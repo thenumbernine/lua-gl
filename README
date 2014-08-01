@@ -1,1 +1,3 @@
 Wrappers for OpenGL calls in LuaJIT
+
+Made for use with malkia's UFO at https://github.com/malkia/ufo
