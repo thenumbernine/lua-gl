@@ -45,6 +45,7 @@ function GLTex2D:load(args)
 		image = Image(filename)
 	end
 	assert(image)
+-- [[ using power-of-two, and using the :size() and :data() image api that sdl_image etc uses ...
 	local w,h = image:size() 
 	local data = image:data()
 	local nw,nh = rupowoftwo(w), rupowoftwo(h)
@@ -67,6 +68,16 @@ function GLTex2D:load(args)
 	args.format = gl.GL_RGBA
 	args.type = gl.GL_UNSIGNED_BYTE
 	args.data = data 
+--]]
+--[[	using npo2 and using .width, .height, and .buffer that the luajit uses
+	args.width = image.width
+	args.height = image.height
+	args.type = gl.GL_UNSIGNED_BYTE
+	args.data = image.buffer
+	local format = assert(({[3] = gl.GL_RGB, [4] = gl.GL_RGBA})[image.channels], "unknown channels "..image.channels)
+	args.internalFormat = format
+	args.format = format
+--]]
 end
 
 return GLTex2D
