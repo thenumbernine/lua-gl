@@ -1,7 +1,8 @@
 local ffi = require 'ffi'
 local gl = require 'ffi.OpenGL'
 local class = require 'ext.class'
-require 'ext.table'
+local table = require 'ext.table'
+
 
 local GLTex = class()
 

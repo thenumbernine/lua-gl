@@ -23,7 +23,7 @@
 local table = require 'ext.table'
 local class = require 'ext.class'
 local FBO = require 'glutil.fbo'
-local Tex2D = require 'glutil.tex2d'
+local GLTex2D = require 'glutil.tex2d'
 
 
 local PingPong = class()
@@ -36,7 +36,7 @@ function PingPong:init(args)
 	self.index = 1	--one-based for history index.  don't forget the associated color attachment is zero-based
 	local numBuffers = args.numBuffers or 2
 	for i=1,numBuffers do
-		local tex = Tex2D(args)
+		local tex = GLTex2D(args)
 		self.hist:insert(tex)
 		self.fbo:setColorAttachmentTex2D(i-1, tex.id)
 	end
