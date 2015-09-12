@@ -15,19 +15,6 @@ for i,var in ipairs(fboErrors) do
 	fboErrorNames[gl[var]] = var
 end
 
-local function checkFBO()
-	local status = gl.glCheckFramebufferStatus(gl.GL_FRAMEBUFFER)
-	if status ~= gl.GL_FRAMEBUFFER_COMPLETE then
-		local errstr = 'glCheckFramebufferStatus status='..status
-		local name = fboErrorNames[status]	
-		if name then errstr = errstr..' error='..name end
-		return false, errstr
-	end
-	return true
-end
-
-
-
 local FBO = class()
 
 function FBO:init(args)
@@ -64,8 +51,16 @@ function FBO:unbind()
 	gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
 end
 
+-- static function
 function FBO.check()
-	return checkFBO()
+	local status = gl.glCheckFramebufferStatus(gl.GL_FRAMEBUFFER)
+	if status ~= gl.GL_FRAMEBUFFER_COMPLETE then
+		local errstr = 'glCheckFramebufferStatus status='..status
+		local name = fboErrorNames[status]	
+		if name then errstr = errstr..' error='..name end
+		return false, errstr
+	end
+	return true
 end
 
 -- TODO - should we bind() beforehand for assurance's sake?
@@ -131,7 +126,7 @@ if index is a table then it runs through the ipairs,
 function FBO:drawToCallback(index, callback, ...)
 	self:bind()
 
-	local res,err = checkFBO()
+	local res,err = self.check()
 	if not res then
 		print(err)
 		print(debug.traceback())

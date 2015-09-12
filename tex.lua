@@ -44,7 +44,24 @@ end
 
 function GLTex:enable() gl.glEnable(self.target) end
 function GLTex:disable() gl.glDisable(self.target) end
-function GLTex:bind() gl.glBindTexture(self.target, self.id) end
-function GLTex:unbind() gl.glBindTexture(self.target, 0) end
+
+function GLTex:bind(unit)
+	if unit then
+		gl.glActiveTexture(gl.GL_TEXTURE0 + unit)
+	end
+	gl.glBindTexture(self.target, self.id)
+end
+
+function GLTex:unbind(unit)
+	if unit then
+		gl.glActiveTexture(gl.GL_TEXTURE0 + unit)
+	end
+	gl.glBindTexture(self.target, 0)
+end
+
+function GLTex:delete()
+	gl.glDeleteTexture(self.id)
+end
+
 
 return GLTex
