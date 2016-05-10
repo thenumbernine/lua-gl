@@ -64,9 +64,22 @@ function GLTex2D:load(args)
 		w,h = nw,nh
 	end
 	args.width, args.height = w, h
-	args.internalFormat = gl.GL_RGBA
-	args.format = gl.GL_RGBA
-	args.type = gl.GL_UNSIGNED_BYTE
+	
+	-- specific for my luajit-based image loader:
+	local formatForChannels = {
+		[1] = gl.GL_LUMINANCE,
+		[3] = gl.GL_RGB,
+		[4] = gl.GL_RGBA,
+	}
+	args.internalFormat = args.internalFormat or formatForChannels[image.channels]
+	args.format = args.format or formatForChannels[image.channels] or gl.GL_RGBA
+	
+	local typeForType = {
+		['char'] = gl.GL_UNSIGNED_BYTE,
+		['signed char'] = gl.GL_UNSIGNED_BYTE,
+		['unsigned char'] = gl.GL_UNSIGNED_BYTE,
+	}
+	args.type = args.type or typeForType[image.format] or gl.GL_UNSIGNED_BYTE
 	args.data = data 
 --]]
 --[[	using npo2 and using .width, .height, and .buffer that the luajit uses
