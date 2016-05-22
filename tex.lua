@@ -12,15 +12,36 @@ local lookupWrap = {
 	r = gl.GL_TEXTURE_WRAP_R,
 }
 
+ffi.cdef[[
+struct gl_tex_ptr_t {
+	GLuint ptr[1];
+};
+typedef struct gl_tex_ptr_t gl_tex_ptr_t;
+]]
+local gl_tex_ptr_t = ffi.metatype('gl_tex_ptr_t', {
+	__gc = function(tex)
+		if tex.ptr[0] ~= 0 then
+			gl.glDeleteTextures(1, tex.ptr)
+			tex.ptr[0] = 0
+		end
+	end,
+})
+
 function GLTex:init(args)
 	if type(args) == 'string' then
 		args = {filename = args}
 	else
 		args = table(args)
 	end
-	local tex = ffi.new('GLuint[1]')
-	gl.glGenTextures(1, tex)
-	self.id = tex[0]
+
+	-- redundant with id
+	-- but I need something ffi ctype to do a gc
+	-- for automatic glDeleteTextures
+	-- and I'll be using a like ptr for that routine as well 
+	self.idPtr = gl_tex_ptr_t()
+	
+	gl.glGenTextures(1, self.idPtr.ptr)
+	self.id = self.idPtr.ptr[0]
 
 	self:bind()
 	if args.filename or args.image then
@@ -60,7 +81,11 @@ function GLTex:unbind(unit)
 end
 
 function GLTex:delete()
-	gl.glDeleteTexture(self.id)
+	if self.idPtr.ptr[0] ~= 0 then
+		gl.glDeleteTextures(1, self.idPtr.ptr)
+		self.idPtr.ptr[0] = 0
+		self.id = 0
+	end
 end
 
 
