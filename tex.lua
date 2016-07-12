@@ -3,7 +3,6 @@ local gl = require 'ffi.OpenGL'
 local class = require 'ext.class'
 local table = require 'ext.table'
 
-
 local GLTex = class()
 
 local lookupWrap = {
