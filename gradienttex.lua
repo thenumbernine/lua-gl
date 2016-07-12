@@ -20,11 +20,10 @@ function GradientTex:init(w, colors)
 		local n2 = n1%#self.colors + 1
 		local c1 = self.colors[n1]
 		local c2 = self.colors[n2]
-		for j=1,3 do
+		for j=1,4 do
 			local c = c1[j] * fp + c2[j] * fn
 			data[j-1+channels*i] = math.floor(255 * c)
 		end
-		data[3+channels*i] = 255
 	end
 	GradientTex.super.init(self, {
 		internalFormat = gl.GL_RGBA,
