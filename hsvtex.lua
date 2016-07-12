@@ -1,9 +1,9 @@
 local ffi = require 'ffi'
 local gl = require 'ffi.OpenGL'
 local class = require 'ext.class'
-local GLTex1D = require 'gl.tex1d'
+local Tex1D = require 'gl.tex1d'
 
-local HSVTex = class(GLTex1D)
+local HSVTex = class(Tex1D)
 
 local colors = {
 	{1,0,0},
@@ -15,8 +15,8 @@ local colors = {
 }
 
 function HSVTex:init(w)
-	local c = 4
-	local d = ffi.new('unsigned char[?]', w*c)
+	local channels = 4
+	local data = ffi.new('unsigned char[?]', w*channels)
 	for i=0,w-1 do
 		local f = (i+.5)/w
 		f = f * #colors
@@ -29,16 +29,16 @@ function HSVTex:init(w)
 		local c2 = colors[n2]
 		for j=1,3 do
 			local c = c1[j] * fp + c2[j] * fn
-			d[j-1+c*i] = math.floor(255 * c)
+			data[j-1+channels*i] = math.floor(255 * c)
 		end
-		d[3+c*i] = 255
+		data[3+channels*i] = 255
 	end
 	HSVTex.super.init(self, {
+		internalFormat = gl.GL_RGBA,
 		width = w,
-		image = {
-			size = function() return w, 1 end,
-			data = function() return d end, 
-		},
+		format = gl.GL_RGBA,
+		type = gl.GL_UNSIGNED_BYTE,
+		data = data,
 		minFilter = gl.GL_LINEAR_MIPMAP_LINEAR,
 		magFilter = gl.GL_LINEAR,
 		generateMipmap = true,
