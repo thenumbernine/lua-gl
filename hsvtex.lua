@@ -39,6 +39,9 @@ function HSVTex:init(w)
 			size = function() return w, 1 end,
 			data = function() return d end, 
 		},
+		minFilter = gl.GL_LINEAR_MIPMAP_LINEAR,
+		magFilter = gl.GL_LINEAR,
+		generateMipmap = true,
 	})
 end
 

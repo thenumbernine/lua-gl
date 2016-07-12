@@ -40,6 +40,8 @@ function GLProgram:init(args)
 			self.attributes[attr] = loc
 		end
 	end
+	-- TODO enumerate all these regardless of specification
+	-- and use the 'uniforms' arg to provide default values
 	self.uniforms = {}
 	if args.uniforms then
 		for _,uni in ipairs(args.uniforms) do

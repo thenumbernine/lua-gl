@@ -52,6 +52,7 @@ function GLTex:init(args)
 	if args.minFilter then gl.glTexParameteri(self.target, gl.GL_TEXTURE_MIN_FILTER, args.minFilter) end
 	if args.magFilter then gl.glTexParameteri(self.target, gl.GL_TEXTURE_MAG_FILTER, args.magFilter) end
 	if args.wrap then self:setWrap(args.wrap) end
+	if args.generateMipmap then gl.glGenerateMipmap(self.target) end
 end
 
 function GLTex:setWrap(wrap)
