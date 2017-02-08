@@ -9,6 +9,28 @@ GLVertexShader.type = gl.GL_VERTEX_SHADER
 local GLFragmentShader = class(GLShader)
 GLFragmentShader.type = gl.GL_FRAGMENT_SHADER
 
+local function getUniformSettersForGLType(utype)
+	return assert( ({
+		[gl.GL_FLOAT] = {arg=gl.glUniform1f, count=1},
+		[gl.GL_INT] = {arg=gl.glUniform1i, count=1},
+		[gl.GL_BOOL] = {arg=gl.glUniform1i, count=1},
+		[gl.GL_SAMPLER_2D] = {arg=gl.glUniform1i, count=1},
+		[gl.GL_SAMPLER_CUBE] = {arg=gl.glUniform1i, count=1},
+		[gl.GL_FLOAT_VEC2] = {arg=gl.glUniform2f, count=2, vec=gl.glUniform2fv},
+		[gl.GL_INT_VEC2] = {arg=gl.glUniform2i, count=2, vec=gl.glUniform2iv},
+		[gl.GL_BOOL_VEC2] = {arg=gl.glUniform2i, count=2, vec=gl.glUniform2iv},
+		[gl.GL_FLOAT_VEC3] = {arg=gl.glUniform3f, count=3, vec=gl.glUniform3fv},
+		[gl.GL_INT_VEC3] = {arg=gl.glUniform3i, count=3, vec=gl.glUniform3iv},
+		[gl.GL_BOOL_VEC3] = {arg=gl.glUniform3i, count=3, vec=gl.glUniform3iv},
+		[gl.GL_FLOAT_VEC4] = {arg=gl.glUniform4f, count=4, vec=gl.glUniform4fv},
+		[gl.GL_INT_VEC4] = {arg=gl.glUniform4i, count=4, vec=gl.glUniform4iv},
+		[gl.GL_BOOL_VEC4] = {arg=gl.glUniform4i, count=4, vec=gl.glUniform4iv},
+		[gl.GL_FLOAT_MAT2] = {mat=gl.glUniformMatrix2fv},
+		[gl.GL_FLOAT_MAT3] = {mat=gl.glUniformMatrix3fv},
+		[gl.GL_FLOAT_MAT4] = {mat=gl.glUniformMatrix4fv},
+	})[utype], "failed to find getter for type "..utype )
+end
+
 local GLProgram = class()
 function GLProgram:init(args)
 	self.vertexShader = GLVertexShader(args.vertexCode)
@@ -32,42 +54,59 @@ function GLProgram:init(args)
 	end
 	--]]
 
-	-- TODO enumerate all these regardless of specification
-	-- and use the 'uniforms' arg to provide default values
-	self.attributes = {}
-	if args.attributes then
-		for _,attr in ipairs(args.attributes) do
-			local loc = gl.glGetAttribLocation(self.id, attr)
-			if loc < 0 then error("failed to find location of attribute "..tostring(attr)) end
-			self.attributes[attr] = loc
-		end
-	end
+	self:use()
+	
 	self.uniforms = {}
-	if args.uniforms then
-		for _,uni in ipairs(args.uniforms) do
-			local loc = gl.glGetUniformLocation(self.id, uni)
-			if loc < 0 then error("failed to find location of uniform "..tostring(uni)) end
-			self.uniforms[uni] = loc
-		end
-	end
-
-	--[[
-	local maxUniforms = ffi.new('int[1]', 0)
+	local maxUniforms = ffi.new('GLint[1]', 0)
 	gl.glGetProgramiv(self.id, gl.GL_ACTIVE_UNIFORMS, maxUniforms)
+	local maxLen = ffi.new('GLint[1]', 0)
+	gl.glGetProgramiv(self.id, gl.GL_ACTIVE_UNIFORM_MAX_LENGTH, maxLen)
 	for i=1,maxUniforms[0] do
-		local len = ffi.new('int[1]', 0)
-		--void glGetActiveUniform (GLuint program, GLuint index, GLsizei bufSize, GLsizei *length, GLint *size, GLenum *type, GLchar *name);
-		local info = {}
+		local bufSize = maxLen[0]+1
+		local name = ffi.new('GLchar[?]', bufSize)
+		local length = ffi.new('GLsizei[1]', 0)
+		ffi.fill(name, bufSize)
+		local size = ffi.new('GLint[1]', 0)
+		local utype = ffi.new('GLenum[1]', 0)
+		gl.glGetActiveUniform(self.id, i-1, bufSize, length, size, utype, name)
+		local info = {
+			name = ffi.string(name, length[0]),
+			size = size[0],
+			type = utype[0],
+		}
+		info.loc = gl.glGetUniformLocation(self.id, info.name)
+		info.setters = getUniformSettersForGLType(info.type)
 		self.uniforms[i] = info
 		self.uniforms[info.name] = info
 	end
-	
-	local maxAttrs = ffi.new('int[1]', 0)
+
+	self.attrs = {}
+	local maxAttrs = ffi.new('GLint[1]', 0)
 	gl.glGetProgramiv(self.id, gl.GL_ACTIVE_ATTRIBUTES, maxAttrs)
+	local maxLen = ffi.new('GLint[1]', 0)
+	gl.glGetProgramiv(self.id, gl.GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, maxLen)
 	for i=1,maxAttrs[0] do
-		void glGetActiveAttrib (GLuint program, GLuint index, GLsizei bufSize, GLsizei *length, GLint *size, GLenum *type, GLchar *name);
+		local bufSize = maxLen[0]+1
+		local name = ffi.new('GLchar[?]', bufSize)
+		local length = ffi.new('GLsizei[1]', 0)
+		ffi.fill(name, bufSize)
+		local size = ffi.new('GLint[1]', 0)
+		local utype = ffi.new('GLenum[1]', 0)
+		gl.glGetActiveAttrib(self.id, i-1, bufSize, length, size, utype, name);
+		local info = {
+			name = ffi.string(name, length[0]),
+			size = size[0],
+			type = utype[0],
+		}
+		info.loc = gl.glGetAttribLocation(self.id, info.name)
+		self.attrs[info.name] = info
 	end
-	--]]
+	
+	if args.uniforms then
+		self:setUniforms(args.uniforms)
+	end
+
+	self:useNone()
 end
 
 function GLProgram:use()
@@ -76,6 +115,36 @@ end
 
 function GLProgram.useNone()
 	gl.glUseProgram(0)
+end
+
+function GLProgram:setUniforms(uniforms)
+	for k,v in pairs(uniforms) do
+		self:setUniform(k, v)
+	end
+	return self
+end
+
+function GLProgram:setUniform(name, value, ...)
+	local info = self.uniforms[name]
+	if not info then return end
+	local isArray = type(value) == 'table'
+	local setters = info.setters
+	local loc = info.loc
+	if not isArray then
+		local setter = setters.arg
+		if not setter then 
+			error("failed to find non-array setter for uniform "..name) 
+		end
+		setter(loc, value, ...)
+	else
+		if setters.vec then
+			setters.vec(loc, value)
+		elseif setters.mat then
+			setters.mat(loc, false, value)
+		else
+			error("failed to find array setter for uniform "..name)
+		end
+	end
 end
 
 return GLProgram
