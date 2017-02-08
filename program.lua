@@ -32,6 +32,8 @@ function GLProgram:init(args)
 	end
 	--]]
 
+	-- TODO enumerate all these regardless of specification
+	-- and use the 'uniforms' arg to provide default values
 	self.attributes = {}
 	if args.attributes then
 		for _,attr in ipairs(args.attributes) do
@@ -40,8 +42,6 @@ function GLProgram:init(args)
 			self.attributes[attr] = loc
 		end
 	end
-	-- TODO enumerate all these regardless of specification
-	-- and use the 'uniforms' arg to provide default values
 	self.uniforms = {}
 	if args.uniforms then
 		for _,uni in ipairs(args.uniforms) do
@@ -50,6 +50,24 @@ function GLProgram:init(args)
 			self.uniforms[uni] = loc
 		end
 	end
+
+	--[[
+	local maxUniforms = ffi.new('int[1]', 0)
+	gl.glGetProgramiv(self.id, gl.GL_ACTIVE_UNIFORMS, maxUniforms)
+	for i=1,maxUniforms[0] do
+		local len = ffi.new('int[1]', 0)
+		--void glGetActiveUniform (GLuint program, GLuint index, GLsizei bufSize, GLsizei *length, GLint *size, GLenum *type, GLchar *name);
+		local info = {}
+		self.uniforms[i] = info
+		self.uniforms[info.name] = info
+	end
+	
+	local maxAttrs = ffi.new('int[1]', 0)
+	gl.glGetProgramiv(self.id, gl.GL_ACTIVE_ATTRIBUTES, maxAttrs)
+	for i=1,maxAttrs[0] do
+		void glGetActiveAttrib (GLuint program, GLuint index, GLsizei bufSize, GLsizei *length, GLint *size, GLenum *type, GLchar *name);
+	end
+	--]]
 end
 
 function GLProgram:use()

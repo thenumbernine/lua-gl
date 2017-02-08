@@ -3,6 +3,7 @@ local ffi = require 'ffi'
 local gl = require 'ffi.OpenGL'
 local Tex2D = require 'gl.tex2d'
 local Tex3D = require 'gl.tex3d'
+local glreport = require 'gl.report'
 
 local fboErrors = {
 	'GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT',

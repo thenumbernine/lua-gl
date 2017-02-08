@@ -22,8 +22,8 @@
 
 local table = require 'ext.table'
 local class = require 'ext.class'
-local FBO = require 'glutil.fbo'
-local GLTex2D = require 'glutil.tex2d'
+local FBO = require 'gl.fbo'
+local GLTex2D = require 'gl.tex2d'
 
 
 local PingPong = class()
