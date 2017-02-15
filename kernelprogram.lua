@@ -17,8 +17,7 @@ void main() {
 	if args.uniforms then
 		for uniformName,uniformType in pairs(args.uniforms) do
 			if type(uniformType) == 'table' then	-- if we have a table then assume it's a type/value pair
-				--uniforms[uniformName] = uniformType[2]
-				uniforms:insert(uniformName)
+				uniforms[uniformName] = uniformType[2]
 				uniformType = uniformType[1]
 			end
 			fragmentCodePrefix = fragmentCodePrefix .. 'uniform '..uniformType..' '..uniformName..';\n'
@@ -39,8 +38,7 @@ void main() {
 			fragmentCodePrefix = fragmentCodePrefix .. 'uniform '..vartype..' '..name..';\n'
 			-- TODO do I need all sampler variables unique, or do I need separate sampler1D's, 2D's, etc unique?
 			-- whatever you choose, make sure fbo:draw agrees when it binds textures
-			--uniforms[name] = i
-			uniforms:insert(name)
+			uniforms[name] = i
 			i = i + 1
 		end
 	end
