@@ -1,4 +1,4 @@
-local gl = require 'ffi.OpenGL'
+local gl = require 'gl'
 
 local function glCallOrRun(list, callback, ...)
 	assert(type(list) == 'table', "expected first parameter to be a table to store the list id")

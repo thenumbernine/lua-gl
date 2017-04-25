@@ -1,6 +1,6 @@
 local class = require 'ext.class'
 local ffi = require 'ffi'
-local gl = require 'ffi.OpenGL'
+local gl = require 'gl'
 local Tex2D = require 'gl.tex2d'
 local Tex3D = require 'gl.tex3d'
 local glreport = require 'gl.report'

@@ -1,4 +1,4 @@
-local gl = require 'ffi.OpenGL'
+local gl = require 'gl'
 
 local function glreport(name)
 	local e = gl.glGetError()

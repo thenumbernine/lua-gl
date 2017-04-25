@@ -20,7 +20,7 @@
 
 --]]
 
-local gl = require 'ffi.OpenGL'
+local gl = require 'gl'
 local table = require 'ext.table'
 local class = require 'ext.class'
 local GLTex = require 'gl.tex'

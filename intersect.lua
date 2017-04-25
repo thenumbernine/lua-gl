@@ -1,5 +1,5 @@
 local ffi = require 'ffi'
-local gl = require 'ffi.OpenGL'
+local gl = require 'gl'
 local glu = require 'ffi.glu'
 
 -- glSceneIntersect
