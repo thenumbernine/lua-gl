@@ -1,9 +1,10 @@
-local string = require 'ext.string'
 local ffi = require 'ffi'
 local gl = require 'ffi.OpenGL'
 local class = require 'ext.class'
+local showcode = require 'template.showcode'
 
 local GLShader = class()
+
 function GLShader:init(code)
 	self.id = gl.glCreateShader(self.type)
 	local len = ffi.new('int[1]')
@@ -19,12 +20,11 @@ function GLShader:init(code)
 		local length = ffi.new('int[1]')
 		gl.glGetShaderiv(self.id, gl.GL_INFO_LOG_LENGTH, length)
 		local log = ffi.new('char[?]',length[0]+1)
-		local result = ffi.new('int[1]')
+		local result = ffi.new('GLsizei[1]')
 		gl.glGetShaderInfoLog(self.id, length[0], result, log);
-		print('code:\n'..string.split(string.trim(code),'\n'):map(function(l,i)
-			return i..': '..l
-		end):concat'\n')
-		print('log: '..ffi.string(log))
+		print(showcode(code))
+		print('log:')
+		print(ffi.string(log))
 		error("compile failed")
 	end 
 end
