@@ -88,5 +88,33 @@ function GLTex:delete()
 	end
 end
 
+-- used by child classes:
+
+GLTex.resizeNPO2 = false
+
+GLTex.formatForChannels = {
+	[1] = gl.GL_LUMINANCE,
+	[3] = gl.GL_RGB,
+	[4] = gl.GL_RGBA,
+}
+
+GLTex.typeForType = {
+	['char'] = gl.GL_UNSIGNED_BYTE,
+	['signed char'] = gl.GL_UNSIGNED_BYTE,
+	['unsigned char'] = gl.GL_UNSIGNED_BYTE,
+}
+
+local bit = bit32 or require 'bit'
+
+-- static method (self not required)
+function GLTex.rupowoftwo(x)
+	local u = 1
+	x = x - 1
+	while x > 0 do
+		x = bit.rshift(x,1)
+		u = bit.lshift(u,1)
+	end
+	return u
+end
 
 return GLTex

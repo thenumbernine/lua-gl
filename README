@@ -1,7 +1,5 @@
 Wrappers for OpenGL calls in LuaJIT
 
-Made for use with malkia's UFO at https://github.com/malkia/ufo
-
 To use this with GLES2,
 make sure LUA_PATH contains '?/?.lua'
 use the following global to override the FFI file:
@@ -10,5 +8,9 @@ require 'gl'
 
 Make sure to use "require 'gl'" instead of "require 'ffi.OpenGL'" so prototype references can be handled properly
 
-TODO
-- use Image:resize resize for the npo2 resize
+REQUIRES
+- luajit
+- lua-ext
+- lua-ffi-bindings
+- lua-template for showcode for GLShader
+- lua-image for image loading / resizing in Tex2D

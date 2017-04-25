@@ -3,7 +3,6 @@ local gl = require 'gl'
 local class = require 'ext.class'
 local GLTex = require 'gl.tex'
 
-
 local GLTex3D = class(GLTex)
 
 GLTex3D.target = gl.GL_TEXTURE_3D
@@ -25,17 +24,6 @@ function GLTex3D:create(args)
 		args.data)
 end
 
-local bit = require 'bit'
-local function rupowoftwo(x)
-	local u = 1
-	x = x - 1
-	while x > 0 do
-		x = bit.rshift(x,1)
-		u = bit.lshift(u,1)
-	end
-	return u
-end
-
 function GLTex3D:load(args)
 	local Image = require 'image'
 	local image = args.image
@@ -45,7 +33,7 @@ function GLTex3D:load(args)
 	assert(image)
 	local w,h,d = image:size() 
 	local data = image:data()
-	local nw,nh,nd = rupowoftwo(w), rupowoftwo(h), rupowoftwo(d)
+	local nw,nh,nd = self.rupowoftwo(w), self.rupowoftwo(h), self.rupowoftwo(d)
 	if w ~= nw or h ~= nh then
 		local ndata = ffi.new('unsigned char[?]', nw*nh*nd*4)
 		for nz=0,nd-1 do
@@ -64,10 +52,10 @@ function GLTex3D:load(args)
 		w,h,d = nw,nh,nd
 	end
 	args.width, args.height, args.depth = w, h, d
-	args.internalFormat = gl.GL_RGBA
-	args.format = gl.GL_RGBA
-	args.type = gl.GL_UNSIGNED_BYTE
 	args.data = data 
+	args.internalFormat = args.internalFormat or self.formatForChannels[image.channels]
+	args.format = args.format or self.formatForChannels[image.channels] or gl.GL_RGBA
+	args.type = args.type or self.typeForType[image.format] or gl.GL_UNSIGNED_BYTE
 end
 
 return GLTex3D

@@ -3,7 +3,6 @@ local gl = require 'gl'
 local class = require 'ext.class'
 local GLTex = require 'gl.tex'
 
-
 local GLTex1D = class(GLTex)
 
 GLTex1D.target = gl.GL_TEXTURE_1D
@@ -21,17 +20,6 @@ function GLTex1D:create(args)
 		args.data)
 end
 
-local bit = require 'bit'
-local function rupowoftwo(x)
-	local u = 1
-	x = x - 1
-	while x > 0 do
-		x = bit.rshift(x,1)
-		u = bit.lshift(u,1)
-	end
-	return u
-end
-
 function GLTex1D:load(args)
 	local image = args.image
 	if not image then
@@ -43,28 +31,21 @@ function GLTex1D:load(args)
 		image = Image(filename)
 	end
 	assert(image)
-	local w,h = image:size() 
-	local data = image:data()
-	local nw,nh = rupowoftwo(w), rupowoftwo(h)
-	if w ~= nw or h ~= nh then
-		local ndata = ffi.new('unsigned char[?]', nw*nh*4)
-		for ny=0,nh-1 do
-			for nx=0,nw-1 do
-				local x = math.floor(nx*(w-1)/(nw-1))
-				local y = math.floor(ny*(h-1)/(nh-1))
-				for c=0,3 do
-					ndata[c+4*(nx+nw*ny)] = data[c+4*(x+w*y)]
-				end
-			end
+	
+	if self.resizeNPO2 then
+		local w,h = image.width, image.height
+		local data = image.buffer
+		local nw,nh = self.rupowoftwo(w), self.rupowoftwo(h)
+		if w ~= nw or h ~= nh then
+			image = image:resize(nw, nh, 'nearest')
 		end
-		data = ndata
-		w,h = nw,nh
 	end
-	args.width = w
-	args.internalFormat = gl.GL_RGBA
-	args.format = gl.GL_RGBA
-	args.type = gl.GL_UNSIGNED_BYTE
+
+	args.width = image.width
 	args.data = data 
+	args.internalFormat = args.internalFormat or self.formatForChannels[image.channels]
+	args.format = args.format or self.formatForChannels[image.channels] or gl.GL_RGBA
+	args.type = args.type or self.typeForType[image.format] or gl.GL_UNSIGNED_BYTE
 end
 
 return GLTex1D
