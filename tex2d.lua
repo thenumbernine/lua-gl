@@ -34,6 +34,18 @@ local function rupowoftwo(x)
 	return u
 end
 
+-- specific for my luajit-based image loader:
+local formatForChannels = {
+	[1] = gl.GL_LUMINANCE,
+	[3] = gl.GL_RGB,
+	[4] = gl.GL_RGBA,
+}
+local typeForType = {
+	['char'] = gl.GL_UNSIGNED_BYTE,
+	['signed char'] = gl.GL_UNSIGNED_BYTE,
+	['unsigned char'] = gl.GL_UNSIGNED_BYTE,
+}
+
 GLTex2D.resizeNPO2 = false
 function GLTex2D:load(args)
 	local image = args.image
@@ -47,18 +59,6 @@ function GLTex2D:load(args)
 	end
 	assert(image)
 
-	-- specific for my luajit-based image loader:
-	local formatForChannels = {
-		[1] = gl.GL_LUMINANCE,
-		[3] = gl.GL_RGB,
-		[4] = gl.GL_RGBA,
-	}
-	local typeForType = {
-		['char'] = gl.GL_UNSIGNED_BYTE,
-		['signed char'] = gl.GL_UNSIGNED_BYTE,
-		['unsigned char'] = gl.GL_UNSIGNED_BYTE,
-	}
-	
 	-- using power-of-two, and using the luajit image api
 	if self.resizeNPO2 then	
 		local w,h = image.width, image.height
