@@ -179,8 +179,9 @@ function FBO:draw(args)
 	end
 	glreport('drawScreenFBO glUseProgram')
 	if args.uniforms then
+		assert(args.shader)
 		for k,v in pairs(args.uniforms) do
-			glUniformGeneric(k,v)		-- uniformf only, but that still supports vectors =)
+			args.shader:setUniform(k,v)	-- uniformf only, but that still supports vectors =)
 			glreport('drawScreenFBO glUniform '..tostring(k)..' '..tostring(v))
 		end
 	end

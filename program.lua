@@ -9,26 +9,27 @@ GLVertexShader.type = gl.GL_VERTEX_SHADER
 local GLFragmentShader = class(GLShader)
 GLFragmentShader.type = gl.GL_FRAGMENT_SHADER
 
+-- this doesn't work as easy as it does in webgl
 local function getUniformSettersForGLType(utype)
 	return assert( ({
-		[gl.GL_FLOAT] = {arg=gl.glUniform1f, count=1},
-		[gl.GL_INT] = {arg=gl.glUniform1i, count=1},
-		[gl.GL_BOOL] = {arg=gl.glUniform1i, count=1},
-		[gl.GL_SAMPLER_1D] = {arg=gl.glUniform1i, count=1},
-		[gl.GL_SAMPLER_2D] = {arg=gl.glUniform1i, count=1},
-		[gl.GL_SAMPLER_3D] = {arg=gl.glUniform1i, count=1},
-		[gl.GL_SAMPLER_CUBE] = {arg=gl.glUniform1i, count=1},
-		[gl.GL_SAMPLER_1D_SHADOW] = {arg=gl.glUniform1i, count=1},
-		[gl.GL_SAMPLER_2D_SHADOW] = {arg=gl.glUniform1i, count=1},
-		[gl.GL_FLOAT_VEC2] = {arg=gl.glUniform2f, count=2, vec=gl.glUniform2fv},
-		[gl.GL_INT_VEC2] = {arg=gl.glUniform2i, count=2, vec=gl.glUniform2iv},
-		[gl.GL_BOOL_VEC2] = {arg=gl.glUniform2i, count=2, vec=gl.glUniform2iv},
-		[gl.GL_FLOAT_VEC3] = {arg=gl.glUniform3f, count=3, vec=gl.glUniform3fv},
-		[gl.GL_INT_VEC3] = {arg=gl.glUniform3i, count=3, vec=gl.glUniform3iv},
-		[gl.GL_BOOL_VEC3] = {arg=gl.glUniform3i, count=3, vec=gl.glUniform3iv},
-		[gl.GL_FLOAT_VEC4] = {arg=gl.glUniform4f, count=4, vec=gl.glUniform4fv},
-		[gl.GL_INT_VEC4] = {arg=gl.glUniform4i, count=4, vec=gl.glUniform4iv},
-		[gl.GL_BOOL_VEC4] = {arg=gl.glUniform4i, count=4, vec=gl.glUniform4iv},
+		[gl.GL_FLOAT] = {arg=gl.glUniform1f},
+		[gl.GL_INT] = {arg=gl.glUniform1i},
+		[gl.GL_BOOL] = {arg=gl.glUniform1i},
+		[gl.GL_SAMPLER_1D] = {arg=gl.glUniform1i},
+		[gl.GL_SAMPLER_2D] = {arg=gl.glUniform1i},
+		[gl.GL_SAMPLER_3D] = {arg=gl.glUniform1i},
+		[gl.GL_SAMPLER_CUBE] = {arg=gl.glUniform1i},
+		[gl.GL_SAMPLER_1D_SHADOW] = {arg=gl.glUniform1i},
+		[gl.GL_SAMPLER_2D_SHADOW] = {arg=gl.glUniform1i},
+		[gl.GL_FLOAT_VEC2] = {arg=gl.glUniform2f, type='float', count=2, vec=gl.glUniform2fv},
+		[gl.GL_INT_VEC2] = {arg=gl.glUniform2i, type='int', count=2, vec=gl.glUniform2iv},
+		[gl.GL_BOOL_VEC2] = {arg=gl.glUniform2i, type='int', count=2, vec=gl.glUniform2iv},
+		[gl.GL_FLOAT_VEC3] = {arg=gl.glUniform3f, type='float', count=3, vec=gl.glUniform3fv},
+		[gl.GL_INT_VEC3] = {arg=gl.glUniform3i, type='int', count=3, vec=gl.glUniform3iv},
+		[gl.GL_BOOL_VEC3] = {arg=gl.glUniform3i, type='int', count=3, vec=gl.glUniform3iv},
+		[gl.GL_FLOAT_VEC4] = {arg=gl.glUniform4f, type='float', count=4, vec=gl.glUniform4fv},
+		[gl.GL_INT_VEC4] = {arg=gl.glUniform4i, type='int', count=4, vec=gl.glUniform4iv},
+		[gl.GL_BOOL_VEC4] = {arg=gl.glUniform4i, type='int', count=4, vec=gl.glUniform4iv},
 		[gl.GL_FLOAT_MAT2] = {mat=gl.glUniformMatrix2fv},
 		[gl.GL_FLOAT_MAT3] = {mat=gl.glUniformMatrix3fv},
 		[gl.GL_FLOAT_MAT4] = {mat=gl.glUniformMatrix4fv},
@@ -142,8 +143,13 @@ function GLProgram:setUniform(name, value, ...)
 		setter(loc, value, ...)
 	else
 		if setters.vec then
-			setters.vec(loc, value)
+			local cdata = ffi.new(setters.type..'['..setters.count..']')
+			for i=1,setters.count do
+				cdata[i-1] = value[i]
+			end
+			setters.vec(loc, 1, cdata)
 		elseif setters.mat then
+			-- TODO c data conversion
 			setters.mat(loc, false, value)
 		else
 			error("failed to find array setter for uniform "..name)
