@@ -3,6 +3,20 @@ local gl = require 'gl'
 local class = require 'ext.class'
 local GLShader = require 'gl.shader'
 
+ffi.cdef[[
+typedef struct gl_program_ptr_s {
+	GLuint ptr[1];
+} gl_program_ptr_t;
+]]
+local gl_program_ptr_t = ffi.metatype('gl_program_ptr_t', {
+	__gc = function(program)
+		if program.ptr[0] ~= 0 then
+			gl.glDeleteProgram(program.ptr[0])
+			program.ptr[0] = 0
+		end
+	end,
+})
+
 local GLVertexShader = class(GLShader)
 GLVertexShader.type = gl.GL_VERTEX_SHADER
 
@@ -41,6 +55,11 @@ function GLProgram:init(args)
 	self.vertexShader = GLVertexShader(args.vertexCode)
 	self.fragmentShader = GLFragmentShader(args.fragmentCode)
 	self.id = gl.glCreateProgram()
+	
+	-- automatic resource cleanup
+	self.idPtr = gl_program_ptr_t()
+	self.idPtr.ptr[0] = self.id
+	
 	gl.glAttachShader(self.id, self.vertexShader.id)
 	gl.glAttachShader(self.id, self.fragmentShader.id)
 	gl.glLinkProgram(self.id)

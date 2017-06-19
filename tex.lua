@@ -3,19 +3,10 @@ local gl = require 'gl'
 local class = require 'ext.class'
 local table = require 'ext.table'
 
-local GLTex = class()
-
-local lookupWrap = {
-	s = gl.GL_TEXTURE_WRAP_S,
-	t = gl.GL_TEXTURE_WRAP_T,
-	r = gl.GL_TEXTURE_WRAP_R,
-}
-
 ffi.cdef[[
-struct gl_tex_ptr_t {
+typedef struct gl_tex_ptr_t {
 	GLuint ptr[1];
-};
-typedef struct gl_tex_ptr_t gl_tex_ptr_t;
+} gl_tex_ptr_t;
 ]]
 local gl_tex_ptr_t = ffi.metatype('gl_tex_ptr_t', {
 	__gc = function(tex)
@@ -25,6 +16,8 @@ local gl_tex_ptr_t = ffi.metatype('gl_tex_ptr_t', {
 		end
 	end,
 })
+
+local GLTex = class()
 
 function GLTex:init(args)
 	if type(args) == 'string' then
@@ -53,6 +46,12 @@ function GLTex:init(args)
 	if args.wrap then self:setWrap(args.wrap) end
 	if args.generateMipmap then gl.glGenerateMipmap(self.target) end
 end
+
+local lookupWrap = {
+	s = gl.GL_TEXTURE_WRAP_S,
+	t = gl.GL_TEXTURE_WRAP_T,
+	r = gl.GL_TEXTURE_WRAP_R,
+}
 
 function GLTex:setWrap(wrap)
 	self:bind()
