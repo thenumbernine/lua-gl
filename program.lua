@@ -1,6 +1,7 @@
 local ffi = require 'ffi'
 local gl = require 'gl'
 local class = require 'ext.class'
+local GetBehavior = require 'gl.get'
 local GLShader = require 'gl.shader'
 
 ffi.cdef[[
@@ -53,8 +54,38 @@ local function getUniformSettersForGLType(utype)
 	})[utype], "failed to find getter for type "..utype )
 end
 
-local GLProgram = class()
+local GLProgram = class(GetBehavior())
+
+GLProgram.checkLinkStatus = GLShader.createCheckStatus('GL_LINK_STATUS', gl.glGetProgramInfoLog)
+
+-- similar to cl/getinfo.lua
+
+GLProgram.getter = gl.glGetProgramiv
+
+GLProgram.gets = {
+	{name='GL_DELETE_STATUS', type='GLint'},
+	{name='GL_LINK_STATUS', type='GLint'},
+	{name='GL_VALIDATE_STATUS', type='GLint'},
+	{name='GL_INFO_LOG_LENGTH', type='GLint'},
+	{name='GL_ATTACHED_SHADERS', type='GLint'},
+	{name='GL_ACTIVE_ATTRIBUTES', type='GLint'},
+	{name='GL_ACTIVE_ATTRIBUTE_MAX_LENGTH', type='GLint'},
+	{name='GL_ACTIVE_UNIFORMS', type='GLint'},
+	{name='GL_ACTIVE_UNIFORM_MAX_LENGTH', type='GLint'},
+	--{name='GL_ACTIVE_ATOMIC_COUNTER_BUFFERS', type='GLint'},
+	--{name='GL_PROGRAM_BINARY_LENGTH', type='GLint'},
+	--{name='GL_COMPUTE_WORK_GROUP_SIZE', type='GLint'},
+	--{name='GL_TRANSFORM_FEEDBACK_BUFFER_MODE', type='GLint'},
+	--{name='GL_TRANSFORM_FEEDBACK_VARYINGS', type='GLint'},
+	--{name='GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH', type='GLint'},
+	--{name='GL_GEOMETRY_VERTICES_OUT', type='GLint'},
+	--{name='GL_GEOMETRY_INPUT_TYPE', type='GLint'},
+	--{name='GL_GEOMETRY_OUTPUT_TYPE', type='GLint'},
+}
+
 function GLProgram:init(args)
+	GLProgram.super.init(self)
+	
 	self.vertexShader = GLVertexShader(args.vertexCode)
 	self.fragmentShader = GLFragmentShader(args.fragmentCode)
 	if args.geometryCode then
@@ -74,29 +105,15 @@ function GLProgram:init(args)
 	end
 	gl.glLinkProgram(self.id)
 	
-	--[[
-	local status = ffi.new('int[1]')
-	gl.glGetProgramiv(self.id, gl.GL_COMPILE_STATUS, status)
-	if status[0] == gl.GL_FALSE then
-		local length = ffi.new('int[1]')
-		gl.glGetProgramiv(self.id, gl.GL_INFO_LOG_LENGTH, length)
-		local log = ffi.new('char[?]',length[0]+1)
-		local result = ffi.new('size_t[1]')
-		gl.glGetProgramInfoLog(self.id, length[0], result, log);
-		print('log: '..ffi.string(log))
-		error(code)
-	end
-	--]]
+	self:checkLinkStatus()
 
 	self:use()
 	
 	self.uniforms = {}
-	local maxUniforms = ffi.new('GLint[1]', 0)
-	gl.glGetProgramiv(self.id, gl.GL_ACTIVE_UNIFORMS, maxUniforms)
-	local maxLen = ffi.new('GLint[1]', 0)
-	gl.glGetProgramiv(self.id, gl.GL_ACTIVE_UNIFORM_MAX_LENGTH, maxLen)
-	for i=1,maxUniforms[0] do
-		local bufSize = maxLen[0]+1
+	local maxUniforms = self:get'GL_ACTIVE_UNIFORMS'
+	local maxLen = self:get'GL_ACTIVE_UNIFORM_MAX_LENGTH'
+	for i=1,maxUniforms do
+		local bufSize = maxLen+1
 		local name = ffi.new('GLchar[?]', bufSize)
 		local length = ffi.new('GLsizei[1]', 0)
 		ffi.fill(name, bufSize)
@@ -115,12 +132,10 @@ function GLProgram:init(args)
 	end
 
 	self.attrs = {}
-	local maxAttrs = ffi.new('GLint[1]', 0)
-	gl.glGetProgramiv(self.id, gl.GL_ACTIVE_ATTRIBUTES, maxAttrs)
-	local maxLen = ffi.new('GLint[1]', 0)
-	gl.glGetProgramiv(self.id, gl.GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, maxLen)
-	for i=1,maxAttrs[0] do
-		local bufSize = maxLen[0]+1
+	local maxAttrs = self:get'GL_ACTIVE_ATTRIBUTES'
+	local maxLen = self:get'GL_ACTIVE_ATTRIBUTE_MAX_LENGTH'
+	for i=1,maxAttrs do
+		local bufSize = maxLen+1
 		local name = ffi.new('GLchar[?]', bufSize)
 		local length = ffi.new('GLsizei[1]', 0)
 		ffi.fill(name, bufSize)

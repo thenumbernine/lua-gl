@@ -2,10 +2,23 @@ local ffi = require 'ffi'
 local gl = require 'gl'
 local class = require 'ext.class'
 local showcode = require 'template.showcode'
+local GetBehavior = require 'gl.get'
 
-local GLShader = class()
+local GLShader = class(GetBehavior())
+
+GLShader.getter = gl.glGetShaderiv
+
+GLShader.gets = {
+	{name='GL_SHADER_TYPE', type='GLint'},
+	{name='GL_DELETE_STATUS', type='GLint'},
+	{name='GL_COMPILE_STATUS', type='GLint'},
+	{name='GL_INFO_LOG_LENGTH', type='GLint'},
+	{name='GL_SHADER_SOURCE_LENGTH', type='GLint'},
+}
 
 function GLShader:init(code)
+	GLShader.super.init(self)
+	
 	self.id = gl.glCreateShader(self.type)
 	local len = ffi.new('int[1]')
 	len[0] = #code
@@ -14,19 +27,28 @@ function GLShader:init(code)
 	gl.glShaderSource(self.id, 1, strs, len)
 	gl.glCompileShader(self.id)
 	
-	local status = ffi.new('int[1]')
-	gl.glGetShaderiv(self.id, gl.GL_COMPILE_STATUS, status)
-	if status[0] == gl.GL_FALSE then
-		local length = ffi.new('int[1]')
-		gl.glGetShaderiv(self.id, gl.GL_INFO_LOG_LENGTH, length)
-		local log = ffi.new('char[?]',length[0]+1)
-		local result = ffi.new('GLsizei[1]')
-		gl.glGetShaderInfoLog(self.id, length[0], result, log);
-		print(showcode(code))
-		print('log:')
-		print(ffi.string(log))
-		error("compile failed")
-	end 
+	self:checkCompileStatus(code)
 end
+
+-- used by GLShader and GLProgram
+function GLShader.createCheckStatus(statusEnum, logGetter)
+	return function(self, code)
+		local status = self:get(statusEnum)
+		if status == gl.GL_FALSE then
+			local length = self:get'GL_INFO_LOG_LENGTH'
+			local log = ffi.new('char[?]',length+1)
+			local result = ffi.new'GLsizei[1]'
+			logGetter(self.id, length, result, log);
+			if code then
+				print(showcode(code))
+			end
+			print'log:'
+			print(ffi.string(log))
+			error(statusEnum..' failed!')
+		end 
+	end
+end
+
+GLShader.checkCompileStatus = GLShader.createCheckStatus('GL_COMPILE_STATUS', gl.glGetShaderInfoLog)
 
 return GLShader
