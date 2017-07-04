@@ -20,9 +20,14 @@ function GLShader:init(code)
 	GLShader.super.init(self)
 	
 	self.id = gl.glCreateShader(self.type)
-	local len = ffi.new('int[1]')
+
+	if gl.glGetError() == gl.GL_INVALID_ENUM then
+		error('the shader type '..('%x'):format(self.type)..' is not supported')
+	end
+
+	local len = ffi.new'int[1]'
 	len[0] = #code
-	local strs = ffi.new('const char*[1]')
+	local strs = ffi.new'const char*[1]'
 	strs[0] = code
 	gl.glShaderSource(self.id, 1, strs, len)
 	gl.glCompileShader(self.id)
@@ -44,6 +49,11 @@ function GLShader.createCheckStatus(statusEnum, logGetter)
 			end
 			print'log:'
 			print(ffi.string(log))
+	
+			for _,get in ipairs(self.gets) do
+				print(get.name..': '..self:get(get.name))
+			end
+			
 			error(statusEnum..' failed!')
 		end 
 	end
