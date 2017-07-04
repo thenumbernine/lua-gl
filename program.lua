@@ -23,6 +23,9 @@ GLVertexShader.type = gl.GL_VERTEX_SHADER
 local GLFragmentShader = class(GLShader)
 GLFragmentShader.type = gl.GL_FRAGMENT_SHADER
 
+local GLGeometryShader = class(GLShader)
+GLGeometryShader.type = gl.GL_GEOMETRY_SHADER
+
 -- this doesn't work as easy as it does in webgl
 local function getUniformSettersForGLType(utype)
 	return assert( ({
@@ -54,6 +57,10 @@ local GLProgram = class()
 function GLProgram:init(args)
 	self.vertexShader = GLVertexShader(args.vertexCode)
 	self.fragmentShader = GLFragmentShader(args.fragmentCode)
+	if args.geometryCode then
+		self.geometryShader = GLGeometryShader(args.geometryCode)
+	end
+	
 	self.id = gl.glCreateProgram()
 	
 	-- automatic resource cleanup
@@ -62,6 +69,9 @@ function GLProgram:init(args)
 	
 	gl.glAttachShader(self.id, self.vertexShader.id)
 	gl.glAttachShader(self.id, self.fragmentShader.id)
+	if self.geometryShader then
+		gl.glAttachShader(self.id, self.geometryShader.id)
+	end
 	gl.glLinkProgram(self.id)
 	
 	--[[
