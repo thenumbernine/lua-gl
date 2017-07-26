@@ -11,8 +11,9 @@ local function glreport(name)
 		end
 		print(str)
 		print(debug.traceback())
+		return nil, str, e
 	end
-	return e
+	return true, nil, e
 end
 
 return glreport
