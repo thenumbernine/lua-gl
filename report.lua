@@ -12,6 +12,7 @@ local function glreport(name)
 		print(str)
 		print(debug.traceback())
 	end
+	return e
 end
 
 return glreport
