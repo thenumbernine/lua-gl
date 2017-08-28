@@ -174,7 +174,7 @@ function FBO:draw(args)
 		if type(sh) == 'table' then
 			sh:use()
 		else
-			gl.glUseProgramObjectARB(sh)
+			gl.glUseProgram(sh)
 		end
 	end
 	glreport('drawScreenFBO glUseProgram')
@@ -228,7 +228,7 @@ function FBO:draw(args)
 		end
 	end
 	if args.shader then
-		gl.glUseProgramObjectARB(nil)
+		gl.glUseProgram(0)
 		glreport('drawScreenFBO glUseProgram nil')
 	end
 	if args.resetProjection then

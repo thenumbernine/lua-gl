@@ -6,7 +6,10 @@ local GetBehavior = require 'gl.get'
 
 local GLShader = class(GetBehavior())
 
-GLShader.getter = gl.glGetShaderiv
+-- wrap it so wgl can replace glGetShaderiv
+function GLShader.getter(...)
+	return gl.glGetShaderiv(...)
+end
 
 GLShader.gets = {
 	{name='GL_SHADER_TYPE', type='GLint'},
@@ -59,6 +62,6 @@ function GLShader.createCheckStatus(statusEnum, logGetter)
 	end
 end
 
-GLShader.checkCompileStatus = GLShader.createCheckStatus('GL_COMPILE_STATUS', gl.glGetShaderInfoLog)
+GLShader.checkCompileStatus = GLShader.createCheckStatus('GL_COMPILE_STATUS', function(...) return gl.glGetShaderInfoLog(...) end)
 
 return GLShader

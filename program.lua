@@ -56,11 +56,13 @@ end
 
 local GLProgram = class(GetBehavior())
 
-GLProgram.checkLinkStatus = GLShader.createCheckStatus('GL_LINK_STATUS', gl.glGetProgramInfoLog)
+GLProgram.checkLinkStatus = GLShader.createCheckStatus('GL_LINK_STATUS', function(...) return gl.glGetProgramInfoLog(...) end)
 
 -- similar to cl/getinfo.lua
 
-GLProgram.getter = gl.glGetProgramiv
+function GLProgram.getter(...)
+	return gl.glGetProgramiv(...)
+end
 
 GLProgram.gets = {
 	{name='GL_DELETE_STATUS', type='GLint'},
