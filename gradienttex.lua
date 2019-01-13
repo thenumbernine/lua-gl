@@ -32,9 +32,8 @@ function GradientTex:init(w, colors, repeated)
 		format = gl.GL_RGBA,
 		type = gl.GL_UNSIGNED_BYTE,
 		data = data,
-		minFilter = gl.GL_LINEAR_MIPMAP_LINEAR,
-		magFilter = gl.GL_LINEAR,
-		generateMipmap = true,
+		minFilter = gl.GL_NEAREST,
+		magFilter = gl.GL_NEAREST,
 		wrap = {s = repeated and gl.GL_REPEAT or gl.GL_CLAMP},
 	})
 end
