@@ -1,6 +1,6 @@
 local gl = require 'gl'
+local ffi = require 'ffi'
 local class = require 'ext.class'
-local ArrayBuffer = require 'gl.buffer'
 
 local Attribute = class()
 
