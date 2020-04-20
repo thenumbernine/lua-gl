@@ -5,7 +5,7 @@ local function glreport(name)
 	if e ~= 0 then
 		local str = name
 		if str then
-			str = str .. ': '..e..(' (0x%4x)'):format(e)
+			str = str .. ': '..e..(' (0x%04x)'):format(e)
 		else
 			str = e
 		end

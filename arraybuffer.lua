@@ -42,6 +42,14 @@ function ArrayBuffer:init(args)
 	end
 end
 
+function ArrayBuffer:bind()
+	gl.glBindBuffer(self.target, self.id)
+end
+
+function ArrayBuffer:unbind()
+	gl.glBindBuffer(self.target, 0)
+end
+
 --[[
 args:
 	size
@@ -58,12 +66,13 @@ function ArrayBuffer:setData(args)
 	self:unbind()
 end
 
-function ArrayBuffer:bind()
-	gl.glBindBuffer(self.target, self.id)
-end
-
-function ArrayBuffer:unbind()
-	gl.glBindBuffer(self.target, 0)
+function ArrayBuffer:updateData(offset, size, data)
+	offset = offset or 0
+	size = size or self.size
+	data = data or self.data
+	self:bind()
+	gl.glBufferSubData(self.target, offset, size, data)
+	self:unbind()
 end
 
 return ArrayBuffer
