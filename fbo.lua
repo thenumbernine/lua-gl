@@ -18,9 +18,9 @@ for i,var in ipairs(fboErrors) do
 	fboErrorNames[gl[var]] = var
 end
 
-local FBO = class()
+local FrameBuffer = class()
 
-function FBO:init(args)
+function FrameBuffer:init(args)
 	args = args or {}
 	
 	-- store these for reference later, if we get them
@@ -46,16 +46,16 @@ function FBO:init(args)
 	gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
 end
 
-function FBO:bind()
+function FrameBuffer:bind()
 	gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.id)
 end
 
-function FBO:unbind()
+function FrameBuffer:unbind()
 	gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
 end
 
 -- static function
-function FBO.check()
+function FrameBuffer.check()
 	local status = gl.glCheckFramebufferStatus(gl.GL_FRAMEBUFFER)
 	if status ~= gl.GL_FRAMEBUFFER_COMPLETE then
 		local errstr = 'glCheckFramebufferStatus status='..status
@@ -72,19 +72,19 @@ end
 --			on the other hand, a fbo setColorAttachmet() without bind() wouldn't fulfill its operation
 -- or should we leave the app to do this (and reduce the possible binds/unbinds?)
 -- or should we only bind, and leave it to the caller to unbind?
-function FBO:setColorAttachmentTex2D(index, tex, target, level)
+function FrameBuffer:setColorAttachmentTex2D(index, tex, target, level)
 	self:bind()
 	gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + index, target or gl.GL_TEXTURE_2D, tex, level or 0)
 	self:unbind()
 end
 
-function FBO:setColorAttachmentTexCubeMapSide(index, tex, side, level)
+function FrameBuffer:setColorAttachmentTexCubeMapSide(index, tex, side, level)
 	self:bind()
 	gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + index, gl.GL_TEXTURE_CUBE_MAP_POSITIVE_X + (side or index), tex, level or 0)
 	self:unbind()
 end
 
-function FBO:setColorAttachmentTexCubeMap(tex, level)
+function FrameBuffer:setColorAttachmentTexCubeMap(tex, level)
 	self:bind()
 	for i=0,5 do
 		gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + i, gl.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, tex, level or 0)
@@ -92,7 +92,7 @@ function FBO:setColorAttachmentTexCubeMap(tex, level)
 	self:unbind()
 end
 
-function FBO:setColorAttachmentTex3D(index, tex, slice, target, level)
+function FrameBuffer:setColorAttachmentTex3D(index, tex, slice, target, level)
 	if not tonumber(slice) then error("unable to convert slice to number: " ..tostring(slice)) end
 	slice = tonumber(slice)
 	self:bind()
@@ -101,7 +101,7 @@ function FBO:setColorAttachmentTex3D(index, tex, slice, target, level)
 end
 
 --general, object-based type-deducing
-function FBO:setColorAttachment(index, tex, ...)
+function FrameBuffer:setColorAttachment(index, tex, ...)
 	if type(tex) == 'table' then
 		local mt = getmetatable(tex)
 		if mt == Tex2D then
@@ -126,7 +126,7 @@ if index is a table then it runs through the ipairs,
 	binding the associated color attachment at 'GL_COLOR_ATTACHMENT0+index[side]'
 	and running the callback for each, passing the side as a parameter
 --]]
-function FBO:drawToCallback(index, callback, ...)
+function FrameBuffer:drawToCallback(index, callback, ...)
 	self:bind()
 
 	local res,err = self.check()
@@ -153,7 +153,20 @@ function FBO:drawToCallback(index, callback, ...)
 	self:unbind()
 end
 
-function FBO:draw(args)
+function FrameBuffer.drawScreenQuad()
+	gl.glBegin(gl.GL_TRIANGLE_STRIP)
+	gl.glTexCoord2f(0,0)
+	gl.glVertex2f(0,0)
+	gl.glTexCoord2f(1,0)
+	gl.glVertex2f(1,0)
+	gl.glTexCoord2f(0,1)
+	gl.glVertex2f(0,1)
+	gl.glTexCoord2f(1,1)
+	gl.glVertex2f(1,1)
+	gl.glEnd()
+end
+
+function FrameBuffer:draw(args)
 	glreport('begin drawScreenFBO')
 	if args.viewport then
 		local vp = args.viewport
@@ -212,7 +225,7 @@ function FBO:draw(args)
 	-- no one seems to use fbo:draw... at all...
 	-- so why preserve a function that no one uses?
 	-- why not just merge it in here?
-	self:drawToCallback(args.colorAttachment or 0, args.callback or drawScreenQuad)
+	self:drawToCallback(args.colorAttachment or 0, args.callback or self.drawScreenQuad)
 	
 	glreport('drawScreenFBO after callback')
 	if args.texs then
@@ -247,4 +260,4 @@ function FBO:draw(args)
 	glreport('end drawScreenFBO')
 end
 
-return FBO
+return FrameBuffer

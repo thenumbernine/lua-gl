@@ -8,18 +8,25 @@ local GLTex2D = class(GLTex)
 GLTex2D.target = gl.GL_TEXTURE_2D
 
 function GLTex2D:create(args)
+	self.target = args.target
+	self.level = args.level
+	self.internalFormat = args.internalFormat
 	self.width = args.width
 	self.height = args.height
+	self.border = args.border
+	self.format = args.format
+	self.type = args.type
+	self.data = args.data
 	gl.glTexImage2D(
-		args.target or self.target,
-		args.level or 0,
-		args.internalFormat,
-		args.width,
-		args.height,
-		args.border or 0,
-		args.format,
-		args.type,
-		args.data)
+		self.target,
+		self.level or 0,
+		self.internalFormat,
+		self.width,
+		self.height,
+		self.border or 0,
+		self.format,
+		self.type,
+		self.data)
 end
 
 function GLTex2D:load(args)
@@ -49,6 +56,20 @@ function GLTex2D:load(args)
 	args.internalFormat = args.internalFormat or self.formatForChannels[image.channels]
 	args.format = args.format or self.formatForChannels[image.channels] or gl.GL_RGBA
 	args.type = args.type or self.typeForType[image.format] or gl.GL_UNSIGNED_BYTE
+end
+
+function GLTex2D:subimage(args)
+	gl.glTexSubImage2D(
+		args.target or self.target,
+		args.level or 0,
+		args.xoffset or 0,
+		args.yoffset or 0,
+		args.width or self.width,
+		args.height or self.height,
+		args.format or self.format,
+		args.type or self.type,
+		args.data or self.data
+	)
 end
 
 return GLTex2D
