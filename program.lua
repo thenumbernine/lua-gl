@@ -3,6 +3,8 @@ local gl = require 'gl'
 local class = require 'ext.class'
 local GetBehavior = require 'gl.get'
 local GLShader = require 'gl.shader'
+local GLArrayBuffer = require 'gl.arraybuffer'
+local GLAttribute = require 'gl.attribute'
 
 ffi.cdef[[
 typedef struct gl_program_ptr_s {
@@ -156,6 +158,9 @@ function GLProgram:init(args)
 	if args.uniforms then
 		self:setUniforms(args.uniforms)
 	end
+	if args.attrs then
+		self:setAttrs(args.attrs)
+	end
 
 	self:useNone()
 end
@@ -201,6 +206,33 @@ function GLProgram:setUniform(name, value, ...)
 			error("failed to find array setter for uniform "..name)
 		end
 	end
+end
+
+function GLProgram:setAttrs(attrs)
+	for name,attr in pairs(attrs) do
+		self:setAttr(name, attr)
+	end
+end
+
+-- buffer = GLArrayBuffer object
+function GLProgram:setAttr(name, attr)
+	local info = assert(self.attrs[name])
+	gl.glEnableVertexAttribArray(info.loc)
+	--[[ there is no buffer.dim, only buffer.size ...
+	-- this all assumes the 'attr' param is called 'buffer'...
+	if GLArrayBuffer.is(buffer) then
+		buffer:bind()
+		gl.glVertexAttribPointer(info.loc, buffer.dim, gl.FLOAT, false, 0, 0);
+	elseif GLAttribute.is(buffer) then
+	--]]
+	attr.buffer:bind()
+	attr:setAttr(info.loc)
+	attr.buffer:unbind()
+end
+
+function GLProgram:unsetAttr(name)
+	local info = assert(self.attrs[name])
+	gl.glDisableVertexAttribArray(info.loc)
 end
 
 return GLProgram

@@ -14,6 +14,7 @@ function Attribute:init(args)
 end
 
 -- assumes the buffer is bound
+-- TODO rename to Attribute:setToLoc or :setPointer or something?
 function Attribute:setAttr(loc)
 	gl.glVertexAttribPointer(
 		loc,
