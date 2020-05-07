@@ -34,4 +34,8 @@ function VertexArray:bind()
 	gl.glBindVertexArray(self.id)
 end
 
+function VertexArray.unbind()
+	gl.glBindVertexArray(0)
+end
+
 return VertexArray 
