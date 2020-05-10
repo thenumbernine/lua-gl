@@ -1,10 +1,8 @@
 local ffi = require 'ffi'
-local gl = require 'gl'
+local gl = require 'ffi.OpenGL'
 local class = require 'ext.class'
 local GetBehavior = require 'gl.get'
 local GLShader = require 'gl.shader'
-local GLArrayBuffer = require 'gl.arraybuffer'
-local GLAttribute = require 'gl.attribute'
 
 ffi.cdef[[
 typedef struct gl_program_ptr_s {
@@ -220,6 +218,8 @@ function GLProgram:setAttr(name, attr)
 	gl.glEnableVertexAttribArray(info.loc)
 	--[[ there is no buffer.dim, only buffer.size ...
 	-- this all assumes the 'attr' param is called 'buffer'...
+	local GLArrayBuffer = require 'gl.arraybuffer'
+	local GLAttribute = require 'gl.attribute'
 	if GLArrayBuffer.is(buffer) then
 		buffer:bind()
 		gl.glVertexAttribPointer(info.loc, buffer.dim, gl.FLOAT, false, 0, 0);
