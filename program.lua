@@ -208,12 +208,12 @@ end
 
 function GLProgram:setAttrs(attrs)
 	for name,attr in pairs(attrs) do
-		self:setAttr(name, attr)
+		if attr.loc then
+			attr:set()
+		else
+			attr:set(self.attrs[name].loc)
+		end
 	end
-end
-
-function GLProgram:setAttr(name, attr)
-	print'FINISHME'
 end
 
 return GLProgram
