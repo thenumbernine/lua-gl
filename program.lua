@@ -101,7 +101,8 @@ args:
 	attrs = key/value pair mapping attr name to GLAttribute
 		or to GLAttribute ctor args (type & size is optionally inferred)
 		or to a GLArrayBuffer object (type & size is inferred)
-	createVAO = set to 'true' to set the .vao field to a VertexArray object for all the attributes specified.
+	createVAO = whether to create the VAO.  default true.
+		the .vao field is set to a VertexArray object for all the attributes specified.
 --]]
 function GLProgram:init(args)
 	GLProgram.super.init(self)
@@ -204,11 +205,11 @@ function GLProgram:init(args)
 
 		self:setAttrs(attrargs)
 	
-		if args.createVAO then
+		if args.createVAO ~= false then
 			self.vao = GLVertexArray(attrargs)
 		end
 	else
-		assert(not args.createVAO, "you specified 'createVAO' but you didn't specify any attrs")
+		assert(args.createVAO == nil, "you specified 'createVAO' but you didn't specify any attrs")
 	end
 
 	self:useNone()
