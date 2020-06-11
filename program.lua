@@ -92,6 +92,17 @@ GLProgram.gets = {
 	--{name='GL_GEOMETRY_OUTPUT_TYPE', type='GLint'},
 }
 
+--[[
+args:
+	vertexCode
+	fragmentCode
+	geometryCode
+	uniforms = key/value pair of uniform values to initialize
+	attrs = key/value pair mapping attr name to GLAttribute
+		or to GLAttribute ctor args (type & size is optionally inferred)
+		or to a GLArrayBuffer object (type & size is inferred)
+	createVAO = set to 'true' to set the .vao field to a VertexArray object for all the attributes specified.
+--]]
 function GLProgram:init(args)
 	GLProgram.super.init(self)
 	
@@ -167,9 +178,6 @@ function GLProgram:init(args)
 		self:setUniforms(args.uniforms)
 	end
 	
-	-- attrs = k/v pair mapping attr name to GLAttribute
-	-- 	or to GLAttribute constructor
-	-- 	or to a GLArrayBuffer object
 	if args.attrs then
 		-- these are of GLAttribute's
 		local attrargs = table()
