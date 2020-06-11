@@ -212,27 +212,8 @@ function GLProgram:setAttrs(attrs)
 	end
 end
 
--- buffer = GLArrayBuffer object
 function GLProgram:setAttr(name, attr)
-	local info = assert(self.attrs[name])
-	gl.glEnableVertexAttribArray(info.loc)
-	--[[ there is no buffer.dim, only buffer.size ...
-	-- this all assumes the 'attr' param is called 'buffer'...
-	local GLArrayBuffer = require 'gl.arraybuffer'
-	local GLAttribute = require 'gl.attribute'
-	if GLArrayBuffer.is(buffer) then
-		buffer:bind()
-		gl.glVertexAttribPointer(info.loc, buffer.dim, gl.FLOAT, false, 0, 0);
-	elseif GLAttribute.is(buffer) then
-	--]]
-	attr.buffer:bind()
-	attr:setAttr(info.loc)
-	attr.buffer:unbind()
-end
-
-function GLProgram:unsetAttr(name)
-	local info = assert(self.attrs[name])
-	gl.glDisableVertexAttribArray(info.loc)
+	print'FINISHME'
 end
 
 return GLProgram
