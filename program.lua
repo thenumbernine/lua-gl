@@ -1,8 +1,15 @@
 local ffi = require 'ffi'
 local gl = require 'ffi.OpenGL'
 local class = require 'ext.class'
+local table = require 'ext.table'
 local GetBehavior = require 'gl.get'
 local GLShader = require 'gl.shader'
+
+-- optional stuff:
+local GLAttribute = require 'gl.attribute'
+local GLArrayBuffer = require 'gl.arraybuffer'
+local GLVertexArray = require 'gl.vertexarray'
+
 
 ffi.cdef[[
 typedef struct gl_program_ptr_s {
@@ -119,12 +126,12 @@ function GLProgram:init(args)
 		local name = ffi.new('GLchar[?]', bufSize)
 		local length = ffi.new('GLsizei[1]', 0)
 		ffi.fill(name, bufSize)
-		local size = ffi.new('GLint[1]', 0)
+		local arraySize = ffi.new('GLint[1]', 0)
 		local utype = ffi.new('GLenum[1]', 0)
-		gl.glGetActiveUniform(self.id, i-1, bufSize, length, size, utype, name)
+		gl.glGetActiveUniform(self.id, i-1, bufSize, length, arraySize, utype, name)
 		local info = {
 			name = ffi.string(name, length[0]),
-			size = size[0],
+			arraySize = arraySize[0],
 			type = utype[0],
 		}
 		info.loc = gl.glGetUniformLocation(self.id, info.name)
@@ -141,13 +148,16 @@ function GLProgram:init(args)
 		local name = ffi.new('GLchar[?]', bufSize)
 		local length = ffi.new('GLsizei[1]', 0)
 		ffi.fill(name, bufSize)
-		local size = ffi.new('GLint[1]', 0)
+		local arraySize = ffi.new('GLint[1]', 0)
 		local utype = ffi.new('GLenum[1]', 0)
-		gl.glGetActiveAttrib(self.id, i-1, bufSize, length, size, utype, name);
+		gl.glGetActiveAttrib(self.id, i-1, bufSize, length, arraySize, utype, name);
+		
+		-- TODO combine this with GLAttribute
+		-- 
 		local info = {
 			name = ffi.string(name, length[0]),
-			size = size[0],
-			type = utype[0],
+			arraySize = arraySize[0],
+			glsltype = utype[0],
 		}
 		info.loc = gl.glGetAttribLocation(self.id, info.name)
 		self.attrs[info.name] = info
@@ -156,8 +166,41 @@ function GLProgram:init(args)
 	if args.uniforms then
 		self:setUniforms(args.uniforms)
 	end
+	
+	-- attrs = k/v pair mapping attr name to GLAttribute
+	-- 	or to GLAttribute constructor
+	-- 	or to a GLArrayBuffer object
 	if args.attrs then
-		self:setAttrs(args.attrs)
+		-- these are of GLAttribute's
+		local attrargs = table()
+		for name,attrarg in pairs(args.attrs) do
+			local attr = assert(self.attrs[name], "tried to build a GLProgram with a specified attr that doesn't exist: "..name)
+			local ctype, size = table.unpack(GLAttribute.getTypeAndSizeForGLSLType[attr.glsltype])
+			if GLArrayBuffer.is(attrarg) then
+				attrarg = GLAttribute{
+					buffer = attrarg,
+					-- derive ctype/size from glsltype
+					type = ctype,
+					size = size,
+				}
+			elseif not GLAttribute.is(attrarg) then
+				attrarg = table(attrarg)
+				-- derive ctype/size from glsltype if they weren't specified
+				attrarg.type =  attrarg.type or ctype
+				attrarg.size =  attrarg.size or size
+				attrarg = GLAttribute(attrarg)
+			end
+			attrarg.loc = attr.loc
+			attrargs:insert(attrarg)
+		end
+
+		self:setAttrs(attrargs)
+	
+		if args.createVAO then
+			self.vao = GLVertexArray(attrargs)
+		end
+	else
+		assert(not args.createVAO, "you specified 'createVAO' but you didn't specify any attrs")
 	end
 
 	self:useNone()
