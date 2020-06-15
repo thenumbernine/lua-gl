@@ -33,7 +33,11 @@ function VertexArray:init(attrs)
 	gl.glGenVertexArrays(1, self.idPtr.ptr)
 	self.id = self.idPtr.ptr[0]
 
-	if attrs then self:setAttrs(attrs) end
+	self.attrs = attrs
+	
+	if self.attrs then 
+		self:setAttrs() 
+	end
 end
 
 function VertexArray:bind(args)
@@ -46,10 +50,22 @@ end
 
 function VertexArray:setAttrs(attrs)
 	self:bind()
-	for _,attr in ipairs(attrs) do
+	for _,attr in ipairs(attrs or self.attrs) do
 		attr:set()
 	end
 	self:unbind()
+end
+
+function VertexArray:enableAttrs(attrs)
+	for _,attr in ipairs(attrs or self.attrs) do
+		attr:enable()
+	end
+end
+
+function VertexArray:disableAttrs(attr)
+	for _,attr in ipairs(attrs or self.attrs) do
+		attr:disable()
+	end
 end
 
 return VertexArray 

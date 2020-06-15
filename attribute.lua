@@ -129,7 +129,6 @@ end
 function Attribute:set(loc)
 	if self.buffer then self.buffer:bind() end
 	self:setPointer(loc)
-	self:enable(loc)
 	if self.buffer then self.buffer:unbind() end
 end
 

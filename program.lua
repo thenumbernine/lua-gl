@@ -8,6 +8,8 @@ local GLShader = require 'gl.shader'
 -- optional stuff:
 local GLAttribute = require 'gl.attribute'
 local GLArrayBuffer = require 'gl.arraybuffer'
+-- TODO instead of storing the VAO in the GLProgram, and calling it next to a separate glDraw command with geom
+--  instead, create a 'GLGeom' or 'GLObject' class that combines the shader, geometry, and binding, and store the VAO with this 
 local GLVertexArray = require 'gl.vertexarray'
 
 
@@ -180,6 +182,10 @@ function GLProgram:init(args)
 	end
 	
 	if args.attrs then
+		-- TODO put this in GLVertexArray ctor as well
+		-- so its ctor is streamlined
+		-- TODO also in GLProgram:setAttrs
+
 		-- these are of GLAttribute's
 		local attrargs = table()
 		for name,attrarg in pairs(args.attrs) do
