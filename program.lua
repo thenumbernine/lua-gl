@@ -154,6 +154,32 @@ function GLProgram:init(args)
 		self.uniforms[info.name] = info
 	end
 
+--[[
+so here's my issue
+GLProgram has .attrs
+.attrs is built by glGetActiveAttrib
+it holds:
+	- name
+	- array size
+	- GLSL type
+however glVertexAttribPointer (in GLAttribute) holds
+	- dimension (1,2,3,4)
+	- C type
+	- normalize flag
+	- stride
+	- offset
+and glEnableVertexAttribArray / glDisableVertexAttribArray operates on
+	- attribute location
+... and the two do not match 1-1.  For matrix attributes, you need multiple glVertexAttribPointer calls, since glVertexAttribPointer can only specify up to 4 channels at once.
+also GLAttribute associates with GLArrayBuffer for setting when drawing
+
+TODO make a GLSceneObject that combines program, geometry, and attributes
+then put the attribute -> buffer mapping information in it
+and also put attribute -> buffer mapping information in GLVertexArray
+
+and then make GLAttribute 1-1 with GLProgram's attr objects
+
+--]]
 	self.attrs = {}
 	local maxAttrs = self:get'GL_ACTIVE_ATTRIBUTES'
 	local maxLen = self:get'GL_ACTIVE_ATTRIBUTE_MAX_LENGTH'
@@ -166,15 +192,20 @@ function GLProgram:init(args)
 		local utype = ffi.new('GLenum[1]', 0)
 		gl.glGetActiveAttrib(self.id, i-1, bufSize, length, arraySize, utype, name);
 		
-		-- TODO combine this with GLAttribute
-		-- 
-		local info = {
-			name = ffi.string(name, length[0]),
-			arraySize = arraySize[0],
-			glsltype = utype[0],
-		}
-		info.loc = gl.glGetAttribLocation(self.id, info.name)
-		self.attrs[info.name] = info
+		local name = ffi.string(name, length[0])
+		local attrargs
+		if args.attrs then
+			attrargs = args.attrs[name]
+			if GLArrayBuffer.is(attrargs) then
+				attrargs = {buffer = attrargs}
+			end
+		end
+		attrargs = table(attrargs)
+		attrargs.name = name
+		attrargs.arraySize = arraySize[0]
+		attrargs.glslType = utype[0]
+		attrargs.loc = gl.glGetAttribLocation(self.id, name)
+		self.attrs[name] = GLAttribute(attrargs)
 	end
 	
 	if args.uniforms then
@@ -182,38 +213,13 @@ function GLProgram:init(args)
 	end
 	
 	if args.attrs then
-		-- TODO put this in GLVertexArray ctor as well
-		-- so its ctor is streamlined
-		-- TODO also in GLProgram:setAttrs
-
-		-- these are of GLAttribute's
-		local attrargs = table()
-		for name,attrarg in pairs(args.attrs) do
-			local attr = assert(self.attrs[name], "tried to build a GLProgram with a specified attr that doesn't exist: "..name)
-			local ctype, size = table.unpack(GLAttribute.getTypeAndSizeForGLSLType[attr.glsltype])
-			if GLArrayBuffer.is(attrarg) then
-				attrarg = GLAttribute{
-					buffer = attrarg,
-					-- derive ctype/size from glsltype
-					type = ctype,
-					size = size,
-				}
-			elseif not GLAttribute.is(attrarg) then
-				attrarg = table(attrarg)
-				-- derive ctype/size from glsltype if they weren't specified
-				attrarg.type =  attrarg.type or ctype
-				attrarg.size =  attrarg.size or size
-				attrarg = GLAttribute(attrarg)
-			end
-			attrarg.loc = attr.loc
-			attrargs:insert(attrarg)
-		end
-
-		self:setAttrs(attrargs)
-	
 		if args.createVAO ~= false then
-			self.vao = GLVertexArray(attrargs)
+			self.vao = GLVertexArray{
+				program = self,
+				attrs = self.attrs,
+			}
 		end
+		self:setAttrs()	-- in case any buffers were specified
 	else
 		assert(args.createVAO == nil, "you specified 'createVAO' but you didn't specify any attrs")
 	end
@@ -264,8 +270,10 @@ function GLProgram:setUniform(name, value, ...)
 	end
 end
 
+-- expects attrs to be an array of GLAttributes
+-- TODO better handling if it isn't?
 function GLProgram:setAttrs(attrs)
-	for name,attr in pairs(attrs) do
+	for name,attr in pairs(attrs or self.attrs) do
 		if attr.loc then
 			attr:set()
 		else

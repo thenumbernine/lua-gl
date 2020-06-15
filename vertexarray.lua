@@ -28,24 +28,29 @@ usage:
 --]]
 local VertexArray = class()
 
-function VertexArray:init(attrs)
+function VertexArray:init(args)
 	self.idPtr = gl_vertex_array_ptr_t()
 	gl.glGenVertexArrays(1, self.idPtr.ptr)
 	self.id = self.idPtr.ptr[0]
 
-	self.attrs = attrs
-	
-	if self.attrs then 
+	if args.attrs then
+		local GLAttribute = require 'gl.attribute'
+		local GLArrayBuffer = require 'gl.arraybuffer'
+		local program = assert(args.program, "if you are specifying attrs then you must specify a program")
+		self.attrs = table()
+		for name,setargs in pairs(args.attrs) do
+			local attr = GLAttribute(program.attrs[name])
+			self.attrs:insert(attr)
+			if GLArrayBuffer.is(setargs) then
+				attr.buffer = setargs
+			else
+				for k,v in pairs(setargs) do
+					attr[k] = v
+				end
+			end
+		end
 		self:setAttrs() 
 	end
-end
-
-function VertexArray:bind(args)
-	gl.glBindVertexArray(self.id)
-end
-
-function VertexArray.unbind()
-	gl.glBindVertexArray(0)
 end
 
 function VertexArray:setAttrs(attrs)
@@ -54,6 +59,14 @@ function VertexArray:setAttrs(attrs)
 		attr:set()
 	end
 	self:unbind()
+end
+
+function VertexArray:bind(args)
+	gl.glBindVertexArray(self.id)
+end
+
+function VertexArray.unbind()
+	gl.glBindVertexArray(0)
 end
 
 function VertexArray:enableAttrs(attrs)
@@ -66,6 +79,18 @@ function VertexArray:disableAttrs(attr)
 	for _,attr in ipairs(attrs or self.attrs) do
 		attr:disable()
 	end
+end
+
+-- shorthand for bind + enableAttrs
+function VertexArray:use()
+	self:bind()
+	self:enableAttrs()
+end
+
+-- shorthand for unbind + disableAttrs
+function VertexArray:useNone()
+	self:disableAttrs()
+	self:unbind()
 end
 
 return VertexArray 
