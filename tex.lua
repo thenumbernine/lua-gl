@@ -41,8 +41,8 @@ function GLTex:init(args)
 	end
 	self:create(args)
 	
-	if args.minFilter then gl.glTexParameteri(self.target, gl.GL_TEXTURE_MIN_FILTER, args.minFilter) end
-	if args.magFilter then gl.glTexParameteri(self.target, gl.GL_TEXTURE_MAG_FILTER, args.magFilter) end
+	if args.minFilter then self:setParameter(gl.GL_TEXTURE_MIN_FILTER, args.minFilter) end
+	if args.magFilter then self:setParameter(gl.GL_TEXTURE_MAG_FILTER, args.magFilter) end
 	if args.wrap then self:setWrap(args.wrap) end
 	if args.generateMipmap then gl.glGenerateMipmap(self.target) end
 end
@@ -58,8 +58,14 @@ function GLTex:setWrap(wrap)
 	for k,v in pairs(wrap) do
 		k = lookupWrap[k] or k
 		assert(k, "tried to set a bad wrap")
-		gl.glTexParameteri(self.target, k, v)
+		self:setParameter(k, v)
 	end
+end
+
+function GLTex:setParameter(k, v)
+	if type(k) == 'string' then k = gl[k] or error("couldn't find parameter "..k) end
+	-- TODO pick by type? and expose each type call separately?
+	return gl.glTexParameterf(self.target, k, v)
 end
 
 function GLTex:enable() gl.glEnable(self.target) end
