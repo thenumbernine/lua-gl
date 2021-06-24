@@ -205,7 +205,19 @@ and then make GLAttribute 1-1 with GLProgram's attr objects
 		attrargs.arraySize = arraySize[0]
 		attrargs.glslType = utype[0]
 		attrargs.loc = gl.glGetAttribLocation(self.id, name)
-		self.attrs[name] = GLAttribute(attrargs)
+		-- alright here's another interesting caveat that Desktop GL supports probably thanks to backwards compatability:
+		-- if you're using a higher shader language version that doesn't require builtins (like gl_Vertex)
+		-- and your shader doesn't use this builtin
+		-- then the shader still provides a queryable vertexAttribute of it
+		-- just with location == -1 i.e. invalid
+		-- soooo ... in that case i'm throwing it away.
+		-- but i'd like to keep them for completeness
+		-- but in the case that i do keep the loc==-1, and simply do not bind them, then i still get gl errors later ...
+		-- weird.
+		-- maybe loc==-1 is valid? and i'm in trouble for not using it?
+		if attrargs.loc ~= -1 then
+			self.attrs[name] = GLAttribute(attrargs)
+		end
 	end
 	
 	if args.uniforms then
@@ -277,7 +289,10 @@ function GLProgram:setAttrs(attrs)
 		if attr.loc then
 			attr:set()
 		else
-			attr:set(self.attrs[name].loc)
+			local selfattr = self.attrs[name]
+			if selfattr then
+				attr:set(selfattr.loc)
+			end
 		end
 	end
 end

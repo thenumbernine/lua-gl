@@ -1,19 +1,36 @@
 local gl = require 'gl'
 
-local function glreport(name)
-	local e = gl.glGetError()
-	if e ~= 0 then
-		local str = name
-		if str then
-			str = str .. ': '..e..(' (0x%04x)'):format(e)
-		else
-			str = e
+local errors = {
+	'GL_INVALID_ENUM',
+	'GL_INVALID_VALUE',
+	'GL_INVALID_OPERATION',
+	'GL_INVALID_FRAMEBUFFER_OPERATION',
+	'GL_INVALID_INDEX',
+}
+
+local function glreport(msg)
+	local err = gl.glGetError()
+	if err == 0 then return true, nil, err end
+		
+	local name
+	for _,v in ipairs(errors) do
+		if err == gl[v] then
+			name = v
+			break
 		end
-		print(str)
-		print(debug.traceback())
-		return nil, str, e
 	end
-	return true, nil, e
+	
+	local str = msg
+	if str then
+		str = str .. ': '
+	end
+	str = str..(' (0x%04x)'):format(err)
+	if name then
+		str = str .. ' '..name
+	end
+	print(str)
+	print(debug.traceback())
+	return nil, str, err
 end
 
 return glreport

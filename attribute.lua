@@ -134,8 +134,10 @@ end
 
 -- assumes the buffer is bound
 function Attribute:setPointer(loc)
+	loc = loc or self.loc
+--if loc == -1 then error'here' end
 	gl.glVertexAttribPointer(
-		loc or self.loc,
+		loc,
 		self.size,
 		self.type,
 		self.normalize and gl.GL_TRUE or gl.GL_FALSE,
