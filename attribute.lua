@@ -157,9 +157,13 @@ end
 
 -- shorthand for binding to the associated buffer, setPointer, and enable
 function Attribute:set(loc)
-	if self.buffer then self.buffer:bind() end
+	if self.buffer then 
+		self.buffer:bind()
+	end
 	self:setPointer(loc)
-	if self.buffer then self.buffer:unbind() end
+	if self.buffer then 
+		self.buffer:unbind()
+	end
 end
 
 return Attribute 

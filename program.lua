@@ -257,10 +257,25 @@ end
 function GLProgram:setUniform(name, value, ...)
 	local info = self.uniforms[name]
 	if not info then return end
-	local isArray = type(value) == 'table'
+	local valueType = type(value)
 	local setters = info.setters
 	local loc = info.loc
-	if not isArray then
+	if valueType == 'cdata' then
+		-- assume it's a pointer?
+		-- test for a pointer? how?
+		-- if it's a cdata then we can set by the cdata type and let gl convert
+		-- esp for double<->float
+
+		if setters.vec then
+			setters.vec(loc, 1, value)
+		elseif setters.mat then
+			setters.mat(loc, 1, false, value)
+		else
+			error("failed to find array setter for uniform "..name)
+		end
+
+	elseif valueType ~= 'table'then
+		
 		local setter = setters.arg
 		if not setter then 
 			error("failed to find non-array setter for uniform "..name) 
@@ -275,7 +290,7 @@ function GLProgram:setUniform(name, value, ...)
 			setters.vec(loc, 1, cdata)
 		elseif setters.mat then
 			-- TODO c data conversion
-			setters.mat(loc, false, value)
+			setters.mat(loc, 1, false, value)
 		else
 			error("failed to find array setter for uniform "..name)
 		end
