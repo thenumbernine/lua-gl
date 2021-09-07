@@ -107,6 +107,8 @@ GLTex.typeForType = {
 	['char'] = gl.GL_UNSIGNED_BYTE,
 	['signed char'] = gl.GL_UNSIGNED_BYTE,
 	['unsigned char'] = gl.GL_UNSIGNED_BYTE,
+	['int8_t'] = gl.GL_UNSIGNED_BYTE,
+	['uint8_t'] = gl.GL_UNSIGNED_BYTE,
 }
 
 local bit = bit32 or require 'bit'
