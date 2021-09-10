@@ -1,9 +1,8 @@
-local GLArrayBuffer = require 'gl.arraybuffer'
-local gl = require 'gl'
 local class = require 'ext.class'
+local gl = require 'gl'
+local Buffer = require 'gl.buffer'
 
-local ElementArrayBuffer = class(GLArrayBuffer)
-
+local ElementArrayBuffer = class(Buffer)
 ElementArrayBuffer.target = gl.GL_ELEMENT_ARRAY_BUFFER
 
 return ElementArrayBuffer
