@@ -44,7 +44,7 @@ function GLTex:init(args)
 	if args.minFilter then self:setParameter(gl.GL_TEXTURE_MIN_FILTER, args.minFilter) end
 	if args.magFilter then self:setParameter(gl.GL_TEXTURE_MAG_FILTER, args.magFilter) end
 	if args.wrap then self:setWrap(args.wrap) end
-	if args.generateMipmap then gl.glGenerateMipmap(self.target) end
+	if args.generateMipmap then self:generateMipmap() end
 end
 
 local lookupWrap = {
@@ -122,6 +122,10 @@ function GLTex.rupowoftwo(x)
 		u = bit.lshift(u,1)
 	end
 	return u
+end
+
+function GLTex:generateMipmap()
+	gl.glGenerateMipmap(self.target)
 end
 
 return GLTex

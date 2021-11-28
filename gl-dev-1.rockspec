@@ -1,7 +1,7 @@
 package = "gl"
 version = "dev-1"
 source = {
-	url = "git+https://github.com/thenumbernine/lua-gl.git"
+	url = "git+https://github.com/thenumbernine/lua-gl"
 }
 description = {
 	detailed = [[
@@ -16,7 +16,11 @@ dependencies = {
 build = {
 	type = "builtin",
 	modules = {
+		["gl.arraybuffer"] = "arraybuffer.lua",
+		["gl.attribute"] = "attribute.lua",
+		["gl.buffer"] = "buffer.lua",
 		["gl.call"] = "call.lua",
+		["gl.elementarraybuffer"] = "elementarraybuffer.lua",
 		["gl.fbo"] = "fbo.lua",
 		["gl.get"] = "get.lua",
 		["gl"] = "gl.lua",
@@ -26,6 +30,8 @@ build = {
 		["gl.kernelprogram"] = "kernelprogram.lua",
 		["gl.pingpong"] = "pingpong.lua",
 		["gl.pingpong3d"] = "pingpong3d.lua",
+		["gl.pixelpackbuffer"] = "pixelpackbuffer.lua",
+		["gl.pixelunpackbuffer"] = "pixelunpackbuffer.lua",
 		["gl.program"] = "program.lua",
 		["gl.report"] = "report.lua",
 		["gl.shader"] = "shader.lua",
@@ -33,6 +39,7 @@ build = {
 		["gl.tex1d"] = "tex1d.lua",
 		["gl.tex2d"] = "tex2d.lua",
 		["gl.tex3d"] = "tex3d.lua",
-		["gl.texcube"] = "texcube.lua"
+		["gl.texcube"] = "texcube.lua",
+		["gl.vertexarray"] = "vertexarray.lua"
 	}
 }

@@ -42,12 +42,6 @@ local function getUniformSettersForGLType(utype)
 		[gl.GL_FLOAT] = {arg=gl.glUniform1f},
 		[gl.GL_INT] = {arg=gl.glUniform1i},
 		[gl.GL_BOOL] = {arg=gl.glUniform1i},
-		[gl.GL_SAMPLER_1D] = {arg=gl.glUniform1i},
-		[gl.GL_SAMPLER_2D] = {arg=gl.glUniform1i},
-		[gl.GL_SAMPLER_3D] = {arg=gl.glUniform1i},
-		[gl.GL_SAMPLER_CUBE] = {arg=gl.glUniform1i},
-		[gl.GL_SAMPLER_1D_SHADOW] = {arg=gl.glUniform1i},
-		[gl.GL_SAMPLER_2D_SHADOW] = {arg=gl.glUniform1i},
 		[gl.GL_FLOAT_VEC2] = {arg=gl.glUniform2f, type='float', count=2, vec=gl.glUniform2fv},
 		[gl.GL_INT_VEC2] = {arg=gl.glUniform2i, type='int', count=2, vec=gl.glUniform2iv},
 		[gl.GL_BOOL_VEC2] = {arg=gl.glUniform2i, type='int', count=2, vec=gl.glUniform2iv},
@@ -60,6 +54,31 @@ local function getUniformSettersForGLType(utype)
 		[gl.GL_FLOAT_MAT2] = {mat=gl.glUniformMatrix2fv},
 		[gl.GL_FLOAT_MAT3] = {mat=gl.glUniformMatrix3fv},
 		[gl.GL_FLOAT_MAT4] = {mat=gl.glUniformMatrix4fv},
+	
+		[gl.GL_SAMPLER_1D] = {arg=gl.glUniform1i},
+		[gl.GL_INT_SAMPLER_1D] = {arg=gl.glUniform1i},
+		[gl.GL_UNSIGNED_INT_SAMPLER_1D] = {arg=gl.glUniform1i},
+		[gl.GL_SAMPLER_2D] = {arg=gl.glUniform1i},
+		[gl.GL_INT_SAMPLER_2D] = {arg=gl.glUniform1i},
+		[gl.GL_UNSIGNED_INT_SAMPLER_2D] = {arg=gl.glUniform1i},
+		[gl.GL_SAMPLER_3D] = {arg=gl.glUniform1i},
+		[gl.GL_INT_SAMPLER_3D] = {arg=gl.glUniform1i},
+		[gl.GL_UNSIGNED_INT_SAMPLER_3D] = {arg=gl.glUniform1i},
+		[gl.GL_SAMPLER_CUBE] = {arg=gl.glUniform1i},
+		[gl.GL_INT_SAMPLER_CUBE] =  {arg=gl.glUniform1i},
+		[gl.GL_UNSIGNED_INT_SAMPLER_CUBE] = {arg=gl.glUniform1i},
+		[gl.GL_SAMPLER_1D_SHADOW] = {arg=gl.glUniform1i},
+		[gl.GL_SAMPLER_2D_SHADOW] = {arg=gl.glUniform1i},
+
+		--GL_SAMPLER_1D_ARRAY
+		--GL_SAMPLER_2D_ARRAY
+		--GL_SAMPLER_1D_ARRAY_SHADOW
+		--GL_SAMPLER_2D_ARRAY_SHADOW
+		--GL_INT_SAMPLER_1D_ARRAY
+		--GL_INT_SAMPLER_2D_ARRAY 
+		--GL_UNSIGNED_INT_SAMPLER_1D_ARRAY
+		--GL_UNSIGNED_INT_SAMPLER_2D_ARRAY 
+	
 	})[utype], "failed to find getter for type "..utype )
 end
 
