@@ -73,8 +73,8 @@ local GLProgram = class(GetBehavior(GCWrapper{
 	gctype = 'autorelease_gl_program_ptr_t',
 	ctype = 'GLuint',
 	-- retain isn't used
-	release = function(id)
-		gl.glDeleteProgram(id)
+	release = function(ptr)
+		return gl.glDeleteProgram(ptr[0])
 	end,
 }))
 
@@ -120,7 +120,8 @@ args:
 		the .vao field is set to a VertexArray object for all the attributes specified.
 --]]
 function GLProgram:init(args)
-	GLProgram.super.init(self, gl.glCreateProgram())
+	self.id = gl.glCreateProgram()
+	GLProgram.super.init(self, self.id)
 	
 	self.vertexShader = GLVertexShader(args.vertexCode)
 	self.fragmentShader = GLFragmentShader(args.fragmentCode)

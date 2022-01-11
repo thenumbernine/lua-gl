@@ -17,8 +17,8 @@ local VertexArray = class(GCWrapper{
 	gctype = 'autorelease_gl_vertex_array_ptr_t',
 	ctype = 'GLuint',
 	-- retain isn't used
-	release = function(id)
-		gl.glDeleteVertexArrays(1, ffi.new('GLuint[1]', id))
+	release = function(ptr)
+		return gl.glDeleteVertexArrays(1, ptr)
 	end,
 })
 

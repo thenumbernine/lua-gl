@@ -8,8 +8,8 @@ local GLTex = class(GCWrapper{
 	gctype = 'autorelease_gl_tex_ptr_t',
 	ctype = 'GLuint',
 	-- retain isn't used
-	release = function(id)
-		return gl.glDeleteTextures(1, ffi.new('GLuint[1]', id))
+	release = function(ptr)
+		return gl.glDeleteTextures(1, ptr)
 	end,
 })
 

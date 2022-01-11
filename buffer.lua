@@ -8,8 +8,8 @@ local Buffer = class(GCWrapper{
 	gctype = 'autorelease_gl_buffer_ptr_t',
 	ctype = 'GLuint',
 	-- retain isn't used
-	release = function(id)
-		gl.glDeleteBuffers(1, ffi.new('GLuint[1]', id))
+	release = function(ptr)
+		return gl.glDeleteBuffers(1, ptr)
 	end,
 })
 
