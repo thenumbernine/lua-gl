@@ -1,23 +1,17 @@
 local ffi = require 'ffi'
+local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
 local class = require 'ext.class'
 local table = require 'ext.table'
 
-ffi.cdef[[
-typedef struct gl_tex_ptr_t {
-	GLuint ptr[1];
-} gl_tex_ptr_t;
-]]
-local gl_tex_ptr_t = ffi.metatype('gl_tex_ptr_t', {
-	__gc = function(tex)
-		if tex.ptr[0] ~= 0 then
-			gl.glDeleteTextures(1, tex.ptr)
-			tex.ptr[0] = 0
-		end
+local GLTex = class(GCWrapper{
+	gctype = 'autorelease_gl_tex_ptr_t',
+	ctype = 'GLuint',
+	-- retain isn't used
+	release = function(id)
+		return gl.glDeleteTextures(1, ffi.new('GLuint[1]', id))
 	end,
 })
-
-local GLTex = class()
 
 function GLTex:init(args)
 	if type(args) == 'string' then
@@ -26,14 +20,16 @@ function GLTex:init(args)
 		args = table(args)
 	end
 
-	-- redundant with id
-	-- but I need something ffi ctype to do a gc
-	-- for automatic glDeleteTextures
-	-- and I'll be using a like ptr for that routine as well 
-	self.idPtr = gl_tex_ptr_t()
-	
-	gl.glGenTextures(1, self.idPtr.ptr)
-	self.id = self.idPtr.ptr[0]
+	-- [[ have the refcount initialize with a null pointer
+	GLTex.super.init(self)
+	gl.glGenTextures(1, self.gc.ptr)
+	self.id = self.gc.ptr[0]
+	--]]
+	--[[ have it initialize with our proper pointer .. requires an extra allocation
+	local idptr = ffi.new('GLuint[1]', 0)
+	gl.glGenTextures(1, idptr)
+	GLTex.super.init(self, idptr[0])
+	--]]
 
 	self:bind()
 	if args.filename or args.image then
@@ -83,14 +79,6 @@ function GLTex:unbind(unit)
 		gl.glActiveTexture(gl.GL_TEXTURE0 + unit)
 	end
 	gl.glBindTexture(self.target, 0)
-end
-
-function GLTex:delete()
-	if self.idPtr.ptr[0] ~= 0 then
-		gl.glDeleteTextures(1, self.idPtr.ptr)
-		self.idPtr.ptr[0] = 0
-		self.id = 0
-	end
 end
 
 -- used by child classes:

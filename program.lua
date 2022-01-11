@@ -1,4 +1,5 @@
 local ffi = require 'ffi'
+local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'ffi.OpenGL'
 local class = require 'ext.class'
 local table = require 'ext.table'
@@ -12,20 +13,6 @@ local GLArrayBuffer = require 'gl.arraybuffer'
 --  instead, create a 'GLGeom' or 'GLObject' class that combines the shader, geometry, and binding, and store the VAO with this 
 local GLVertexArray = require 'gl.vertexarray'
 
-
-ffi.cdef[[
-typedef struct gl_program_ptr_s {
-	GLuint ptr[1];
-} gl_program_ptr_t;
-]]
-local gl_program_ptr_t = ffi.metatype('gl_program_ptr_t', {
-	__gc = function(program)
-		if program.ptr[0] ~= 0 then
-			gl.glDeleteProgram(program.ptr[0])
-			program.ptr[0] = 0
-		end
-	end,
-})
 
 local GLVertexShader = class(GLShader)
 GLVertexShader.type = gl.GL_VERTEX_SHADER
@@ -82,7 +69,14 @@ local function getUniformSettersForGLType(utype)
 	})[utype], "failed to find getter for type "..utype )
 end
 
-local GLProgram = class(GetBehavior())
+local GLProgram = class(GetBehavior(GCWrapper{
+	gctype = 'autorelease_gl_program_ptr_t',
+	ctype = 'GLuint',
+	-- retain isn't used
+	release = function(id)
+		gl.glDeleteProgram(id)
+	end,
+}))
 
 GLProgram.checkLinkStatus = GLShader.createCheckStatus('GL_LINK_STATUS', function(...) return gl.glGetProgramInfoLog(...) end)
 
@@ -126,20 +120,14 @@ args:
 		the .vao field is set to a VertexArray object for all the attributes specified.
 --]]
 function GLProgram:init(args)
-	GLProgram.super.init(self)
+	GLProgram.super.init(self, gl.glCreateProgram())
 	
 	self.vertexShader = GLVertexShader(args.vertexCode)
 	self.fragmentShader = GLFragmentShader(args.fragmentCode)
 	if args.geometryCode then
 		self.geometryShader = GLGeometryShader(args.geometryCode)
 	end
-	
-	self.id = gl.glCreateProgram()
-	
-	-- automatic resource cleanup
-	self.idPtr = gl_program_ptr_t()
-	self.idPtr.ptr[0] = self.id
-	
+
 	gl.glAttachShader(self.id, self.vertexShader.id)
 	gl.glAttachShader(self.id, self.fragmentShader.id)
 	if self.geometryShader then

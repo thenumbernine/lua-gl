@@ -1,21 +1,8 @@
 local ffi = require 'ffi'
+local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
 local class = require 'ext.class'
 local table = require 'ext.table'
-
-ffi.cdef[[
-typedef struct gl_vertex_array_ptr_t {
-	GLuint ptr[1];
-} gl_vertex_array_ptr_t;
-]]
-local gl_vertex_array_ptr_t = ffi.metatype('gl_vertex_array_ptr_t', {
-	__gc = function(vertexArray)
-		if vertexArray.ptr[0] ~= 0 then
-			gl.glDeleteVertexArrays(1, vertexArray.ptr)
-			vertexArray.ptr[0] = 0
-		end
-	end,
-})
 
 --[[
 usage: 
@@ -26,12 +13,19 @@ usage:
 5)	set vertex attrib pointer
 6)	enable attrib array
 --]]
-local VertexArray = class()
+local VertexArray = class(GCWrapper{
+	gctype = 'autorelease_gl_vertex_array_ptr_t',
+	ctype = 'GLuint',
+	-- retain isn't used
+	release = function(id)
+		gl.glDeleteVertexArrays(1, ffi.new('GLuint[1]', id))
+	end,
+})
 
 function VertexArray:init(args)
-	self.idPtr = gl_vertex_array_ptr_t()
-	gl.glGenVertexArrays(1, self.idPtr.ptr)
-	self.id = self.idPtr.ptr[0]
+	VertexArray.super.init(self)
+	gl.glGenVertexArrays(1, self.gc.ptr)
+	self.id = self.gc.ptr[0]
 
 	if args.attrs then
 		local GLAttribute = require 'gl.attribute'

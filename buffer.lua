@@ -1,24 +1,17 @@
 local ffi = require 'ffi'
+local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
 local class = require 'ext.class'
 local table = require 'ext.table'
 
-ffi.cdef[[
-typedef struct gl_buffer_ptr_t {
-	GLuint ptr[1];
-} gl_buffer_ptr_t;
-]]
-
-local gl_buffer_ptr_t = ffi.metatype('gl_buffer_ptr_t', {
-	__gc = function(buffer)
-		if buffer.ptr[0] ~= 0 then
-			gl.glDeleteBuffers(1, buffer.ptr)
-			buffer.ptr[0] = 0
-		end
+local Buffer = class(GCWrapper{
+	gctype = 'autorelease_gl_buffer_ptr_t',
+	ctype = 'GLuint',
+	-- retain isn't used
+	release = function(id)
+		gl.glDeleteBuffers(1, ffi.new('GLuint[1]', id))
 	end,
 })
-
-local Buffer = class()
 
 --[[
 args:
@@ -30,9 +23,9 @@ this makes it more compatible with GLProgram:setAttr(buffer)
 instead of only GLProgram:setAttr(attr)
 --]]
 function Buffer:init(args)
-	self.idPtr = gl_buffer_ptr_t()
-	gl.glGenBuffers(1, self.idPtr.ptr)
-	self.id = self.idPtr.ptr[0]
+	Buffer.super.init(self)
+	gl.glGenBuffers(1, self.gc.ptr)
+	self.id = self.gc.ptr[0]
 	
 	assert(args, "expected args")
 	if args.data then
