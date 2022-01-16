@@ -204,7 +204,7 @@ and then make GLAttribute 1-1 with GLProgram's attr objects
 		local attrargs
 		if args.attrs then
 			attrargs = args.attrs[name]
-			if GLArrayBuffer.is(attrargs) then
+			if GLArrayBuffer:isa(attrargs) then
 				attrargs = {buffer = attrargs}
 			end
 		end

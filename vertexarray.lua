@@ -35,7 +35,7 @@ function VertexArray:init(args)
 		for name,setargs in pairs(args.attrs) do
 			local attr = GLAttribute(program.attrs[name])
 			self.attrs:insert(attr)
-			if GLArrayBuffer.is(setargs) then
+			if GLArrayBuffer:isa(setargs) then
 				attr.buffer = setargs
 			else
 				for k,v in pairs(setargs) do
