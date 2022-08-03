@@ -2,13 +2,19 @@
 
 ### OOP Wrappers for OpenGL calls in LuaJIT.
 
-To use this with GLES2, use the following global to override the FFI file:
+## Usage:
+```
+require 'gl'
+```
+
+Make sure to use `require 'gl'` instead of `require 'ffi.OpenGL'` so prototype references can be handled properly.
+
+## To use this with GLES2, use the following global to override the FFI file:
 ```
 ffi_OpenGL = 'ffi.OpenGLES2'
 require 'gl'
 ```
 
-Make sure to use `require 'gl'` instead of `require 'ffi.OpenGL'` so prototype references can be handled properly.
 
 ### Dependencies:
 
