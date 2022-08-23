@@ -91,12 +91,43 @@ GLTex.formatForChannels = {
 	[4] = gl.GL_RGBA,
 }
 
+-- inverse of 'formatForChannels'
+GLTex.channelsForFormat = {
+	-- TODO this table is long.
+}
+
 GLTex.typeForType = {
 	['char'] = gl.GL_UNSIGNED_BYTE,
 	['signed char'] = gl.GL_UNSIGNED_BYTE,
 	['unsigned char'] = gl.GL_UNSIGNED_BYTE,
 	['int8_t'] = gl.GL_UNSIGNED_BYTE,
 	['uint8_t'] = gl.GL_UNSIGNED_BYTE,
+}
+
+-- inverse of 'typeForType' (which I should rename)
+GLTex.cypeForGLType = {
+	-- these types are per-channel
+	[gl.GL_UNSIGNED_BYTE] = 'uint8_t',
+	[gl.GL_BYTE] = 'int8_t',
+	[gl.GL_UNSIGNED_SHORT] = 'uint16_t',
+	[gl.GL_SHORT] = 'int16_t',
+	[gl.GL_UNSIGNED_INT] = 'uint32_t',
+	[gl.GL_INT] = 'int32_t',
+	[gl.GL_HALF_FLOAT] = 'uint16_t',
+	[gl.GL_FLOAT] = 'float',
+	-- these types incorporate all channels
+	[gl.GL_UNSIGNED_BYTE_3_3_2] = 'uint8_t',
+	[gl.GL_UNSIGNED_BYTE_2_3_3_REV] = 'uint8_t',
+	[gl.GL_UNSIGNED_SHORT_5_6_5] = 'uint16_t',
+	[gl.GL_UNSIGNED_SHORT_5_6_5_REV] = 'uint16_t',
+	[gl.GL_UNSIGNED_SHORT_4_4_4_4] = 'uint16_t',
+	[gl.GL_UNSIGNED_SHORT_4_4_4_4_REV] = 'uint16_t',
+	[gl.GL_UNSIGNED_SHORT_5_5_5_1] = 'uint16_t',
+	[gl.GL_UNSIGNED_SHORT_1_5_5_5_REV] = 'uint16_t',
+	[gl.GL_UNSIGNED_INT_8_8_8_8] = 'uint32_t',
+	[gl.GL_UNSIGNED_INT_8_8_8_8_REV] = 'uint32_t',
+	[gl.GL_UNSIGNED_INT_10_10_10_2] = 'uint32_t',
+	[gl.GL_UNSIGNED_INT_2_10_10_10_REV] = 'uint32_t',
 }
 
 local bit = bit32 or require 'bit'
@@ -114,6 +145,19 @@ end
 
 function GLTex:generateMipmap()
 	gl.glGenerateMipmap(self.target)
+end
+
+function GLTex:toCPU(ptr, level)
+	if not ptr then
+		-- TODO need to map from format to channels
+		-- TOOD need to map from GL type to C type
+		--ptr = ffi.new('uint8_t[?]', size)
+		error("expected ptr")
+	end
+	-- TODO .keep to keep the ptr upon init, and default to it here?
+	self:bind()
+	gl.glGetTexImage(self.target, level or 0, self.format, self.type, ptr)
+	return ptr
 end
 
 return GLTex
