@@ -156,7 +156,7 @@ function GLTex:toCPU(ptr, level)
 	end
 	-- TODO .keep to keep the ptr upon init, and default to it here?
 	self:bind()
-	gl.glGetTexImage(self.target, level or 0, self.format, self.type, ptr)
+	gl.glGetTexImage(self.target, level or 0, self.format, self.type, ffi.cast('char*', ptr))
 	return ptr
 end
 
