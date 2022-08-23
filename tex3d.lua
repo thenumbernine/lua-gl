@@ -8,20 +8,27 @@ local GLTex3D = class(GLTex)
 GLTex3D.target = gl.GL_TEXTURE_3D
 
 function GLTex3D:create(args)
+	self.target = args.target
+	self.level = args.level	-- TODO store? really?
+	self.internalFormat = args.internalFormat
 	self.width = args.width
 	self.height = args.height
 	self.depth = args.depth
+	self.border = args.border
+	self.format = args.format
+	self.type = args.type
+	self.data = args.data
 	gl.glTexImage3D(
-		args.target or self.target,
-		args.level or 0,
-		args.internalFormat,
-		args.width,
-		args.height,
-		args.depth,
-		args.border or 0,
-		args.format,
-		args.type,
-		args.data)
+		self.target,
+		self.level or 0,
+		self.internalFormat,
+		self.width,
+		self.height,
+		self.depth,
+		self.border or 0,
+		self.format,
+		self.type,
+		self.data)
 end
 
 function GLTex3D:load(args)

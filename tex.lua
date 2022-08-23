@@ -152,6 +152,7 @@ function GLTex:toCPU(ptr, level)
 		-- TODO need to map from format to channels
 		-- TOOD need to map from GL type to C type
 		--ptr = ffi.new('uint8_t[?]', size)
+		-- or TODO default to self.data, that was used for initial texture creation?
 		error("expected ptr")
 	end
 	-- TODO .keep to keep the ptr upon init, and default to it here?

@@ -9,7 +9,7 @@ GLTex2D.target = gl.GL_TEXTURE_2D
 
 function GLTex2D:create(args)
 	self.target = args.target
-	self.level = args.level
+	self.level = args.level	-- TODO store? really?
 	self.internalFormat = args.internalFormat
 	self.width = args.width
 	self.height = args.height

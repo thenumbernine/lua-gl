@@ -8,16 +8,23 @@ local GLTex1D = class(GLTex)
 GLTex1D.target = gl.GL_TEXTURE_1D
 
 function GLTex1D:create(args)
+	self.target = args.target
+	self.level = args.level	-- TODO store? really?
+	self.internalFormat = args.internalFormat
 	self.width = args.width
+	self.border = args.border
+	self.format = args.format
+	self.type = args.type
+	self.data = args.data
 	gl.glTexImage1D(
-		args.target or self.target,
-		args.level or 0,
-		args.internalFormat,
-		args.width,
-		args.border or 0,
-		args.format,
-		args.type,
-		args.data)
+		self.target,
+		self.level or 0,
+		self.internalFormat,
+		self.width,
+		self.border or 0,
+		self.format,
+		self.type,
+		self.data)
 end
 
 function GLTex1D:load(args)
