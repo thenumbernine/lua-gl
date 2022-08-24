@@ -1,3 +1,5 @@
+local class = require 'ext.class'
+local table = require 'ext.table'
 local GLProgram = require 'gl.program'
 
 local GLKernelProgram = class(GLProgram)
