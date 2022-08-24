@@ -105,7 +105,7 @@ GLTex.typeForType = {
 }
 
 -- inverse of 'typeForType' (which I should rename)
-GLTex.cypeForGLType = {
+GLTex.ctypeForGLType = {
 	-- these types are per-channel
 	[gl.GL_UNSIGNED_BYTE] = 'uint8_t',
 	[gl.GL_BYTE] = 'int8_t',
