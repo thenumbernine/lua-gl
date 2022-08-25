@@ -118,6 +118,7 @@ args:
 		or to a GLArrayBuffer object (type & size is inferred)
 	createVAO = whether to create the VAO.  default true.
 		the .vao field is set to a VertexArray object for all the attributes specified.
+	attrLocs = optional {[attr name] = loc} for binding attribute locations
 --]]
 function GLProgram:init(args)
 	self.id = gl.glCreateProgram()
@@ -134,6 +135,13 @@ function GLProgram:init(args)
 	if self.geometryShader then
 		gl.glAttachShader(self.id, self.geometryShader.id)
 	end
+
+	if args.attrLocs then
+		for k,v in pairs(args.attrLocs) do
+			gl.glBindAttribLocation(self.id, v, k);
+		end
+	end
+
 	gl.glLinkProgram(self.id)
 	
 	self:checkLinkStatus()
