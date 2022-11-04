@@ -46,6 +46,7 @@ function GLTexCube:create(args)
 			height = height,
 		}))
 	end
+	self.target = nil
 end
 
 return GLTexCube
