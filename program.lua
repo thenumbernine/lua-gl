@@ -23,50 +23,63 @@ GLFragmentShader.type = gl.GL_FRAGMENT_SHADER
 local GLGeometryShader = class(GLShader)
 GLGeometryShader.type = gl.GL_GEOMETRY_SHADER
 
--- this doesn't work as easy as it does in webgl
-local function getUniformSettersForGLType(utype)
-	return assert( ({
-		[gl.GL_FLOAT] = {arg=gl.glUniform1f},
-		[gl.GL_INT] = {arg=gl.glUniform1i},
-		[gl.GL_BOOL] = {arg=gl.glUniform1i},
-		[gl.GL_FLOAT_VEC2] = {arg=gl.glUniform2f, type='float', count=2, vec=gl.glUniform2fv},
-		[gl.GL_INT_VEC2] = {arg=gl.glUniform2i, type='int', count=2, vec=gl.glUniform2iv},
-		[gl.GL_BOOL_VEC2] = {arg=gl.glUniform2i, type='int', count=2, vec=gl.glUniform2iv},
-		[gl.GL_FLOAT_VEC3] = {arg=gl.glUniform3f, type='float', count=3, vec=gl.glUniform3fv},
-		[gl.GL_INT_VEC3] = {arg=gl.glUniform3i, type='int', count=3, vec=gl.glUniform3iv},
-		[gl.GL_BOOL_VEC3] = {arg=gl.glUniform3i, type='int', count=3, vec=gl.glUniform3iv},
-		[gl.GL_FLOAT_VEC4] = {arg=gl.glUniform4f, type='float', count=4, vec=gl.glUniform4fv},
-		[gl.GL_INT_VEC4] = {arg=gl.glUniform4i, type='int', count=4, vec=gl.glUniform4iv},
-		[gl.GL_BOOL_VEC4] = {arg=gl.glUniform4i, type='int', count=4, vec=gl.glUniform4iv},
-		[gl.GL_FLOAT_MAT2] = {mat=gl.glUniformMatrix2fv},
-		[gl.GL_FLOAT_MAT3] = {mat=gl.glUniformMatrix3fv},
-		[gl.GL_FLOAT_MAT4] = {mat=gl.glUniformMatrix4fv},
-	
-		[gl.GL_SAMPLER_1D] = {arg=gl.glUniform1i},
-		[gl.GL_INT_SAMPLER_1D] = {arg=gl.glUniform1i},
-		[gl.GL_UNSIGNED_INT_SAMPLER_1D] = {arg=gl.glUniform1i},
-		[gl.GL_SAMPLER_2D] = {arg=gl.glUniform1i},
-		[gl.GL_INT_SAMPLER_2D] = {arg=gl.glUniform1i},
-		[gl.GL_UNSIGNED_INT_SAMPLER_2D] = {arg=gl.glUniform1i},
-		[gl.GL_SAMPLER_3D] = {arg=gl.glUniform1i},
-		[gl.GL_INT_SAMPLER_3D] = {arg=gl.glUniform1i},
-		[gl.GL_UNSIGNED_INT_SAMPLER_3D] = {arg=gl.glUniform1i},
-		[gl.GL_SAMPLER_CUBE] = {arg=gl.glUniform1i},
-		[gl.GL_INT_SAMPLER_CUBE] =  {arg=gl.glUniform1i},
-		[gl.GL_UNSIGNED_INT_SAMPLER_CUBE] = {arg=gl.glUniform1i},
-		[gl.GL_SAMPLER_1D_SHADOW] = {arg=gl.glUniform1i},
-		[gl.GL_SAMPLER_2D_SHADOW] = {arg=gl.glUniform1i},
+local GLComputeShader = class(GLShader)
+GLComputeShader.type = gl.GL_COMPUTE_SHADER
 
-		--GL_SAMPLER_1D_ARRAY
-		--GL_SAMPLER_2D_ARRAY
-		--GL_SAMPLER_1D_ARRAY_SHADOW
-		--GL_SAMPLER_2D_ARRAY_SHADOW
-		--GL_INT_SAMPLER_1D_ARRAY
-		--GL_INT_SAMPLER_2D_ARRAY 
-		--GL_UNSIGNED_INT_SAMPLER_1D_ARRAY
-		--GL_UNSIGNED_INT_SAMPLER_2D_ARRAY 
-	
-	})[utype], "failed to find getter for type "..utype )
+-- this doesn't work as easy as it does in webgl
+local uniformSettersForGLTypes = {}
+for name,info in pairs{
+	GL_FLOAT = {arg=gl.glUniform1f},
+	GL_INT = {arg=gl.glUniform1i},
+	GL_BOOL = {arg=gl.glUniform1i},
+	GL_FLOAT_VEC2 = {arg=gl.glUniform2f, type='float', count=2, vec=gl.glUniform2fv},
+	GL_INT_VEC2 = {arg=gl.glUniform2i, type='int', count=2, vec=gl.glUniform2iv},
+	GL_BOOL_VEC2 = {arg=gl.glUniform2i, type='int', count=2, vec=gl.glUniform2iv},
+	GL_FLOAT_VEC3 = {arg=gl.glUniform3f, type='float', count=3, vec=gl.glUniform3fv},
+	GL_INT_VEC3 = {arg=gl.glUniform3i, type='int', count=3, vec=gl.glUniform3iv},
+	GL_BOOL_VEC3 = {arg=gl.glUniform3i, type='int', count=3, vec=gl.glUniform3iv},
+	GL_FLOAT_VEC4 = {arg=gl.glUniform4f, type='float', count=4, vec=gl.glUniform4fv},
+	GL_INT_VEC4 = {arg=gl.glUniform4i, type='int', count=4, vec=gl.glUniform4iv},
+	GL_BOOL_VEC4 = {arg=gl.glUniform4i, type='int', count=4, vec=gl.glUniform4iv},
+	GL_FLOAT_MAT2 = {mat=gl.glUniformMatrix2fv},
+	GL_FLOAT_MAT3 = {mat=gl.glUniformMatrix3fv},
+	GL_FLOAT_MAT4 = {mat=gl.glUniformMatrix4fv},
+
+	GL_SAMPLER_1D = {arg=gl.glUniform1i},
+	GL_INT_SAMPLER_1D = {arg=gl.glUniform1i},
+	GL_UNSIGNED_INT_SAMPLER_1D = {arg=gl.glUniform1i},
+	GL_SAMPLER_2D = {arg=gl.glUniform1i},
+	GL_INT_SAMPLER_2D = {arg=gl.glUniform1i},
+	GL_UNSIGNED_INT_SAMPLER_2D = {arg=gl.glUniform1i},
+	GL_SAMPLER_3D = {arg=gl.glUniform1i},
+	GL_INT_SAMPLER_3D = {arg=gl.glUniform1i},
+	GL_UNSIGNED_INT_SAMPLER_3D = {arg=gl.glUniform1i},
+	GL_SAMPLER_CUBE = {arg=gl.glUniform1i},
+	GL_INT_SAMPLER_CUBE =  {arg=gl.glUniform1i},
+	GL_UNSIGNED_INT_SAMPLER_CUBE = {arg=gl.glUniform1i},
+	GL_SAMPLER_1D_SHADOW = {arg=gl.glUniform1i},
+	GL_SAMPLER_2D_SHADOW = {arg=gl.glUniform1i},
+
+	--GL_SAMPLER_1D_ARRAY
+	--GL_SAMPLER_2D_ARRAY
+	--GL_SAMPLER_1D_ARRAY_SHADOW
+	--GL_SAMPLER_2D_ARRAY_SHADOW
+	--GL_INT_SAMPLER_1D_ARRAY
+	--GL_INT_SAMPLER_2D_ARRAY 
+	--GL_UNSIGNED_INT_SAMPLER_1D_ARRAY
+	--GL_UNSIGNED_INT_SAMPLER_2D_ARRAY 
+} do
+	local v = gl[name] 
+	if v then
+		uniformSettersForGLTypes[v] = info
+	end
+end
+local function getUniformSettersForGLType(utype)
+	local setters = uniformSettersForGLTypes[utype]
+	if not setters then
+		error("failed to find getter for type "..utype)
+	end
+	return setters
 end
 
 local GLProgram = class(GetBehavior(GCWrapper{
@@ -86,7 +99,8 @@ function GLProgram.getter(...)
 	return gl.glGetProgramiv(...)
 end
 
-GLProgram.gets = {
+GLProgram.gets = {}
+for _,info in ipairs{
 	{name='GL_DELETE_STATUS', type='GLint'},
 	{name='GL_LINK_STATUS', type='GLint'},
 	{name='GL_VALIDATE_STATUS', type='GLint'},
@@ -96,16 +110,20 @@ GLProgram.gets = {
 	{name='GL_ACTIVE_ATTRIBUTE_MAX_LENGTH', type='GLint'},
 	{name='GL_ACTIVE_UNIFORMS', type='GLint'},
 	{name='GL_ACTIVE_UNIFORM_MAX_LENGTH', type='GLint'},
-	--{name='GL_ACTIVE_ATOMIC_COUNTER_BUFFERS', type='GLint'},
-	--{name='GL_PROGRAM_BINARY_LENGTH', type='GLint'},
-	--{name='GL_COMPUTE_WORK_GROUP_SIZE', type='GLint'},
-	--{name='GL_TRANSFORM_FEEDBACK_BUFFER_MODE', type='GLint'},
-	--{name='GL_TRANSFORM_FEEDBACK_VARYINGS', type='GLint'},
-	--{name='GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH', type='GLint'},
-	--{name='GL_GEOMETRY_VERTICES_OUT', type='GLint'},
-	--{name='GL_GEOMETRY_INPUT_TYPE', type='GLint'},
-	--{name='GL_GEOMETRY_OUTPUT_TYPE', type='GLint'},
-}
+	{name='GL_ACTIVE_ATOMIC_COUNTER_BUFFERS', type='GLint'},
+	{name='GL_PROGRAM_BINARY_LENGTH', type='GLint'},
+	{name='GL_COMPUTE_WORK_GROUP_SIZE', type='GLint'},
+	{name='GL_TRANSFORM_FEEDBACK_BUFFER_MODE', type='GLint'},
+	{name='GL_TRANSFORM_FEEDBACK_VARYINGS', type='GLint'},
+	{name='GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH', type='GLint'},
+	{name='GL_GEOMETRY_VERTICES_OUT', type='GLint'},
+	{name='GL_GEOMETRY_INPUT_TYPE', type='GLint'},
+	{name='GL_GEOMETRY_OUTPUT_TYPE', type='GLint'},
+} do
+	if gl[info.name] then
+		table.insert(GLProgram.gets, info)
+	end
+end
 
 --[[
 args:
@@ -128,6 +146,9 @@ function GLProgram:init(args)
 	self.fragmentShader = GLFragmentShader(args.fragmentCode)
 	if args.geometryCode then
 		self.geometryShader = GLGeometryShader(args.geometryCode)
+	end
+	if args.computeCode then
+		self.computeShader = GLComputeShader(args.computeCode)
 	end
 
 	gl.glAttachShader(self.id, self.vertexShader.id)
