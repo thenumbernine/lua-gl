@@ -16,9 +16,11 @@ local function GetBehavior(parent)
 		local getter = assert(args.getter)
 		local vars = assert(args.vars)
 		for _,var in ipairs(vars) do
-			var.getter = getter
-			table.insert(self.getInfo, var)
-			self.getInfo[var.name] = var
+			if gl[var.name] then
+				var.getter = getter
+				table.insert(self.getInfo, var)
+				self.getInfo[var.name] = var
+			end
 		end
 	end
 

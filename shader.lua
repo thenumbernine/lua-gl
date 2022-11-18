@@ -5,16 +5,13 @@ local showcode = require 'template.showcode'
 local GetBehavior = require 'gl.get'
 local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 
-local GLShader = class(GetBehavior(
-	GCWrapper{
-		gctype = 'autorelease_gl_shader_ptr_t',
-		ctype = 'GLuint',
-		release = function(ptr)
-			-- detach first?
-			return gl.glDeleteShader(ptr[0])
-		end,
-	}
-))
+local GLShader = class(GetBehavior(GCWrapper{
+	gctype = 'autorelease_gl_shader_ptr_t',
+	ctype = 'GLuint',
+	release = function(ptr)
+		return gl.glDeleteShader(ptr[0])
+	end,
+}))
 
 GLShader:addGetterVars{
 	-- wrap it so wgl can replace glGetShaderiv
@@ -32,6 +29,7 @@ GLShader:addGetterVars{
 
 function GLShader:init(code)
 	self.id = gl.glCreateShader(self.type)
+	GLShader.super.init(self, self.id)
 
 	if gl.glGetError() == gl.GL_INVALID_ENUM then
 		error('the shader type '..('0x%x'):format(self.type)..' is not supported')

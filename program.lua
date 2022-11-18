@@ -195,6 +195,7 @@ args:
 	vertexCode
 	fragmentCode
 	geometryCode
+	computeCode
 	uniforms = key/value pair of uniform values to initialize
 	attrs = key/value pair mapping attr name to GLAttribute
 		or to GLAttribute ctor args (type & size is optionally inferred)
@@ -206,31 +207,26 @@ args:
 function GLProgram:init(args)
 	self.id = gl.glCreateProgram()
 	GLProgram.super.init(self, self.id)
-	
-	if args.vertexCode then
-		self.vertexShader = GLVertexShader(args.vertexCode)
-	end
-	if args.fragmentCode then
-		self.fragmentShader = GLFragmentShader(args.fragmentCode)
-	end
-	if args.geometryCode then
-		self.geometryShader = GLGeometryShader(args.geometryCode)
-	end
-	if args.computeCode then
-		self.computeShader = GLComputeShader(args.computeCode)
+
+	local shaders = table()
+	local shaderTypes = {
+		{'vertex', GLVertexShader},
+		{'fragment', GLFragmentShader},
+		{'geometry', GLGeometryShader},
+		{'compute', GLComputeShader},
+	}
+	for _,st in ipairs(shaderTypes) do
+		local field, cl = table.unpack(st)
+		local code = args[field..'Code']
+		-- TODO how about multiple vertex/fragment shaders per program?
+		-- how about just passing a 'args.shaders' to just attach all?
+		if code then
+			shaders:insert(cl(code))
+		end
 	end
 
-	if self.vertexShader then
-		gl.glAttachShader(self.id, self.vertexShader.id)
-	end
-	if self.fragmentShader then
-		gl.glAttachShader(self.id, self.fragmentShader.id)
-	end
-	if self.geometryShader then
-		gl.glAttachShader(self.id, self.geometryShader.id)
-	end
-	if self.computeShader then
-		gl.glAttachShader(self.id, self.computeShader.id)
+	for _,shader in ipairs(shaders) do
+		gl.glAttachShader(self.id, shader.id)
 	end
 
 	if args.attrLocs then
@@ -240,9 +236,14 @@ function GLProgram:init(args)
 	end
 
 	gl.glLinkProgram(self.id)
-	
 	self:checkLinkStatus()
 
+	-- now that the program is linked, we can detach all shaders (riiigiht?)
+	-- https://community.khronos.org/t/correct-way-to-delete-shader-programs/69742/3
+	for _,shader in ipairs(shaders) do
+		gl.glDetachShader(self.id, shader.id)
+	end
+	
 	self:use()
 	
 	self.uniforms = {}
