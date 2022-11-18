@@ -432,8 +432,10 @@ end
 -- then keep the original GLProgram for vertex/fragment?
 -- btw can you link vertex+fragment+compute shaders all together?
 
-local vec3i = require 'vec-ffi.vec3i'
 
+-- TODO move this from gl.program to something like gl.get
+-- and have gl.get work for all the generic glGet functions not associated with other objects/binds
+local vec3i = require 'vec-ffi.vec3i'
 function GLProgram:get3(name)
 	local v = vec3i()
 	local pname = gl[name]
@@ -441,6 +443,18 @@ function GLProgram:get3(name)
 	gl.glGetIntegeri_v(pname, 1, v.s+1)
 	gl.glGetIntegeri_v(pname, 2, v.s+2)
 	return v
+end
+
+-- tex is a gl.tex object
+function GLProgram:bindImage(unit, tex, format, rw, level, layered, layer)
+	gl.glBindImageTexture(
+		unit,
+		tex.id,
+		level or 0,
+		layered or gl.GL_FALSE,
+		layer or 0,
+		rw,
+		format)
 end
 
 return GLProgram
