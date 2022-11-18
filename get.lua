@@ -6,23 +6,32 @@ local glreport = require 'gl.report'
 local function GetBehavior(parent)
 	local template = class(parent)
 	
-	function template:init(...)
-		self.getTypeMap = {}
-		for _,get in ipairs(self.gets) do
-			self.getTypeMap[get.name] = get.type
+	--[[
+	static method
+	adds fields to class.getInfo and .getInfoForName
+	(or should I just index by integer and by name both?)
+	--]]
+	function template:addGetterVars(args)
+		self.getInfo = self.getInfo or {}
+		local getter = assert(args.getter)
+		local vars = assert(args.vars)
+		for _,var in ipairs(vars) do
+			var.getter = getter
+			table.insert(self.getInfo, var)
+			self.getInfo[var.name] = var
 		end
-		
-		if parent then return parent.init(self, ...) end
 	end
 
 	function template:get(name)
 		glreport'here' -- check error
 		
-		local infoType = self.getTypeMap[name]
+		local var = self.getInfo[name]
+		local infoType = assert(var.type)
+		local getter = assert(var.getter)
 		local nameValue = assert(gl[name])
 
 		local result = ffi.new(infoType..'[1]')
-		self.getter(self.id, nameValue, result)
+		getter(self.id, nameValue, result)
 		
 		glreport'here' -- check error
 		

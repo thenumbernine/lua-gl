@@ -3,25 +3,34 @@ local gl = require 'gl'
 local class = require 'ext.class'
 local showcode = require 'template.showcode'
 local GetBehavior = require 'gl.get'
+local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 
-local GLShader = class(GetBehavior())
+local GLShader = class(GetBehavior(
+	GCWrapper{
+		gctype = 'autorelease_gl_shader_ptr_t',
+		ctype = 'GLuint',
+		release = function(ptr)
+			-- detach first?
+			return gl.glDeleteShader(ptr[0])
+		end,
+	}
+))
 
--- wrap it so wgl can replace glGetShaderiv
-function GLShader.getter(...)
-	return gl.glGetShaderiv(...)
-end
-
-GLShader.gets = {
-	{name='GL_SHADER_TYPE', type='GLint'},
-	{name='GL_DELETE_STATUS', type='GLint'},
-	{name='GL_COMPILE_STATUS', type='GLint'},
-	{name='GL_INFO_LOG_LENGTH', type='GLint'},
-	{name='GL_SHADER_SOURCE_LENGTH', type='GLint'},
+GLShader:addGetterVars{
+	-- wrap it so wgl can replace glGetShaderiv
+	getter = function(...)
+		return gl.glGetShaderiv(...)
+	end,
+	vars = {
+		{name='GL_SHADER_TYPE', type='GLint'},
+		{name='GL_DELETE_STATUS', type='GLint'},
+		{name='GL_COMPILE_STATUS', type='GLint'},
+		{name='GL_INFO_LOG_LENGTH', type='GLint'},
+		{name='GL_SHADER_SOURCE_LENGTH', type='GLint'},
+	},
 }
 
 function GLShader:init(code)
-	GLShader.super.init(self)
-	
 	self.id = gl.glCreateShader(self.type)
 
 	if gl.glGetError() == gl.GL_INVALID_ENUM then
@@ -53,7 +62,7 @@ function GLShader.createCheckStatus(statusEnum, logGetter)
 			print'log:'
 			print(ffi.string(log))
 	
-			for _,get in ipairs(self.gets) do
+			for _,get in ipairs(self.getInfo) do
 				print(get.name..': '..self:get(get.name))
 			end
 			

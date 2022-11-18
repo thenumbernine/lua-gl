@@ -162,35 +162,33 @@ GLProgram.checkLinkStatus = GLShader.createCheckStatus('GL_LINK_STATUS', functio
 
 -- similar to cl/getinfo.lua
 
-function GLProgram.getter(...)
-	return gl.glGetProgramiv(...)
-end
 
-GLProgram.gets = {}
-for _,info in ipairs{
-	{name='GL_DELETE_STATUS', type='GLint'},
-	{name='GL_LINK_STATUS', type='GLint'},
-	{name='GL_VALIDATE_STATUS', type='GLint'},
-	{name='GL_INFO_LOG_LENGTH', type='GLint'},
-	{name='GL_ATTACHED_SHADERS', type='GLint'},
-	{name='GL_ACTIVE_ATTRIBUTES', type='GLint'},
-	{name='GL_ACTIVE_ATTRIBUTE_MAX_LENGTH', type='GLint'},
-	{name='GL_ACTIVE_UNIFORMS', type='GLint'},
-	{name='GL_ACTIVE_UNIFORM_MAX_LENGTH', type='GLint'},
-	{name='GL_ACTIVE_ATOMIC_COUNTER_BUFFERS', type='GLint'},
-	{name='GL_PROGRAM_BINARY_LENGTH', type='GLint'},
-	{name='GL_COMPUTE_WORK_GROUP_SIZE', type='GLint'},
-	{name='GL_TRANSFORM_FEEDBACK_BUFFER_MODE', type='GLint'},
-	{name='GL_TRANSFORM_FEEDBACK_VARYINGS', type='GLint'},
-	{name='GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH', type='GLint'},
-	{name='GL_GEOMETRY_VERTICES_OUT', type='GLint'},
-	{name='GL_GEOMETRY_INPUT_TYPE', type='GLint'},
-	{name='GL_GEOMETRY_OUTPUT_TYPE', type='GLint'},
-} do
-	if gl[info.name] then
-		table.insert(GLProgram.gets, info)
-	end
-end
+GLProgram:addGetterVars{
+	-- wrap it so wgl can replace glGetShaderiv
+	getter = function(...)
+		return gl.glGetProgramiv(...)
+	end,
+	vars = {
+		{name='GL_DELETE_STATUS', type='GLint'},
+		{name='GL_LINK_STATUS', type='GLint'},
+		{name='GL_VALIDATE_STATUS', type='GLint'},
+		{name='GL_INFO_LOG_LENGTH', type='GLint'},
+		{name='GL_ATTACHED_SHADERS', type='GLint'},
+		{name='GL_ACTIVE_ATTRIBUTES', type='GLint'},
+		{name='GL_ACTIVE_ATTRIBUTE_MAX_LENGTH', type='GLint'},
+		{name='GL_ACTIVE_UNIFORMS', type='GLint'},
+		{name='GL_ACTIVE_UNIFORM_MAX_LENGTH', type='GLint'},
+		{name='GL_ACTIVE_ATOMIC_COUNTER_BUFFERS', type='GLint'},
+		{name='GL_PROGRAM_BINARY_LENGTH', type='GLint'},
+		{name='GL_COMPUTE_WORK_GROUP_SIZE', type='GLint'},
+		{name='GL_TRANSFORM_FEEDBACK_BUFFER_MODE', type='GLint'},
+		{name='GL_TRANSFORM_FEEDBACK_VARYINGS', type='GLint'},
+		{name='GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH', type='GLint'},
+		{name='GL_GEOMETRY_VERTICES_OUT', type='GLint'},
+		{name='GL_GEOMETRY_INPUT_TYPE', type='GLint'},
+		{name='GL_GEOMETRY_OUTPUT_TYPE', type='GLint'},
+	},
+}
 
 --[[
 args:
@@ -425,6 +423,23 @@ function GLProgram:setAttrs(attrs)
 			end
 		end
 	end
+end
+
+
+---------------- compute-only ----------------
+-- should I just subclass GLProgram?
+-- then keep the original GLProgram for vertex/fragment?
+-- btw can you link vertex+fragment+compute shaders all together?
+
+local vec3i = require 'vec-ffi.vec3i'
+
+function GLProgram:get3(name)
+	local v = vec3i()
+	local pname = gl[name]
+	gl.glGetIntegeri_v(pname, 0, v.s+0)
+	gl.glGetIntegeri_v(pname, 1, v.s+1)
+	gl.glGetIntegeri_v(pname, 2, v.s+2)
+	return v
 end
 
 return GLProgram
