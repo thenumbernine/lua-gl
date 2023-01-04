@@ -82,4 +82,10 @@ function Buffer:updateData(offset, size, data)
 	self:unbind()
 end
 
+-- https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBindBufferBase.xhtml
+-- "target must be one of GL_ATOMIC_COUNTER_BUFFER, GL_TRANSFORM_FEEDBACK_BUFFER, GL_UNIFORM_BUFFER or GL_SHADER_STORAGE_BUFFER."
+function Buffer:bindBase(index)
+	gl.glBindBufferBase(self.target, index, self.id)
+end
+
 return Buffer
