@@ -40,15 +40,14 @@ function GLTex2D:load(args)
 	end
 	assert(image)
 
-	if self.resizeNPO2 then	
+	if self.resizeNPO2 then
 		local w, h = image.width, image.height
-		local data = image.buffer
 		local nw,nh = self.rupowoftwo(w), self.rupowoftwo(h)
 		if w ~= nw or h ~= nh then
 			image = image:resize(nw, nh, 'nearest')
 		end
 	end
-	
+
 	args.width = image.width
 	args.height = image.height
 	args.data = image.buffer

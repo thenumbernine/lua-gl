@@ -1,4 +1,3 @@
-local ffi = require 'ffi'
 local gl = require 'gl'
 local class = require 'ext.class'
 local GLTex = require 'gl.tex'
@@ -18,4 +17,4 @@ function GLTexBuffer:create(args)
 		self.buffer)
 end
 
-return GLTexBuffer 
+return GLTexBuffer

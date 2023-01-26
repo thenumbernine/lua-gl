@@ -22,23 +22,23 @@ local function glSceneIntersect(screenFracPosX, screenFracPosY, renderCallback, 
 	gl.glGetIntegerv(gl.GL_VIEWPORT, viewC)
 	local mx = math.floor(screenFracPosX * (tonumber(viewC[2]) - 1))
 	local my = math.floor(screenFracPosY * (tonumber(viewC[3]) - 1))
-	
+
 	gl.glReadPixels(mx, my, 1, 1, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT, depthValuePtr)
 	local pix = depthValuePtr[0]
-	
+
 	--if pix == 1 then return nil end	-- full depth means a cleared-depth value, means nothing was here
-	
+
 	gl.glGetDoublev(gl.GL_MODELVIEW_MATRIX, modelC)
 	gl.glGetDoublev(gl.GL_PROJECTION_MATRIX, projC)
-	
+
 	local res = glu.gluUnProject(mx, my, pix, modelC, projC, viewC, objX, objY, objZ)
 	local projX = objX[0]
 	local projY = objY[0]
 	local projZ = objZ[0]
 
 	gl.glReadBuffer(readbuf)
-	
-	return projX, projY, projZ, pix
+
+	return projX, projY, projZ, pix, res
 end
 
 return glSceneIntersect

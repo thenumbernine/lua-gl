@@ -1,11 +1,10 @@
-local ffi = require 'ffi'
 local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
 local class = require 'ext.class'
 local table = require 'ext.table'
 
 --[[
-usage: 
+usage:
 1) create VertexArray
 2) bind VertexArray
 3) for all attrs
@@ -43,7 +42,7 @@ function VertexArray:init(args)
 				end
 			end
 		end
-		self:setAttrs() 
+		self:setAttrs()
 	end
 end
 
@@ -69,7 +68,7 @@ function VertexArray:enableAttrs(attrs)
 	end
 end
 
-function VertexArray:disableAttrs(attr)
+function VertexArray:disableAttrs(attrs)
 	for _,attr in ipairs(attrs or self.attrs) do
 		attr:disable()
 	end
@@ -87,4 +86,4 @@ function VertexArray:useNone()
 	self:unbind()
 end
 
-return VertexArray 
+return VertexArray

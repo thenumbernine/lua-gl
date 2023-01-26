@@ -5,7 +5,7 @@ local glreport = require 'gl.report'
 
 local function GetBehavior(parent)
 	local template = class(parent)
-	
+
 	--[[
 	static method
 	adds fields to class.getInfo and .getInfoForName
@@ -26,7 +26,7 @@ local function GetBehavior(parent)
 
 	function template:get(name)
 		glreport'here' -- check error
-		
+
 		local var = self.getInfo[name]
 		local infoType = assert(var.type)
 		local getter = assert(var.getter)
@@ -34,9 +34,9 @@ local function GetBehavior(parent)
 
 		local result = ffi.new(infoType..'[1]')
 		getter(self.id, nameValue, result)
-		
+
 		glreport'here' -- check error
-		
+
 		return result[0]
 	end
 

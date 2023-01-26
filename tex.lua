@@ -36,7 +36,7 @@ function GLTex:init(args)
 		self:load(args)
 	end
 	self:create(args)
-	
+
 	if args.minFilter then self:setParameter(gl.GL_TEXTURE_MIN_FILTER, args.minFilter) end
 	if args.magFilter then self:setParameter(gl.GL_TEXTURE_MAG_FILTER, args.magFilter) end
 	if args.wrap then self:setWrap(args.wrap) end

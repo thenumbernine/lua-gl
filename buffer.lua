@@ -26,7 +26,7 @@ function Buffer:init(args)
 	Buffer.super.init(self)
 	gl.glGenBuffers(1, self.gc.ptr)
 	self.id = self.gc.ptr[0]
-	
+
 	assert(args, "expected args")
 	if args.data then
 		self:setData(args)
@@ -64,7 +64,7 @@ function Buffer:setData(args)
 		end
 		data = cdata
 	end
-	-- mind you, this is saving the cdata, even if you :setData() with Lua data ... 
+	-- mind you, this is saving the cdata, even if you :setData() with Lua data ...
 	self.data = data
 	self.size = size
 	self.usage = args.usage or gl.GL_STATIC_DRAW

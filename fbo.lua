@@ -22,7 +22,7 @@ local FrameBuffer = class()
 
 function FrameBuffer:init(args)
 	args = args or {}
-	
+
 	-- store these for reference later, if we get them
 	-- they're actually not needed for only-color buffer fbos
 	self.width = args.width
@@ -59,7 +59,7 @@ function FrameBuffer.check()
 	local status = gl.glCheckFramebufferStatus(gl.GL_FRAMEBUFFER)
 	if status ~= gl.GL_FRAMEBUFFER_COMPLETE then
 		local errstr = 'glCheckFramebufferStatus status='..status
-		local name = fboErrorNames[status]	
+		local name = fboErrorNames[status]
 		if name then errstr = errstr..' error='..name end
 		return false, errstr
 	end
@@ -221,12 +221,12 @@ function FrameBuffer:draw(args)
 		self:setColorAttachment(0, args.dest)
 	end
 	glreport('drawScreenFBO before callback')
-	
+
 	-- no one seems to use fbo:draw... at all...
 	-- so why preserve a function that no one uses?
 	-- why not just merge it in here?
 	self:drawToCallback(args.colorAttachment or 0, args.callback or self.drawScreenQuad)
-	
+
 	glreport('drawScreenFBO after callback')
 	if args.texs then
 		for i=#args.texs,1,-1 do	-- step -1 so we end up at zero

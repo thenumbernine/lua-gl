@@ -10,7 +10,7 @@ local GLShader = require 'gl.shader'
 local GLAttribute = require 'gl.attribute'
 local GLArrayBuffer = require 'gl.arraybuffer'
 -- TODO instead of storing the VAO in the GLProgram, and calling it next to a separate glDraw command with geom
---  instead, create a 'GLGeom' or 'GLObject' class that combines the shader, geometry, and binding, and store the VAO with this 
+--  instead, create a 'GLGeom' or 'GLObject' class that combines the shader, geometry, and binding, and store the VAO with this
 local GLVertexArray = require 'gl.vertexarray'
 
 
@@ -136,7 +136,7 @@ for name,info in pairs{
 	GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE_ARRAY = {glsltype='uimage2DMSArray'},
 	GL_UNSIGNED_INT_ATOMIC_COUNTER = {glsltype='atomic_uint'},
 } do
-	local v = gl[name] 
+	local v = gl[name]
 	if v then
 		uniformSettersForGLTypes[v] = info
 	end
@@ -243,9 +243,9 @@ function GLProgram:init(args)
 	for _,shader in ipairs(shaders) do
 		gl.glDetachShader(self.id, shader.id)
 	end
-	
+
 	self:use()
-	
+
 	self.uniforms = {}
 	local maxUniforms = self:get'GL_ACTIVE_UNIFORMS'
 	local maxLen = self:get'GL_ACTIVE_UNIFORM_MAX_LENGTH'
@@ -305,7 +305,7 @@ and then make GLAttribute 1-1 with GLProgram's attr objects
 		local arraySize = ffi.new('GLint[1]', 0)
 		local utype = ffi.new('GLenum[1]', 0)
 		gl.glGetActiveAttrib(self.id, i-1, bufSize, length, arraySize, utype, name);
-		
+
 		local name = ffi.string(name, length[0])
 		local attrargs
 		if args.attrs then
@@ -333,11 +333,11 @@ and then make GLAttribute 1-1 with GLProgram's attr objects
 			self.attrs[name] = GLAttribute(attrargs)
 		end
 	end
-	
+
 	if args.uniforms then
 		self:setUniforms(args.uniforms)
 	end
-	
+
 	if args.attrs then
 		if args.createVAO ~= false then
 			self.vao = GLVertexArray{
@@ -389,10 +389,10 @@ function GLProgram:setUniform(name, value, ...)
 		end
 
 	elseif valueType ~= 'table'then
-		
+
 		local setter = setters.arg
-		if not setter then 
-			error("failed to find non-array setter for uniform "..name) 
+		if not setter then
+			error("failed to find non-array setter for uniform "..name)
 		end
 		setter(loc, value, ...)
 	else

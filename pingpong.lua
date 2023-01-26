@@ -42,7 +42,7 @@ function PingPong:last()
 end
 
 function PingPong:draw(args)
-	local args = table({
+	args = table({
 		colorAttachment=self.index-1;
 		-- i'm not sure whether i want args.viewport==nil to mean use a default sized to the fbo, or don't touch it
 		-- i'm leaning towards not touching it...

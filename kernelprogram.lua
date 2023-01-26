@@ -44,7 +44,7 @@ void main() {
 			i = i + 1
 		end
 	end
-	
+
 	GLKernelProgram.super.init(self, {
 		vertexCode = args.vertexCode or vertexCode,
 		fragmentCode = fragmentCodePrefix..assert(args.code),

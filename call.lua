@@ -7,9 +7,9 @@ local function glCallOrRun(list, callback, ...)
 	else
 		list.id = gl.glGenLists(1)
 		gl.glNewList(list.id, gl.GL_COMPILE_AND_EXECUTE)
-		
+
 		callback(...)
-		
+
 		gl.glEndList()
 	end
 end

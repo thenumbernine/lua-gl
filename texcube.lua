@@ -13,7 +13,6 @@ function GLTexCube:create(args)
 	local data = args.data or {}
 	if args.filenames then data = {} end	-- I'm breaking with tradition: no more GLTexCube.load, now just through the ctor
 	local baseWidth, baseHeight = args.width, args.height
-	local width, height = baseWidth, baseHeight
 	local baseFormat, baseInternalFormat, baseType = args.format, args.internalFormat or args.format, args.type
 	for i=1,6 do
 		local width, height, format, internalFormat, glType = baseWidth, baseHeight, baseFormat, baseInternalFormat, baseType
@@ -23,7 +22,7 @@ function GLTexCube:create(args)
 			local image = Image(filename)
 			if baseWidth and baseHeight then image = image:resample(baseWidth, baseHeight) end
 			data[i] = image:data()
-			
+
 			local channels
 			width, height, channels = image:size()
 			glType = gl.GL_UNSIGNED_BYTE

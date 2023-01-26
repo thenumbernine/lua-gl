@@ -7,7 +7,7 @@ local GradientTex = class(Tex1D)
 
 function GradientTex:init(w, colors, repeated)
 	self.colors = colors
-	
+
 	local channels = 4
 	local data = ffi.new('unsigned char[?]', w*channels)
 	for i=0,w-1 do

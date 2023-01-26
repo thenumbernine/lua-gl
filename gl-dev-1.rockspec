@@ -1,17 +1,16 @@
 package = "gl"
 version = "dev-1"
 source = {
-	url = "git+https://github.com/thenumbernine/lua-gl"
+	url = "git+https://github.com/thenumbernine/lua-gl.git"
 }
 description = {
-	detailed = [[
-OOP Wrappers for OpenGL calls in LuaJIT.
-]],
+	summary = "OOP Wrappers for OpenGL calls in LuaJIT.",
+	detailed = "OOP Wrappers for OpenGL calls in LuaJIT.",
 	homepage = "https://github.com/thenumbernine/lua-gl",
-	license = "MIT"
+	license = "MIT",
 }
 dependencies = {
-	"lua >= 5.1"
+	"lua >= 5.1",
 }
 build = {
 	type = "builtin",
@@ -35,10 +34,12 @@ build = {
 		["gl.program"] = "program.lua",
 		["gl.report"] = "report.lua",
 		["gl.shader"] = "shader.lua",
+		["gl.shaderstoragebuffer"] = "shaderstoragebuffer.lua",
 		["gl.tex"] = "tex.lua",
 		["gl.tex1d"] = "tex1d.lua",
 		["gl.tex2d"] = "tex2d.lua",
 		["gl.tex3d"] = "tex3d.lua",
+		["gl.texbuffer"] = "texbuffer.lua",
 		["gl.texcube"] = "texcube.lua",
 		["gl.vertexarray"] = "vertexarray.lua"
 	}

@@ -41,7 +41,7 @@ function GLShader:init(code)
 	strs[0] = code
 	gl.glShaderSource(self.id, 1, strs, len)
 	gl.glCompileShader(self.id)
-	
+
 	self:checkCompileStatus(code)
 end
 
@@ -59,13 +59,13 @@ function GLShader.createCheckStatus(statusEnum, logGetter)
 			end
 			print'log:'
 			print(ffi.string(log))
-	
+
 			for _,get in ipairs(self.getInfo) do
 				print(get.name..': '..self:get(get.name))
 			end
-			
+
 			error(statusEnum..' failed!')
-		end 
+		end
 	end
 end
 

@@ -32,13 +32,12 @@ function GLTex3D:create(args)
 end
 
 function GLTex3D:load(args)
-	local Image = require 'image'
 	local image = args.image
 	if not image then
 		error('GLTex3D:load expected image')
 	end
 	assert(image)
-	local w,h,d = image:size() 
+	local w,h,d = image:size()
 	local data = image:data()
 	local nw,nh,nd = self.rupowoftwo(w), self.rupowoftwo(h), self.rupowoftwo(d)
 	if w ~= nw or h ~= nh then
@@ -59,7 +58,7 @@ function GLTex3D:load(args)
 		w,h,d = nw,nh,nd
 	end
 	args.width, args.height, args.depth = w, h, d
-	args.data = data 
+	args.data = data
 	args.internalFormat = args.internalFormat or self.formatForChannels[image.channels]
 	args.format = args.format or self.formatForChannels[image.channels] or gl.GL_RGBA
 	args.type = args.type or self.typeForType[image.format] or gl.GL_UNSIGNED_BYTE

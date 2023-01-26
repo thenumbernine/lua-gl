@@ -5,7 +5,7 @@ local FBO = require 'gl.fbo'
 local Tex3D = require 'gl.tex3d'
 
 
--- almost identical to PingPong 
+-- almost identical to PingPong
 -- TODO organize better with the above class
 
 local PingPong3D = class(PingPong)
@@ -27,7 +27,7 @@ end
 -- unlike the above, with all those slices, we have to attach upon request
 function PingPong3D:draw(args)
 	self.fbo:setColorAttachmentTex3D(0, self.hist[self.index].id, args.slice)
-	local args = table({
+	args = table({
 		colorAttachment=0;
 	}, args)
 	self.fbo:draw(args)

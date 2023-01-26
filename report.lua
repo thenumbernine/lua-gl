@@ -15,7 +15,7 @@ local errors = {
 local function glreport(msg)
 	local err = gl.glGetError()
 	if err == 0 then return true, nil, err end
-		
+
 	local name
 	for _,v in ipairs(errors) do
 		if err == gl[v] then
@@ -23,7 +23,7 @@ local function glreport(msg)
 			break
 		end
 	end
-	
+
 	local str = msg
 	if str then
 		str = str .. ': '

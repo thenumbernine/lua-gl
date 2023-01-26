@@ -37,10 +37,9 @@ function GLTex1D:load(args)
 		image = Image(filename)
 	end
 	assert(image)
-	
+
 	if self.resizeNPO2 then
 		local w,h = image.width, image.height
-		local data = image.buffer
 		local nw,nh = self.rupowoftwo(w), self.rupowoftwo(h)
 		if w ~= nw or h ~= nh then
 			image = image:resize(nw, nh, 'nearest')
@@ -48,7 +47,7 @@ function GLTex1D:load(args)
 	end
 
 	args.width = image.width
-	args.data = data 
+	args.data = image.buffer
 	args.internalFormat = args.internalFormat or self.formatForChannels[image.channels]
 	args.format = args.format or self.formatForChannels[image.channels] or gl.GL_RGBA
 	args.type = args.type or self.typeForType[image.format] or gl.GL_UNSIGNED_BYTE
