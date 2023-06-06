@@ -329,6 +329,7 @@ and then make GLAttribute 1-1 with GLProgram's attr objects
 		-- but in the case that i do keep the loc==-1, and simply do not bind them, then i still get gl errors later ...
 		-- weird.
 		-- maybe loc==-1 is valid? and i'm in trouble for not using it?
+-- TODO don't use GLAttribute here, just use a nameless table like for .uniforms
 		if attrargs.loc ~= -1 then
 			self.attrs[name] = GLAttribute(attrargs)
 		end
@@ -387,9 +388,7 @@ function GLProgram:setUniform(name, value, ...)
 		else
 			error("failed to find array setter for uniform "..name)
 		end
-
 	elseif valueType ~= 'table'then
-
 		local setter = setters.arg
 		if not setter then
 			error("failed to find non-array setter for uniform "..name)

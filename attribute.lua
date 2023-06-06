@@ -19,6 +19,7 @@ while glGetActiveAttrib ctypes assoc with glsltypes are only:
 local gl = require 'gl'
 local ffi = require 'ffi'
 local class = require 'ext.class'
+local table = require 'ext.table'
 
 --[[
 Attribute has the following args:
