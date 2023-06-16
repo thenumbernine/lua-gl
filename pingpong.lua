@@ -18,6 +18,8 @@ function PingPong:init(args)
 		self.hist:insert(tex)
 		self.fbo:setColorAttachmentTex2D(tex.id, i-1)
 	end
+	-- TODO stick with theme and don't unbind automatically upon init
+	self.fbo:unbind()
 end
 
 function PingPong:nextIndex(n)
@@ -43,7 +45,7 @@ end
 
 function PingPong:draw(args)
 	args = table({
-		colorAttachment=self.index-1;
+		colorAttachment = self.index-1,
 		-- i'm not sure whether i want args.viewport==nil to mean use a default sized to the fbo, or don't touch it
 		-- i'm leaning towards not touching it...
 	}, args)
@@ -52,10 +54,10 @@ end
 
 function PingPong:clear(index, color)
 	self:draw{
-		colorAttachment=index-1;
-		color=color;
-		resetProjection=true;
-		viewport={0, 0, self.width, self.height};
+		colorAttachment = index-1,
+		color = color,
+		resetProjection = true,
+		viewport = {0, 0, self.width, self.height},
 	}
 end
 
