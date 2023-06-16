@@ -71,17 +71,15 @@ end
 --		(thought a texture bind() without enable() would still fulfill its operation, yet wouldn't be visible in some render methods
 --			on the other hand, a fbo setColorAttachmet() without bind() wouldn't fulfill its operation
 -- or should we leave the app to do this (and reduce the possible binds/unbinds?)
--- or should we only bind, and leave it to the caller to unbind?
-function FrameBuffer:setColorAttachmentTex2D(index, tex, target, level)
+function FrameBuffer:setColorAttachmentTex2D(tex, index, target, level)
 	self:bind()
-	gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + index, target or gl.GL_TEXTURE_2D, tex, level or 0)
-	self:unbind()
+	gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + (index or 0), target or gl.GL_TEXTURE_2D, tex, level or 0)
 end
 
-function FrameBuffer:setColorAttachmentTexCubeMapSide(index, tex, side, level)
+function FrameBuffer:setColorAttachmentTexCubeMapSide(tex, index, side, level)
 	self:bind()
+	index = index or 0
 	gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + index, gl.GL_TEXTURE_CUBE_MAP_POSITIVE_X + (side or index), tex, level or 0)
-	self:unbind()
 end
 
 function FrameBuffer:setColorAttachmentTexCubeMap(tex, level)
@@ -89,31 +87,30 @@ function FrameBuffer:setColorAttachmentTexCubeMap(tex, level)
 	for i=0,5 do
 		gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + i, gl.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, tex, level or 0)
 	end
-	self:unbind()
 end
 
-function FrameBuffer:setColorAttachmentTex3D(index, tex, slice, target, level)
+function FrameBuffer:setColorAttachmentTex3D(tex, index, slice, target, level)
 	if not tonumber(slice) then error("unable to convert slice to number: " ..tostring(slice)) end
 	slice = tonumber(slice)
 	self:bind()
-	gl.glFramebufferTexture3D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + index, target or gl.GL_TEXTURE_3D, tex, level or 0, slice)
-	self:unbind()
+	gl.glFramebufferTexture3D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + (index or 0), target or gl.GL_TEXTURE_3D, tex, level or 0, slice)
 end
 
 --general, object-based type-deducing
-function FrameBuffer:setColorAttachment(index, tex, ...)
+-- TODO put index 2nd and make it default to 0
+function FrameBuffer:setColorAttachment(tex, index, ...)
 	if type(tex) == 'table' then
 		local mt = getmetatable(tex)
 		if mt == Tex2D then
-			self:setColorAttachmentTex2D(index, tex.id, ...)
+			self:setColorAttachmentTex2D(tex.id, index, ...)
 		-- cube map? side or all at once?
 		elseif mt == Tex3D then
-			self:setColorAttachmentTex3D(index, tex.id, ...)
+			self:setColorAttachmentTex3D(tex.id, index, ...)
 		else
 			error("Can't deduce how to attach the object.  Try using an explicit attachment method")
 		end
 	elseif type(tex) == 'number' then
-		self:setColorAttachmentTex2D(index, tex, ...)	-- though this could be a 3d slice or a cube side...
+		self:setColorAttachmentTex2D(tex, index, ...)	-- though this could be a 3d slice or a cube side...
 	else
 		error("Can't deduce how to attach the object.  Try using an explicit attachment method")
 	end
@@ -218,7 +215,8 @@ function FrameBuffer:draw(args)
 		glreport('drawScreenFBO glColor')
 	end
 	if args.dest then
-		self:setColorAttachment(0, args.dest)
+		-- TODO this binds then unbinds ... hmmmm
+		self:setColorAttachment(args.dest, 0)
 	end
 	glreport('drawScreenFBO before callback')
 

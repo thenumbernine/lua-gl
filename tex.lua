@@ -1,3 +1,9 @@
+--[[
+TODO consistency of bind() before all texture operations?
+or how about a flag for whether to always bind before operations?
+or just never bind() before operations?
+or TODO use bind-less textures?
+--]]
 local ffi = require 'ffi'
 local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
@@ -59,6 +65,7 @@ function GLTex:setWrap(wrap)
 end
 
 function GLTex:setParameter(k, v)
+	self:bind()
 	if type(k) == 'string' then k = gl[k] or error("couldn't find parameter "..k) end
 	-- TODO pick by type? and expose each type call separately?
 	return gl.glTexParameterf(self.target, k, v)
@@ -143,7 +150,9 @@ function GLTex.rupowoftwo(x)
 	return u
 end
 
+-- requires bind beforehand (TODO should this also bind?)
 function GLTex:generateMipmap()
+	self:bind()
 	gl.glGenerateMipmap(self.target)
 end
 

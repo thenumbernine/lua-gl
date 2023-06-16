@@ -16,7 +16,7 @@ function PingPong:init(args)
 	for i=1,numBuffers do
 		local tex = GLTex2D(args)
 		self.hist:insert(tex)
-		self.fbo:setColorAttachmentTex2D(i-1, tex.id)
+		self.fbo:setColorAttachmentTex2D(tex.id, i-1)
 	end
 end
 
