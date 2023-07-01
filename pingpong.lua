@@ -19,6 +19,7 @@ function PingPong:init(args)
 		self.fbo:setColorAttachmentTex2D(tex.id, i-1)
 	end
 	-- TODO stick with theme and don't unbind automatically upon init
+	-- or TODO maybe all objects should unbind upon init? just not upon param call?
 	self.fbo:unbind()
 end
 

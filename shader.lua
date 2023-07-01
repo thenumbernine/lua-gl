@@ -1,5 +1,6 @@
 local ffi = require 'ffi'
 local gl = require 'gl'
+local table = require 'ext.table'
 local class = require 'ext.class'
 local showcode = require 'template.showcode'
 local GetBehavior = require 'gl.get'
@@ -54,17 +55,19 @@ function GLShader.createCheckStatus(statusEnum, logGetter)
 			local log = ffi.new('char[?]',length+1)
 			local result = ffi.new'GLsizei[1]'
 			logGetter(self.id, length, result, log);
+			local s = table()
 			if code then
-				print(showcode(code))
+				s:insert(showcode(code))
 			end
-			print'log:'
-			print(ffi.string(log))
+			s:insert('log:')
+			s:insert(ffi.string(log))
 
 			for _,get in ipairs(self.getInfo) do
-				print(get.name..': '..self:get(get.name))
+				s:insert(get.name..': '..self:get(get.name))
 			end
 
-			error(statusEnum..' failed!')
+			s:insert(statusEnum..' failed!')
+			error(s:concat'\n')
 		end
 	end
 end
