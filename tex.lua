@@ -65,14 +65,23 @@ function GLTex:setWrap(wrap)
 end
 
 function GLTex:setParameter(k, v)
+	-- TODO bind before set? unbind after? 
+	-- make sure it is consistent with shader etc
 	self:bind()
 	if type(k) == 'string' then k = gl[k] or error("couldn't find parameter "..k) end
 	-- TODO pick by type? and expose each type call separately?
 	return gl.glTexParameterf(self.target, k, v)
 end
 
-function GLTex:enable() gl.glEnable(self.target) end
-function GLTex:disable() gl.glDisable(self.target) end
+function GLTex:enable()
+	gl.glEnable(self.target)
+	return self
+end
+
+function GLTex:disable()
+	gl.glDisable(self.target)
+	return self
+end
 
 function GLTex:bind(unit)
 	if unit then
