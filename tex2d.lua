@@ -68,6 +68,7 @@ function GLTex2D:subimage(args)
 		args.type or self.type,
 		args.data or self.data
 	)
+	return self
 end
 
 return GLTex2D
