@@ -79,6 +79,7 @@ function GLTex:bind(unit)
 		gl.glActiveTexture(gl.GL_TEXTURE0 + unit)
 	end
 	gl.glBindTexture(self.target, self.id)
+	return self
 end
 
 function GLTex:unbind(unit)
@@ -86,6 +87,7 @@ function GLTex:unbind(unit)
 		gl.glActiveTexture(gl.GL_TEXTURE0 + unit)
 	end
 	gl.glBindTexture(self.target, 0)
+	return self
 end
 
 -- used by child classes:
