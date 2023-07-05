@@ -58,15 +58,15 @@ end
 
 function GLTex2D:subimage(args)
 	gl.glTexSubImage2D(
-		args.target or self.target,
-		args.level or 0,
-		args.xoffset or 0,
-		args.yoffset or 0,
-		args.width or self.width,
-		args.height or self.height,
-		args.format or self.format,
-		args.type or self.type,
-		args.data or self.data
+		args and args.target or self.target,
+		args and args.level or 0,
+		args and args.xoffset or 0,
+		args and args.yoffset or 0,
+		args and args.width or self.width,
+		args and args.height or self.height,
+		args and args.format or self.format,
+		args and args.type or self.type,
+		args and args.data or self.data
 	)
 	return self
 end
