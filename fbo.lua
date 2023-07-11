@@ -48,10 +48,12 @@ end
 
 function FrameBuffer:bind()
 	gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.id)
+	return self
 end
 
 function FrameBuffer:unbind()
 	gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
+	return self
 end
 
 -- static function

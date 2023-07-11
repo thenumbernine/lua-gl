@@ -361,12 +361,16 @@ and then make GLAttribute 1-1 with GLProgram's attr objects
 	self:useNone()
 end
 
+-- TODO 'bind' ?
 function GLProgram:use()
 	gl.glUseProgram(self.id)
+	return self
 end
 
+-- TODO 'unuse' ? or just 'unbind' ?
 function GLProgram.useNone()
 	gl.glUseProgram(0)
+	return self
 end
 
 function GLProgram:setUniforms(uniforms)
