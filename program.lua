@@ -368,7 +368,7 @@ function GLProgram:use()
 end
 
 -- TODO 'unuse' ? or just 'unbind' ?
-function GLProgram.useNone()
+function GLProgram:useNone()
 	gl.glUseProgram(0)
 	return self
 end
