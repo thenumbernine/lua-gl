@@ -8,6 +8,7 @@ local GetBehavior = require 'gl.get'
 local GLShader = require 'gl.shader'
 
 
+-- for GLES which doesn't have VAO functionality
 local hasVAO = not not op.safeindex(gl, 'glGenVertexArrays')
 
 
@@ -377,6 +378,9 @@ and then make GLAttribute 1-1 with GLProgram's attr objects
 				program = self,
 				attrs = self.attrs,
 			}
+		else
+			-- TODO
+			--self.vao = GLVertexArrayCPU ...
 		end
 		self:setAttrs()	-- in case any buffers were specified
 	else
@@ -460,8 +464,37 @@ function GLProgram:setAttrs(attrs)
 			end
 		end
 	end
+	return self
 end
 
+-- helper functions - same as vao
+-- TODO hmm, what about a vao that isn't hardware? and put this in there?
+-- or how about call this :setAndEnableAttrs() ?
+function GLProgram:enableAttrs()
+	if self.vao then
+		self.vao:use()
+	else
+		for attrname,attr in pairs(self.attrs) do
+			-- setPointer() vs set() ?
+			-- set() calls bind() too ...
+			-- set() is required.
+			attr
+				:enable()
+				:set()
+		end
+	end
+	return self
+end
+function GLProgram:disableAttrs()
+	if self.vao then
+		self.vao:useNone()
+	else
+		for attrname,attr in pairs(self.attrs) do
+			attr:disable()
+		end
+	end
+	return self
+end
 
 ---------------- compute-only ----------------
 -- should I just subclass GLProgram?
