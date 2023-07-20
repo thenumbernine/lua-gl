@@ -16,6 +16,11 @@ ffi_OpenGL = 'ffi.OpenGLES2'
 require 'gl'
 ```
 
+Behavior rule of thumb:
+
+Creating an object will bind() it, and requires an unbind() / useNone().
+
+Setting any parameters will require a manual bind() called beforehand.
 
 ### Dependencies:
 

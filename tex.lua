@@ -56,21 +56,19 @@ local lookupWrap = {
 }
 
 function GLTex:setWrap(wrap)
-	self:bind()
 	for k,v in pairs(wrap) do
 		k = lookupWrap[k] or k
 		assert(k, "tried to set a bad wrap")
 		self:setParameter(k, v)
 	end
+	return self
 end
 
 function GLTex:setParameter(k, v)
-	-- TODO bind before set? unbind after? 
-	-- make sure it is consistent with shader etc
-	self:bind()
 	if type(k) == 'string' then k = gl[k] or error("couldn't find parameter "..k) end
 	-- TODO pick by type? and expose each type call separately?
-	return gl.glTexParameterf(self.target, k, v)
+	gl.glTexParameterf(self.target, k, v)
+	return self
 end
 
 function GLTex:enable()
@@ -163,8 +161,8 @@ end
 
 -- requires bind beforehand (TODO should this also bind?)
 function GLTex:generateMipmap()
-	self:bind()
 	gl.glGenerateMipmap(self.target)
+	return self
 end
 
 function GLTex:toCPU(ptr, level)
@@ -176,6 +174,7 @@ function GLTex:toCPU(ptr, level)
 		error("expected ptr")
 	end
 	-- TODO .keep to keep the ptr upon init, and default to it here?
+	-- TODO require bind() beforehand like all the other setters? or manually bind() here?
 	self:bind()
 	gl.glGetTexImage(self.target, level or 0, self.format, self.type, ffi.cast('char*', ptr))
 	return ptr
