@@ -52,38 +52,45 @@ function VertexArray:setAttrs(attrs)
 		attr:set()
 	end
 	self:unbind()
+	return self
 end
 
 function VertexArray:bind(args)
 	gl.glBindVertexArray(self.id)
+	return self
 end
 
 function VertexArray.unbind()
 	gl.glBindVertexArray(0)
+	return self
 end
 
 function VertexArray:enableAttrs(attrs)
 	for _,attr in ipairs(attrs or self.attrs) do
 		attr:enable()
 	end
+	return self
 end
 
 function VertexArray:disableAttrs(attrs)
 	for _,attr in ipairs(attrs or self.attrs) do
 		attr:disable()
 	end
+	return self
 end
 
 -- shorthand for bind + enableAttrs
 function VertexArray:use()
 	self:bind()
 	self:enableAttrs()
+	return self
 end
 
 -- shorthand for unbind + disableAttrs
 function VertexArray:useNone()
 	self:disableAttrs()
 	self:unbind()
+	return self
 end
 
 return VertexArray

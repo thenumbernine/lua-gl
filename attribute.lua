@@ -154,15 +154,18 @@ function Attribute:setPointer(loc)
 		self.stride,
 		self.offset
 	)
+	return self
 end
 
 -- assumes the buffer is bound
 function Attribute:enable(loc)
 	gl.glEnableVertexAttribArray(loc or self.loc)
+	return self
 end
 
 function Attribute:disable(loc)
 	gl.glDisableVertexAttribArray(loc or self.loc)
+	return self
 end
 
 -- shorthand for binding to the associated buffer, setPointer, and enable
