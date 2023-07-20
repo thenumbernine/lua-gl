@@ -1,10 +1,15 @@
 local ffi = require 'ffi'
 local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
-local gl = require 'ffi.OpenGL'
+local gl = require 'gl'
 local class = require 'ext.class'
 local table = require 'ext.table'
+local op = require 'ext.op'
 local GetBehavior = require 'gl.get'
 local GLShader = require 'gl.shader'
+
+
+local hasVAO = not not op.safeindex(gl, 'glGenVertexArrays')
+
 
 -- optional stuff:
 local GLAttribute = require 'gl.attribute'
@@ -20,11 +25,17 @@ GLVertexShader.type = gl.GL_VERTEX_SHADER
 local GLFragmentShader = class(GLShader)
 GLFragmentShader.type = gl.GL_FRAGMENT_SHADER
 
-local GLGeometryShader = class(GLShader)
-GLGeometryShader.type = gl.GL_GEOMETRY_SHADER
+local GLGeometryShader
+if op.safeindex(gl, 'GL_GEOMETRY_SHADER') then
+	GLGeometryShader = class(GLShader)
+	GLGeometryShader.type = gl.GL_GEOMETRY_SHADER
+end
 
-local GLComputeShader = class(GLShader)
-GLComputeShader.type = gl.GL_COMPUTE_SHADER
+local GLComputeShader
+if op.safeindex(gl, 'GL_COMPUTE_SHADER') then
+	GLComputeShader = class(GLShader)
+	GLComputeShader.type = gl.GL_COMPUTE_SHADER
+end
 
 -- this doesn't work as easy as it does in webgl
 -- https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetActiveUniform.xhtml
@@ -36,50 +47,50 @@ local function getUniformSettersForGLType(utype)
 	if not uniformSettersForGLTypes then
 		uniformSettersForGLTypes = {}
 		for name,info in pairs{
-			GL_FLOAT = {arg=gl.glUniform1f, glsltype='float'},
-			GL_FLOAT_VEC2 = {arg=gl.glUniform2f, type='float', count=2, vec=gl.glUniform2fv, glsltype='vec2'},
-			GL_FLOAT_VEC3 = {arg=gl.glUniform3f, type='float', count=3, vec=gl.glUniform3fv, glsltype='vec3'},
-			GL_FLOAT_VEC4 = {arg=gl.glUniform4f, type='float', count=4, vec=gl.glUniform4fv, glsltype='vec4'},
-			GL_DOUBLE = {arg=gl.glUniform1d, glsltype='double'},
-			GL_DOUBLE_VEC2 = {arg=gl.glUniform2d, type='double', count=2, vec=gl.glUniform2fv, glsltype='dvec2'},
-			GL_DOUBLE_VEC3 = {arg=gl.glUniform3d, type='double', count=3, vec=gl.glUniform3fv, glsltype='dvec3'},
-			GL_DOUBLE_VEC4 = {arg=gl.glUniform4d, type='double', count=4, vec=gl.glUniform4fv, glsltype='dvec4'},
-			GL_INT = {arg=gl.glUniform1i, glsltype='int'},
-			GL_INT_VEC2 = {arg=gl.glUniform2i, type='int', count=2, vec=gl.glUniform2iv, glsltype='ivec2'},
-			GL_INT_VEC3 = {arg=gl.glUniform3i, type='int', count=3, vec=gl.glUniform3iv, glsltype='ivec3'},
-			GL_INT_VEC4 = {arg=gl.glUniform4i, type='int', count=4, vec=gl.glUniform4iv, glsltype='ivec4'},
-			GL_UNSIGNED_INT = {arg=gl.glUniform1ui, glsltype='unsigned int'},
-			GL_UNSIGNED_INT_VEC2 = {arg=gl.glUniform2ui, type='unsigned int', count=2, vec=gl.glUniform2iv, glsltype='uvec2'},
-			GL_UNSIGNED_INT_VEC3 = {arg=gl.glUniform3ui, type='unsigned int', count=3, vec=gl.glUniform3iv, glsltype='uvec3'},
-			GL_UNSIGNED_INT_VEC4 = {arg=gl.glUniform4ui, type='unsigned int', count=4, vec=gl.glUniform4iv, glsltype='uvec4'},
-			GL_BOOL = {arg=gl.glUniform1i, glsltype='bool'},
-			GL_BOOL_VEC2 = {arg=gl.glUniform2i, type='int', count=2, vec=gl.glUniform2iv, glsltype='bvec2'},
-			GL_BOOL_VEC3 = {arg=gl.glUniform3i, type='int', count=3, vec=gl.glUniform3iv, glsltype='bvec3'},
-			GL_BOOL_VEC4 = {arg=gl.glUniform4i, type='int', count=4, vec=gl.glUniform4iv, glsltype='bvec4'},
-			GL_FLOAT_MAT2 = {mat=gl.glUniformMatrix2fv, glsltype='mat2'},
-			GL_FLOAT_MAT3 = {mat=gl.glUniformMatrix3fv, glsltype='mat3'},
-			GL_FLOAT_MAT4 = {mat=gl.glUniformMatrix4fv, glsltype='mat4'},
-			GL_FLOAT_MAT2x3 = {mat=gl.glUniformMatrix2x3fv, glsltype='mat2x3'},
-			GL_FLOAT_MAT2x4 = {mat=gl.glUniformMatrix3x2fv, glsltype='mat2x4'},
-			GL_FLOAT_MAT3x2 = {mat=gl.glUniformMatrix2x4fv, glsltype='mat3x2'},
-			GL_FLOAT_MAT3x4 = {mat=gl.glUniformMatrix4x2fv, glsltype='mat3x4'},
-			GL_FLOAT_MAT4x2 = {mat=gl.glUniformMatrix3x4fv, glsltype='mat4x2'},
-			GL_FLOAT_MAT4x3 = {mat=gl.glUniformMatrix4x3fv, glsltype='mat4x3'},
-			GL_DOUBLE_MAT2 = {mat=gl.glUniformMatrix2dv, glsltype='dmat2'},
-			GL_DOUBLE_MAT3 = {mat=gl.glUniformMatrix3dv, glsltype='dmat3'},
-			GL_DOUBLE_MAT4 = {mat=gl.glUniformMatrix4dv, glsltype='dmat4'},
-			GL_DOUBLE_MAT2x3 = {mat=gl.glUniformMatrix2x3dv, glsltype='dmat2x3'},
-			GL_DOUBLE_MAT2x4 = {mat=gl.glUniformMatrix3x2dv, glsltype='dmat2x4'},
-			GL_DOUBLE_MAT3x2 = {mat=gl.glUniformMatrix2x4dv, glsltype='dmat3x2'},
-			GL_DOUBLE_MAT3x4 = {mat=gl.glUniformMatrix4x2dv, glsltype='dmat3x4'},
-			GL_DOUBLE_MAT4x2 = {mat=gl.glUniformMatrix3x4dv, glsltype='dmat4x2'},
-			GL_DOUBLE_MAT4x3 = {mat=gl.glUniformMatrix4x3dv, glsltype='dmat4x3'},
-			GL_SAMPLER_1D = {arg=gl.glUniform1i, glsltype='sampler1D'},
-			GL_SAMPLER_2D = {arg=gl.glUniform1i, glsltype='sampler2D'},
-			GL_SAMPLER_3D = {arg=gl.glUniform1i, glsltype='sampler3D'},
-			GL_SAMPLER_CUBE = {arg=gl.glUniform1i, glsltype='samplerCube'},
-			GL_SAMPLER_1D_SHADOW = {arg=gl.glUniform1i, glsltype='sampler1DShadow'},
-			GL_SAMPLER_2D_SHADOW = {arg=gl.glUniform1i, glsltype='sampler2DShadow'},
+			GL_FLOAT = {arg='glUniform1f', glsltype='float'},
+			GL_FLOAT_VEC2 = {arg='glUniform2f', type='float', count=2, vec=gl.glUniform2fv, glsltype='vec2'},
+			GL_FLOAT_VEC3 = {arg='glUniform3f', type='float', count=3, vec=gl.glUniform3fv, glsltype='vec3'},
+			GL_FLOAT_VEC4 = {arg='glUniform4f', type='float', count=4, vec=gl.glUniform4fv, glsltype='vec4'},
+			GL_DOUBLE = {arg='glUniform1d', glsltype='double'},
+			GL_DOUBLE_VEC2 = {arg='glUniform2d', type='double', count=2, vec=gl.glUniform2fv, glsltype='dvec2'},
+			GL_DOUBLE_VEC3 = {arg='glUniform3d', type='double', count=3, vec=gl.glUniform3fv, glsltype='dvec3'},
+			GL_DOUBLE_VEC4 = {arg='glUniform4d', type='double', count=4, vec=gl.glUniform4fv, glsltype='dvec4'},
+			GL_INT = {arg='glUniform1i', glsltype='int'},
+			GL_INT_VEC2 = {arg='glUniform2i', type='int', count=2, vec=gl.glUniform2iv, glsltype='ivec2'},
+			GL_INT_VEC3 = {arg='glUniform3i', type='int', count=3, vec=gl.glUniform3iv, glsltype='ivec3'},
+			GL_INT_VEC4 = {arg='glUniform4i', type='int', count=4, vec=gl.glUniform4iv, glsltype='ivec4'},
+			GL_UNSIGNED_INT = {arg='glUniform1ui', glsltype='unsigned int'},
+			GL_UNSIGNED_INT_VEC2 = {arg='glUniform2ui', type='unsigned int', count=2, vec=gl.glUniform2iv, glsltype='uvec2'},
+			GL_UNSIGNED_INT_VEC3 = {arg='glUniform3ui', type='unsigned int', count=3, vec=gl.glUniform3iv, glsltype='uvec3'},
+			GL_UNSIGNED_INT_VEC4 = {arg='glUniform4ui', type='unsigned int', count=4, vec=gl.glUniform4iv, glsltype='uvec4'},
+			GL_BOOL = {arg='glUniform1i', glsltype='bool'},
+			GL_BOOL_VEC2 = {arg='glUniform2i', type='int', count=2, vec=gl.glUniform2iv, glsltype='bvec2'},
+			GL_BOOL_VEC3 = {arg='glUniform3i', type='int', count=3, vec=gl.glUniform3iv, glsltype='bvec3'},
+			GL_BOOL_VEC4 = {arg='glUniform4i', type='int', count=4, vec=gl.glUniform4iv, glsltype='bvec4'},
+			GL_FLOAT_MAT2 = {mat='glUniformMatrix2fv', glsltype='mat2'},
+			GL_FLOAT_MAT3 = {mat='glUniformMatrix3fv', glsltype='mat3'},
+			GL_FLOAT_MAT4 = {mat='glUniformMatrix4fv', glsltype='mat4'},
+			GL_FLOAT_MAT2x3 = {mat='glUniformMatrix2x3fv', glsltype='mat2x3'},
+			GL_FLOAT_MAT2x4 = {mat='glUniformMatrix3x2fv', glsltype='mat2x4'},
+			GL_FLOAT_MAT3x2 = {mat='glUniformMatrix2x4fv', glsltype='mat3x2'},
+			GL_FLOAT_MAT3x4 = {mat='glUniformMatrix4x2fv', glsltype='mat3x4'},
+			GL_FLOAT_MAT4x2 = {mat='glUniformMatrix3x4fv', glsltype='mat4x2'},
+			GL_FLOAT_MAT4x3 = {mat='glUniformMatrix4x3fv', glsltype='mat4x3'},
+			GL_DOUBLE_MAT2 = {mat='glUniformMatrix2dv', glsltype='dmat2'},
+			GL_DOUBLE_MAT3 = {mat='glUniformMatrix3dv', glsltype='dmat3'},
+			GL_DOUBLE_MAT4 = {mat='glUniformMatrix4dv', glsltype='dmat4'},
+			GL_DOUBLE_MAT2x3 = {mat='glUniformMatrix2x3dv', glsltype='dmat2x3'},
+			GL_DOUBLE_MAT2x4 = {mat='glUniformMatrix3x2dv', glsltype='dmat2x4'},
+			GL_DOUBLE_MAT3x2 = {mat='glUniformMatrix2x4dv', glsltype='dmat3x2'},
+			GL_DOUBLE_MAT3x4 = {mat='glUniformMatrix4x2dv', glsltype='dmat3x4'},
+			GL_DOUBLE_MAT4x2 = {mat='glUniformMatrix3x4dv', glsltype='dmat4x2'},
+			GL_DOUBLE_MAT4x3 = {mat='glUniformMatrix4x3dv', glsltype='dmat4x3'},
+			GL_SAMPLER_1D = {arg='glUniform1i', glsltype='sampler1D'},
+			GL_SAMPLER_2D = {arg='glUniform1i', glsltype='sampler2D'},
+			GL_SAMPLER_3D = {arg='glUniform1i', glsltype='sampler3D'},
+			GL_SAMPLER_CUBE = {arg='glUniform1i', glsltype='samplerCube'},
+			GL_SAMPLER_1D_SHADOW = {arg='glUniform1i', glsltype='sampler1DShadow'},
+			GL_SAMPLER_2D_SHADOW = {arg='glUniform1i', glsltype='sampler2DShadow'},
 			GL_SAMPLER_1D_ARRAY = {glsltype='sampler1DArray'},
 			GL_SAMPLER_2D_ARRAY = {glsltype='sampler2DArray'},
 			GL_SAMPLER_1D_ARRAY_SHADOW = {glsltype='sampler1DArrayShadow'},
@@ -90,20 +101,20 @@ local function getUniformSettersForGLType(utype)
 			GL_SAMPLER_BUFFER = {glsltype='samplerBuffer'},
 			GL_SAMPLER_2D_RECT = {glsltype='sampler2DRect'},
 			GL_SAMPLER_2D_RECT_SHADOW = {glsltype='sampler2DRectShadow'},
-			GL_INT_SAMPLER_1D = {arg=gl.glUniform1i, glsltype='isampler1D'},
-			GL_INT_SAMPLER_2D = {arg=gl.glUniform1i, glsltype='isampler2D'},
-			GL_INT_SAMPLER_3D = {arg=gl.glUniform1i, glsltype='isampler3D'},
-			GL_INT_SAMPLER_CUBE =  {arg=gl.glUniform1i, glsltype='isamplerCube'},
+			GL_INT_SAMPLER_1D = {arg='glUniform1i', glsltype='isampler1D'},
+			GL_INT_SAMPLER_2D = {arg='glUniform1i', glsltype='isampler2D'},
+			GL_INT_SAMPLER_3D = {arg='glUniform1i', glsltype='isampler3D'},
+			GL_INT_SAMPLER_CUBE =  {arg='glUniform1i', glsltype='isamplerCube'},
 			GL_INT_SAMPLER_1D_ARRAY = {glsltype='isampler1DArray'},
 			GL_INT_SAMPLER_2D_ARRAY = {glsltype='isampler2DArray'},
 			GL_INT_SAMPLER_2D_MULTISAMPLE = {glsltype='isampler2DMS'},
 			GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY = {glsltype='isampler2DMSArray'},
 			GL_INT_SAMPLER_BUFFER = {glsltype='isamplerBuffer'},
 			GL_INT_SAMPLER_2D_RECT = {glsltype='isampler2DRect'},
-			GL_UNSIGNED_INT_SAMPLER_1D = {arg=gl.glUniform1i, glsltype='usampler1D'},
-			GL_UNSIGNED_INT_SAMPLER_2D = {arg=gl.glUniform1i, glsltype='usampler2D'},
-			GL_UNSIGNED_INT_SAMPLER_3D = {arg=gl.glUniform1i, glsltype='usampler3D'},
-			GL_UNSIGNED_INT_SAMPLER_CUBE = {arg=gl.glUniform1i, glsltype='usamplerCube'},
+			GL_UNSIGNED_INT_SAMPLER_1D = {arg='glUniform1i', glsltype='usampler1D'},
+			GL_UNSIGNED_INT_SAMPLER_2D = {arg='glUniform1i', glsltype='usampler2D'},
+			GL_UNSIGNED_INT_SAMPLER_3D = {arg='glUniform1i', glsltype='usampler3D'},
+			GL_UNSIGNED_INT_SAMPLER_CUBE = {arg='glUniform1i', glsltype='usamplerCube'},
 			GL_UNSIGNED_INT_SAMPLER_1D_ARRAY = {glsltype='usampler2DArray'},
 			GL_UNSIGNED_INT_SAMPLER_2D_ARRAY = {glsltype='usampler2DArray'},
 			GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE = {glsltype='usampler2DMS'},
@@ -142,8 +153,16 @@ local function getUniformSettersForGLType(utype)
 			GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE_ARRAY = {glsltype='uimage2DMSArray'},
 			GL_UNSIGNED_INT_ATOMIC_COUNTER = {glsltype='atomic_uint'},
 		} do
-			local v = gl[name]
-			if v then
+			local v = op.safeindex(gl, name)
+			if info and info.arg then
+				info.arg = op.safeindex(gl, info.arg)
+				if not info.arg then info = nil end
+			end
+			if info and info.mat then
+				info.mat = op.safeindex(gl, info.mat)
+				if not info.mat then info = nil end
+			end
+			if v and info then
 				uniformSettersForGLTypes[v] = info
 			end
 		end
@@ -216,12 +235,16 @@ function GLProgram:init(args)
 	GLProgram.super.init(self, self.id)
 
 	local shaders = table()
-	local shaderTypes = {
+	local shaderTypes = table{
 		{'vertex', GLVertexShader},
 		{'fragment', GLFragmentShader},
-		{'geometry', GLGeometryShader},
-		{'compute', GLComputeShader},
 	}
+	if GLGeometryShader then
+		shaderTypes:insert{'geometry', GLGeometryShader}
+	end
+	if GLComputeShader then
+		shaderTypes:insert{'compute', GLComputeShader}
+	end
 	for _,st in ipairs(shaderTypes) do
 		local field, cl = table.unpack(st)
 		local code = args[field..'Code']
@@ -347,7 +370,9 @@ and then make GLAttribute 1-1 with GLProgram's attr objects
 	end
 
 	if args.attrs then
-		if args.createVAO ~= false then
+		if args.createVAO ~= false
+		and hasVAO
+		then
 			self.vao = GLVertexArray{
 				program = self,
 				attrs = self.attrs,
@@ -358,6 +383,7 @@ and then make GLAttribute 1-1 with GLProgram's attr objects
 		assert(args.createVAO == nil, "you specified 'createVAO' but you didn't specify any attrs")
 	end
 
+	-- TODO remove this ...
 	self:useNone()
 end
 

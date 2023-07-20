@@ -1,2 +1,2 @@
 -- TODO more modular or something?  I don't like globals...
-return require('ffi.OpenGL' or ffi_OpenGL)
+return require(ffi_OpenGL or 'ffi.OpenGL')

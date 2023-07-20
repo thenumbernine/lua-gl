@@ -1,5 +1,6 @@
 local ffi = require 'ffi'
 local class = require 'ext.class'
+local op = require 'ext.op'
 local gl = require 'gl'
 local glreport = require 'gl.report'
 
@@ -16,7 +17,7 @@ local function GetBehavior(parent)
 		local getter = assert(args.getter)
 		local vars = assert(args.vars)
 		for _,var in ipairs(vars) do
-			if gl[var.name] then
+			if op.safeindex(gl, var.name) then
 				var.getter = getter
 				table.insert(self.getInfo, var)
 				self.getInfo[var.name] = var

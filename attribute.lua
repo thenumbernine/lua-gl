@@ -20,6 +20,7 @@ local gl = require 'gl'
 local ffi = require 'ffi'
 local class = require 'ext.class'
 local table = require 'ext.table'
+local op = require 'ext.op'
 
 --[[
 Attribute has the following args:
@@ -33,46 +34,54 @@ local Attribute = class()
 -- GL_HALF_FLOAT, GL_FLOAT, GL_DOUBLE, GL_FIXED, GL_INT_2_10_10_10_REV, GL_UNSIGNED_INT_2_10_10_10_REV, GL_UNSIGNED_INT_10F_11F_11F_REV
 
 -- [[
-Attribute.getTypeAndSizeForGLSLType = {
-	[gl.GL_FLOAT] 				= {gl.GL_FLOAT,			1,	1},
-	[gl.GL_FLOAT_VEC2] 			= {gl.GL_FLOAT,			2,	1},
-	[gl.GL_FLOAT_VEC3] 			= {gl.GL_FLOAT,			3,	1},
-	[gl.GL_FLOAT_VEC4] 			= {gl.GL_FLOAT,			4,	1},
-	[gl.GL_FLOAT_MAT2] 			= {gl.GL_FLOAT,			2,	2},
-	[gl.GL_FLOAT_MAT3] 			= {gl.GL_FLOAT,			3,	3},
-	[gl.GL_FLOAT_MAT4] 			= {gl.GL_FLOAT,			4,	4},
-	[gl.GL_FLOAT_MAT2x3] 		= {gl.GL_FLOAT,			2,	3},
-	[gl.GL_FLOAT_MAT2x4] 		= {gl.GL_FLOAT,			2,	4},
-	[gl.GL_FLOAT_MAT3x2] 		= {gl.GL_FLOAT,			3,	2},
-	[gl.GL_FLOAT_MAT3x4] 		= {gl.GL_FLOAT,			3,	4},
-	[gl.GL_FLOAT_MAT4x2] 		= {gl.GL_FLOAT,			4,	2},
-	[gl.GL_FLOAT_MAT4x3] 		= {gl.GL_FLOAT,			4,	2},
-	[gl.GL_INT] 				= {gl.GL_INT,			1,	1},
-	[gl.GL_INT_VEC2] 			= {gl.GL_INT,			2,	1},
-	[gl.GL_INT_VEC3] 			= {gl.GL_INT,			3,	1},
-	[gl.GL_INT_VEC4] 			= {gl.GL_INT,			4,	1},
---	[gl.GL_DOUBLE] 				= {gl.GL_DOUBLE,		1,	1},
---	[gl.GL_DOUBLE_VEC2] 		= {gl.GL_DOUBLE,		2,	1},
---	[gl.GL_DOUBLE_VEC3] 		= {gl.GL_DOUBLE,		3,	1},
---	[gl.GL_DOUBLE_VEC4] 		= {gl.GL_DOUBLE,		4,	1},
---	[gl.GL_DOUBLE_MAT2] 		= {gl.GL_DOUBLE,		2,	2},
---	[gl.GL_DOUBLE_MAT3] 		= {gl.GL_DOUBLE,		3,	3},
---	[gl.GL_DOUBLE_MAT4] 		= {gl.GL_DOUBLE,		4,	4},
---	[gl.GL_DOUBLE_MAT2x3] 		= {gl.GL_DOUBLE,		2,	3},
---	[gl.GL_DOUBLE_MAT2x4] 		= {gl.GL_DOUBLE,		2,	4},
---	[gl.GL_DOUBLE_MAT3x2] 		= {gl.GL_DOUBLE,		3,	2},
---	[gl.GL_DOUBLE_MAT3x4] 		= {gl.GL_DOUBLE,		3,	4},
---	[gl.GL_DOUBLE_MAT4x2] 		= {gl.GL_DOUBLE,		4,	2},
---	[gl.GL_DOUBLE_MAT4x3] 		= {gl.GL_DOUBLE,		4,	2},
---	[gl.GL_UNSIGNED_INT] 		= {gl.GL_UNSIGNED_INT,	1,	1},
---	[gl.GL_UNSIGNED_INT_VEC2] 	= {gl.GL_UNSIGNED_INT,	2,	1},
---	[gl.GL_UNSIGNED_INT_VEC3] 	= {gl.GL_UNSIGNED_INT,	3,	1},
---	[gl.GL_UNSIGNED_INT_VEC4] 	= {gl.GL_UNSIGNED_INT,	4,	1},
---	[gl.GL_BOOL] 				= {gl.GL_BOOL,			1,	1},
---	[gl.GL_BOOL_VEC2] 	 	 	= {gl.GL_BOOL,	 	 	2,	1},
---	[gl.GL_BOOL_VEC3] 	 	 	= {gl.GL_BOOL,	 	 	3,	1},
---	[gl.GL_BOOL_VEC4] 	 	 	= {gl.GL_BOOL,	 	 	4,	1},
-}
+Attribute.getTypeAndSizeForGLSLType = table{
+	{'GL_FLOAT',				{'GL_FLOAT',		1,	1}},
+	{'GL_FLOAT_VEC2',			{'GL_FLOAT',		2,	1}},
+	{'GL_FLOAT_VEC3',			{'GL_FLOAT',		3,	1}},
+	{'GL_FLOAT_VEC4',			{'GL_FLOAT',		4,	1}},
+	{'GL_FLOAT_MAT2',			{'GL_FLOAT',		2,	2}},
+	{'GL_FLOAT_MAT3',			{'GL_FLOAT',		3,	3}},
+	{'GL_FLOAT_MAT4',			{'GL_FLOAT',		4,	4}},
+	{'GL_FLOAT_MAT2x3',			{'GL_FLOAT',		2,	3}},
+	{'GL_FLOAT_MAT2x4',			{'GL_FLOAT',		2,	4}},
+	{'GL_FLOAT_MAT3x2',			{'GL_FLOAT',		3,	2}},
+	{'GL_FLOAT_MAT3x4',			{'GL_FLOAT',		3,	4}},
+	{'GL_FLOAT_MAT4x2',			{'GL_FLOAT',		4,	2}},
+	{'GL_FLOAT_MAT4x3',			{'GL_FLOAT',		4,	2}},
+	{'GL_INT',					{'GL_INT',			1,	1}},
+	{'GL_INT_VEC2',				{'GL_INT',			2,	1}},
+	{'GL_INT_VEC3',				{'GL_INT',			3,	1}},
+	{'GL_INT_VEC4',				{'GL_INT',			4,	1}},
+	{'GL_DOUBLE',				{'GL_DOUBLE',		1,	1}},
+	{'GL_DOUBLE_VEC2',			{'GL_DOUBLE',		2,	1}},
+	{'GL_DOUBLE_VEC3',			{'GL_DOUBLE',		3,	1}},
+	{'GL_DOUBLE_VEC4',			{'GL_DOUBLE',		4,	1}},
+	{'GL_DOUBLE_MAT2',			{'GL_DOUBLE',		2,	2}},
+	{'GL_DOUBLE_MAT3',			{'GL_DOUBLE',		3,	3}},
+	{'GL_DOUBLE_MAT4',			{'GL_DOUBLE',		4,	4}},
+	{'GL_DOUBLE_MAT2x3',		{'GL_DOUBLE',		2,	3}},
+	{'GL_DOUBLE_MAT2x4',		{'GL_DOUBLE',		2,	4}},
+	{'GL_DOUBLE_MAT3x2',		{'GL_DOUBLE',		3,	2}},
+	{'GL_DOUBLE_MAT3x4',		{'GL_DOUBLE',		3,	4}},
+	{'GL_DOUBLE_MAT4x2',		{'GL_DOUBLE',		4,	2}},
+	{'GL_DOUBLE_MAT4x3',		{'GL_DOUBLE',		4,	2}},
+	{'GL_UNSIGNED_INT',			{'GL_UNSIGNED_INT',	1,	1}},
+	{'GL_UNSIGNED_INT_VEC2',	{'GL_UNSIGNED_INT',	2,	1}},
+	{'GL_UNSIGNED_INT_VEC3',	{'GL_UNSIGNED_INT',	3,	1}},
+	{'GL_UNSIGNED_INT_VEC4',	{'GL_UNSIGNED_INT',	4,	1}},
+	{'GL_BOOL',					{'GL_BOOL',			1,	1}},
+	{'GL_BOOL_VEC2',			{'GL_BOOL',	 	 	2,	1}},
+	{'GL_BOOL_VEC3',			{'GL_BOOL',	 	 	3,	1}},
+	{'GL_BOOL_VEC4',			{'GL_BOOL',	 	 	4,	1}},
+}:mapi(function(p)
+	-- some of these are not in GLES so ...
+	-- luajit cdata doesn't let you test for existence with a simple nil value
+	local k = op.safeindex(gl, p[1])
+	p[2][1] = op.safeindex(gl, p[2][1])
+	if not p[2][1] then return nil end
+	if not k then return nil end
+	return p[2], k
+end):setmetatable(nil)
 --]]
 
 --[[
