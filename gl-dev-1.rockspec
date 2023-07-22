@@ -24,6 +24,7 @@ build = {
 		["gl.get"] = "get.lua",
 		["gl"] = "gl.lua",
 		["gl.gradienttex"] = "gradienttex.lua",
+		["gl.gradienttex2d"] = "gradienttex2d.lua",
 		["gl.hsvtex"] = "hsvtex.lua",
 		["gl.intersect"] = "intersect.lua",
 		["gl.kernelprogram"] = "kernelprogram.lua",
