@@ -1,9 +1,14 @@
-local class = require 'ext.class'
 local ffi = require 'ffi'
+local class = require 'ext.class'
+local op = require 'ext.op'
 local gl = require 'gl'
 local Tex2D = require 'gl.tex2d'
-local Tex3D = require 'gl.tex3d'
 local glreport = require 'gl.report'
+
+local Tex3D
+if op.safeindex(gl, 'GL_TEXTURE_3D') then
+	Tex3D = require 'gl.tex3d'
+end
 
 local fboErrors = {
 	'GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT',
@@ -15,7 +20,10 @@ local fboErrors = {
 
 local fboErrorNames = {}
 for i,var in ipairs(fboErrors) do
-	fboErrorNames[gl[var]] = var
+	local k = op.safeindex(gl, var)
+	if k then
+		fboErrorNames[k] = var
+	end
 end
 
 local FrameBuffer = class()
@@ -106,7 +114,7 @@ function FrameBuffer:setColorAttachment(tex, index, ...)
 		if mt == Tex2D then
 			self:setColorAttachmentTex2D(tex.id, index, ...)
 		-- cube map? side or all at once?
-		elseif mt == Tex3D then
+		elseif Tex3D and mt == Tex3D then
 			self:setColorAttachmentTex3D(tex.id, index, ...)
 		else
 			error("Can't deduce how to attach the object.  Try using an explicit attachment method")

@@ -1,16 +1,16 @@
+-- right now this is just a copy of gradient-1D but as a 2D texture.
+-- hmm trying to think how to expose gradienttex as either 1D or 2D by API choice
+-- when desktop still supports 1D, but ES doesn't support 1D ...
+-- TODO maybe generalize it to a 2D gradient, or to a 2D procedural texture, or something
+-- or generalize procedural/function-driven textures from the function-driven Image API, 
+-- and just provide the 1D or 2D gradient-generation functiosn?
+
 local ffi = require 'ffi'
 local gl = require 'gl'
 local class = require 'ext.class'
+local Tex2D = require 'gl.tex2d'
 
--- TODO hmmmm
--- TEXTURE_1D is allowed in latest GL
--- but not in GLES
--- so I can't design desktop-GL to work with GLSL 320 ES  and use a GL_TEXTURE_1D-exists check here to see if it's compat, because it'll be compat with the API but not the shader
--- so maybe for compatability I should change this to be Tex2D-based?
--- or maybe I should just have a gradienttex2d option?
-local Tex1D = require 'gl.tex1d'
-
-local GradientTex = class(Tex1D)
+local GradientTex = class(Tex2D)
 
 function GradientTex:init(w, colors, repeated)
 	self.colors = colors
@@ -36,6 +36,7 @@ function GradientTex:init(w, colors, repeated)
 	GradientTex.super.init(self, {
 		internalFormat = gl.GL_RGBA,
 		width = w,
+		height = 1,
 		format = gl.GL_RGBA,
 		type = gl.GL_UNSIGNED_BYTE,
 		data = data,
