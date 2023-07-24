@@ -1,2 +1,3 @@
 -- TODO more modular or something?  I don't like globals...
+-- use require 'gl.setup' to avoid using a global
 return require(ffi_OpenGL or 'ffi.OpenGL')
