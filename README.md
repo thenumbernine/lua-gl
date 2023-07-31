@@ -4,17 +4,17 @@
 ### LuaJIT OpenGL Classes
 
 ## Usage:
-```
-require 'gl'
+``` lua
+local gl = require 'gl'
 ```
 
-Make sure to use `require 'gl'` instead of `require 'ffi.OpenGL'` so prototype references can be handled properly.
+Make sure to use `require 'gl'` instead of `require 'ffi.req' 'OpenGL'` so prototype references can be handled properly.
 
 ## To use this with GLES2, use the following global to override the FFI file:
+``` lua
+local gl = require 'gl.setup' 'OpenGLES2'
 ```
-ffi_OpenGL = 'ffi.OpenGLES2'
-require 'gl'
-```
+... and then all subsequent `require 'gl'` will return the correctly-loaded library.
 
 Behavior rule of thumb:
 

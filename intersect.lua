@@ -1,6 +1,6 @@
 local ffi = require 'ffi'
 local gl = require 'gl'
-local glu = require 'ffi.glu'
+local glu = require 'ffi.req' 'glu'
 
 -- glSceneIntersect
 
