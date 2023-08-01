@@ -6,9 +6,16 @@ local GLTex2D = require 'gl.tex2d'
 
 local PingPong = class()
 
+--[[
+args:
+	- fbo = provide your own gl.fbo object.  default one is created.
+	- numBuffers = number of buffers for the pingpong. default 2.
+	- dontAttach = dont attach the pingpong buffers to GL_COLOR_ATTACHMENT_0 through n-1
+	- the rest are forwarded to GLTex2D
+--]]
 function PingPong:init(args)
 	self.hist = table()
-	self.fbo = GLFrameBuffer{width=args.width, height=args.height}
+	self.fbo = args.fbo or GLFrameBuffer{width=args.width, height=args.height}
 	self.width = args.width
 	self.height = args.height
 	self.index = 1	--one-based for history index.  don't forget the associated color attachment is zero-based

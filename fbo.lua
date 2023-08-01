@@ -28,6 +28,12 @@ end
 
 local FrameBuffer = class()
 
+--[[
+args:
+	width
+	height
+	useDepth to allocate and bind a renderbuffer associated with the depth component
+--]]
 function FrameBuffer:init(args)
 	args = args or {}
 
