@@ -12,16 +12,22 @@ function PingPong:init(args)
 	self.width = args.width
 	self.height = args.height
 	self.index = 1	--one-based for history index.  don't forget the associated color attachment is zero-based
-	self.fbo:bind()	-- TODO bind-upon-create? hmmm...
+	if not args.dontAttach then
+		self.fbo:bind()	-- TODO bind-upon-create? hmmm...
+	end
 	local numBuffers = args.numBuffers or 2
 	for i=1,numBuffers do
 		local tex = GLTex2D(args)
 		self.hist:insert(tex)
-		self.fbo:setColorAttachmentTex2D(tex.id, i-1)
+		if not args.dontAttach then
+			self.fbo:setColorAttachmentTex2D(tex.id, i-1)
+		end
 	end
 	-- TODO stick with theme and don't unbind automatically upon init
 	-- or TODO maybe all objects should unbind upon init? just not upon param call?
-	self.fbo:unbind()
+	if not args.dontAttach then
+		self.fbo:unbind()
+	end
 end
 
 function PingPong:nextIndex(n)
