@@ -83,22 +83,26 @@ end
 -- or should we leave the app to do this (and reduce the possible binds/unbinds?)
 function FrameBuffer:setColorAttachmentTex2D(tex, index, target, level)
 	gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + (index or 0), target or gl.GL_TEXTURE_2D, tex, level or 0)
+	return self
 end
 
 function FrameBuffer:setColorAttachmentTexCubeMapSide(tex, index, side, level)
 	gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + (index or 0), gl.GL_TEXTURE_CUBE_MAP_POSITIVE_X + (side or index), tex, level or 0)
+	return self
 end
 
 function FrameBuffer:setColorAttachmentTexCubeMap(tex, level)
 	for i=0,5 do
 		gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + i, gl.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, tex, level or 0)
 	end
+	return self
 end
 
 function FrameBuffer:setColorAttachmentTex3D(tex, index, slice, target, level)
 	if not tonumber(slice) then error("unable to convert slice to number: " ..tostring(slice)) end
 	slice = tonumber(slice)
 	gl.glFramebufferTexture3D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + (index or 0), target or gl.GL_TEXTURE_3D, tex, level or 0, slice)
+	return self
 end
 
 --general, object-based type-deducing
@@ -119,6 +123,7 @@ function FrameBuffer:setColorAttachment(tex, index, ...)
 	else
 		error("Can't deduce how to attach the object.  Try using an explicit attachment method")
 	end
+	return self
 end
 
 local glint = ffi.new('GLint[1]')
