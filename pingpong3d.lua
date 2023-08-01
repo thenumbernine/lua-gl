@@ -26,7 +26,9 @@ end
 
 -- unlike the above, with all those slices, we have to attach upon request
 function PingPong3D:draw(args)
-	self.fbo:setColorAttachmentTex3D(self.hist[self.index].id, 0, args.slice)
+	self.fbo
+		:bind()
+		:setColorAttachmentTex3D(self.hist[self.index].id, 0, args.slice)
 	args = table({
 		colorAttachment = 0,
 	}, args)
