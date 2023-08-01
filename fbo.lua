@@ -162,14 +162,10 @@ end
 
 function FrameBuffer.drawScreenQuad()
 	gl.glBegin(gl.GL_TRIANGLE_STRIP)
-	gl.glTexCoord2f(0,0)
-	gl.glVertex2f(0,0)
-	gl.glTexCoord2f(1,0)
-	gl.glVertex2f(1,0)
-	gl.glTexCoord2f(0,1)
-	gl.glVertex2f(0,1)
-	gl.glTexCoord2f(1,1)
-	gl.glVertex2f(1,1)
+	gl.glTexCoord2f(0,0)	gl.glVertex2f(0,0)
+	gl.glTexCoord2f(1,0)	gl.glVertex2f(1,0)
+	gl.glTexCoord2f(0,1)	gl.glVertex2f(0,1)
+	gl.glTexCoord2f(1,1)	gl.glVertex2f(1,1)
 	gl.glEnd()
 end
 

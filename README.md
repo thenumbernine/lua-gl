@@ -26,6 +26,6 @@ Setting any parameters will require a manual bind() called beforehand.
 
 - LuaJIT
 - https://github.com/thenumbernine/lua-ext
-- https://github.com/malkia/ufo and/or https://github.com/thenumbernine/lua-ffi-bindings
+- https://github.com/thenumbernine/lua-ffi-bindings
 - https://github.com/thenumbernine/lua-template for showcode for GLShader
 - https://github.com/thenumbernine/lua-image for image loading / resizing in Tex2D

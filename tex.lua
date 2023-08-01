@@ -180,6 +180,7 @@ function GLTex:generateMipmap()
 	return self
 end
 
+-- TODO well if now I'm storing .data ...
 function GLTex:toCPU(ptr, level)
 	if not ptr then
 		-- TODO need to map from format to channels
