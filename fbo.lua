@@ -39,8 +39,8 @@ function FrameBuffer:init(args)
 	local id = ffi.new('GLuint[1]')
 	gl.glGenFramebuffers(1, id)
 	self.id = id[0]
-	gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.id)
 
+	self:bind()
 	-- make a depth buffer render target only if you need it
 	self.depthID = 0
 	if args.useDepth then
@@ -51,7 +51,7 @@ function FrameBuffer:init(args)
 		gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, 0)
 		gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, self.depthID)
 	end
-	gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
+	self:unbind()
 end
 
 function FrameBuffer:bind()
@@ -82,18 +82,14 @@ end
 --			on the other hand, a fbo setColorAttachmet() without bind() wouldn't fulfill its operation
 -- or should we leave the app to do this (and reduce the possible binds/unbinds?)
 function FrameBuffer:setColorAttachmentTex2D(tex, index, target, level)
-	self:bind()
 	gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + (index or 0), target or gl.GL_TEXTURE_2D, tex, level or 0)
 end
 
 function FrameBuffer:setColorAttachmentTexCubeMapSide(tex, index, side, level)
-	self:bind()
-	index = index or 0
-	gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + index, gl.GL_TEXTURE_CUBE_MAP_POSITIVE_X + (side or index), tex, level or 0)
+	gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + (index or 0), gl.GL_TEXTURE_CUBE_MAP_POSITIVE_X + (side or index), tex, level or 0)
 end
 
 function FrameBuffer:setColorAttachmentTexCubeMap(tex, level)
-	self:bind()
 	for i=0,5 do
 		gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + i, gl.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, tex, level or 0)
 	end
@@ -102,7 +98,6 @@ end
 function FrameBuffer:setColorAttachmentTex3D(tex, index, slice, target, level)
 	if not tonumber(slice) then error("unable to convert slice to number: " ..tostring(slice)) end
 	slice = tonumber(slice)
-	self:bind()
 	gl.glFramebufferTexture3D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + (index or 0), target or gl.GL_TEXTURE_3D, tex, level or 0, slice)
 end
 
@@ -221,8 +216,10 @@ function FrameBuffer:draw(args)
 		glreport('drawScreenFBO glColor')
 	end
 	if args.dest then
-		-- TODO this binds then unbinds ... hmmmm
-		self:setColorAttachment(args.dest, 0)
+		-- TODO extra bind here and in drawToCallback ... hmmmm
+		self
+			:bind()
+			:setColorAttachment(args.dest, 0)
 	end
 	glreport('drawScreenFBO before callback')
 

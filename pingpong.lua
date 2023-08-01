@@ -12,6 +12,7 @@ function PingPong:init(args)
 	self.width = args.width
 	self.height = args.height
 	self.index = 1	--one-based for history index.  don't forget the associated color attachment is zero-based
+	self.fbo:bind()	-- TODO bind-upon-create? hmmm...
 	local numBuffers = args.numBuffers or 2
 	for i=1,numBuffers do
 		local tex = GLTex2D(args)

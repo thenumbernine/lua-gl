@@ -388,6 +388,7 @@ and then make GLAttribute 1-1 with GLProgram's attr objects
 	end
 
 	-- TODO remove this ...
+	-- make it consistent behavior to leave objects bound upon their creation
 	self:useNone()
 end
 
