@@ -295,6 +295,7 @@ function GLProgram:init(args)
 
 	self:use()
 
+-- TODO to give uniforms their own classes?
 	self.uniforms = {}
 	local maxUniforms = self:get'GL_ACTIVE_UNIFORMS'
 	local maxLen = self:get'GL_ACTIVE_UNIFORM_MAX_LENGTH'
@@ -378,7 +379,6 @@ and then make GLAttribute 1-1 with GLProgram's attr objects
 		-- but in the case that i do keep the loc==-1, and simply do not bind them, then i still get gl errors later ...
 		-- weird.
 		-- maybe loc==-1 is valid? and i'm in trouble for not using it?
--- TODO don't use GLAttribute here, just use a nameless table like for .uniforms
 		if attrargs.loc ~= -1 then
 			self.attrs[name] = GLAttribute(attrargs)
 		end
@@ -404,10 +404,6 @@ and then make GLAttribute 1-1 with GLProgram's attr objects
 	else
 		assert(not args.createVAO, "you specified 'createVAO' but you didn't specify any attrs")
 	end
-
-	-- TODO remove this ...
-	-- make it consistent behavior to leave objects bound upon their creation
-	self:useNone()
 end
 
 -- TODO 'bind' ?
@@ -530,6 +526,7 @@ function GLProgram:bindImage(unit, tex, format, rw, level, layered, layer)
 		layer or 0,
 		rw,
 		format)
+	return self
 end
 
 return GLProgram

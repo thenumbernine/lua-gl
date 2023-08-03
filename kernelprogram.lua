@@ -1,8 +1,7 @@
-local class = require 'ext.class'
 local table = require 'ext.table'
 local GLProgram = require 'gl.program'
 
-local GLKernelProgram = class(GLProgram)
+local GLKernelProgram = GLProgram:subclass()
 
 function GLKernelProgram:init(args)
 	local varyingCode = [[
