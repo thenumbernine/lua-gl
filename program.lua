@@ -1,14 +1,13 @@
 local ffi = require 'ffi'
 local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
-local class = require 'ext.class'
 local table = require 'ext.table'
 local op = require 'ext.op'
 local GetBehavior = require 'gl.get'
 local GLShader = require 'gl.shader'
 
 
--- for GLES which doesn't have VAO functionality
+-- for GLES1&2 which doesn't have VAO functionality
 local hasVAO = not not op.safeindex(gl, 'glGenVertexArrays')
 
 
@@ -20,21 +19,21 @@ local GLArrayBuffer = require 'gl.arraybuffer'
 local GLVertexArray = require 'gl.vertexarray'
 
 
-local GLVertexShader = class(GLShader)
+local GLVertexShader = GLShader:subclass()
 GLVertexShader.type = gl.GL_VERTEX_SHADER
 
-local GLFragmentShader = class(GLShader)
+local GLFragmentShader = GLShader:subclass()
 GLFragmentShader.type = gl.GL_FRAGMENT_SHADER
 
 local GLGeometryShader
 if op.safeindex(gl, 'GL_GEOMETRY_SHADER') then
-	GLGeometryShader = class(GLShader)
+	GLGeometryShader = GLShader:subclass()
 	GLGeometryShader.type = gl.GL_GEOMETRY_SHADER
 end
 
 local GLComputeShader
 if op.safeindex(gl, 'GL_COMPUTE_SHADER') then
-	GLComputeShader = class(GLShader)
+	GLComputeShader = GLShader:subclass()
 	GLComputeShader.type = gl.GL_COMPUTE_SHADER
 end
 
@@ -176,14 +175,14 @@ local function getUniformSettersForGLType(utype)
 	return setters
 end
 
-local GLProgram = class(GetBehavior(GCWrapper{
+local GLProgram = GetBehavior(GCWrapper{
 	gctype = 'autorelease_gl_program_ptr_t',
 	ctype = 'GLuint',
 	-- retain isn't used
 	release = function(ptr)
 		return gl.glDeleteProgram(ptr[0])
 	end,
-}))
+}):subclass()
 
 GLProgram.checkLinkStatus = GLShader.createCheckStatus('GL_LINK_STATUS', function(...) return gl.glGetProgramInfoLog(...) end)
 
@@ -192,8 +191,8 @@ GLProgram.checkLinkStatus = GLShader.createCheckStatus('GL_LINK_STATUS', functio
 
 GLProgram:addGetterVars{
 	-- wrap it so wgl can replace glGetShaderiv
-	getter = function(...)
-		return gl.glGetProgramiv(...)
+	getter = function(self, namevalue, result)
+		return gl.glGetProgramiv(self.id, namevalue, result)
 	end,
 	vars = {
 		{name='GL_DELETE_STATUS', type='GLint'},
@@ -384,7 +383,7 @@ and then make GLAttribute 1-1 with GLProgram's attr objects
 		end
 		self:setAttrs()	-- in case any buffers were specified
 	else
-		assert(args.createVAO == nil, "you specified 'createVAO' but you didn't specify any attrs")
+		assert(not args.createVAO, "you specified 'createVAO' but you didn't specify any attrs")
 	end
 
 	-- TODO remove this ...

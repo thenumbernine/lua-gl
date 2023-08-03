@@ -1,6 +1,5 @@
 local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
-local class = require 'ext.class'
 local table = require 'ext.table'
 
 --[[
@@ -12,14 +11,14 @@ usage:
 5)	set vertex attrib pointer
 6)	enable attrib array
 --]]
-local VertexArray = class(GCWrapper{
+local VertexArray = GCWrapper{
 	gctype = 'autorelease_gl_vertex_array_ptr_t',
 	ctype = 'GLuint',
 	-- retain isn't used
 	release = function(ptr)
 		return gl.glDeleteVertexArrays(1, ptr)
 	end,
-})
+}:subclass()
 
 function VertexArray:init(args)
 	VertexArray.super.init(self)

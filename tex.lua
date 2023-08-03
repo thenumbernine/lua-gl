@@ -7,18 +7,78 @@ or TODO use bind-less textures?
 local ffi = require 'ffi'
 local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
+local GetBehavior = require 'gl.get'
 local class = require 'ext.class'
 local table = require 'ext.table'
 local op = require 'ext.op'
 
-local GLTex = class(GCWrapper{
+local GLTex = GetBehavior(GCWrapper{
 	gctype = 'autorelease_gl_tex_ptr_t',
 	ctype = 'GLuint',
 	-- retain isn't used
 	release = function(ptr)
 		return gl.glDeleteTextures(1, ptr)
 	end,
-})
+}):subclass()
+
+-- assumes tex is already bound to target
+local function getteriv(self, namevalue, result)
+	-- if we're GL 4.5 then we can use glGetTextureParameter* which accepts self.id (like glGetProgram and like the whole CL API)
+	-- but otherwise (incl all GLES) we have to use glGetTexParameter*
+	-- GL has glGetTextureParameterfv & -iv
+	-- GLES1 has only glGetTexParameterf
+	-- GLES2 and 3 have glGetTexParameterf and -i
+	return gl.glGetTextureParameteriv(self.target, namevalue, result) 
+end
+
+-- hmm 'getter' means call the getter above, which is a wrapper for glGet*
+-- so mayb i have to put th branch in the getter above fr now ....
+-- another TODO is this should be getterf for GLES2 ... and for GLES1 *all* texture getters are getterf ...
+local function getterfv(self, namevalue, result)
+	return gl.glGetTextureParameterfv(self.target, namevalue, result) 
+end
+
+GLTex:addGetterVars{
+	-- default use int
+	-- TODO map and assign based on type and on gl version
+	getter = getteriv,
+	-- https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetTexParameter.xhtml 
+	-- would be nice if the docs specified what getter result type was preferred
+	vars = {
+		{name='GL_TEXTURE_MAG_FILTER', type='GLuint'},
+		{name='GL_TEXTURE_MIN_FILTER', type='GLuint'},
+		{name='GL_TEXTURE_MIN_LOD', type='GLfloat', getter=getterfv},,
+		{name='GL_TEXTURE_MAX_LOD', type='GLfloat', getter=getterfv},
+		{name='GL_TEXTURE_BASE_LEVEL', type='GLuint'},
+		{name='GL_TEXTURE_MAX_LEVEL', type='GLuint'},
+		{name='GL_TEXTURE_SWIZZLE_R', type='GLuint'},
+		{name='GL_TEXTURE_SWIZZLE_G', type='GLuint'},
+		{name='GL_TEXTURE_SWIZZLE_B', type='GLuint'},
+		{name='GL_TEXTURE_SWIZZLE_A', type='GLuint'},
+		{name='GL_TEXTURE_SWIZZLE_RGBA', type='GLuint[4]'},
+		{name='GL_TEXTURE_WRAP_S', type='GLuint'},
+		{name='GL_TEXTURE_WRAP_T', type='GLuint'},
+		{name='GL_TEXTURE_WRAP_R', type='GLuint'},
+		{name='GL_TEXTURE_BORDER_COLOR', type='GLfloat[4]', getter=getterfv},
+		{name='GL_TEXTURE_COMPARE_MODE', type='GLuint'},
+		{name='GL_TEXTURE_COMPARE_FUNC', type='GLuint'},
+		{name='GL_TEXTURE_IMMUTABLE_FORMAT', type='GLuint'},
+		
+		-- 4.2 or later
+		{name='GL_IMAGE_FORMAT_COMPATIBILITY_TYPE', type='GLuint'},
+
+		-- 4.3 or later
+		{name='GL_DEPTH_STENCIL_TEXTURE_MODE', type='GLuint'},
+		{name='GL_TEXTURE_VIEW_MIN_LEVEL', type='GLuint'},
+		{name='GL_TEXTURE_VIEW_NUM_LEVELS', type='GLuint'},
+		{name='GL_TEXTURE_VIEW_MIN_LAYER', type='GLuint'},
+		{name='GL_TEXTURE_VIEW_NUM_LAYERS', type='GLuint'},
+		{name='GL_TEXTURE_IMMUTABLE_LEVELS', type='GLuint'},
+
+		-- 4.5 or later
+		{name='GL_TEXTURE_TARGET', type='GLuint'},
+	},
+}
 
 function GLTex:init(args)
 	if type(args) == 'string' then

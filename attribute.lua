@@ -17,6 +17,7 @@ while glGetActiveAttrib ctypes assoc with glsltypes are only:
 
 --]]
 local gl = require 'gl'
+local GetBehavior = require 'gl.get'
 local ffi = require 'ffi'
 local class = require 'ext.class'
 local table = require 'ext.table'
@@ -27,7 +28,35 @@ Attribute has the following args:
 	size = number of channels, derived from the glslType
 	type =
 --]]
-local Attribute = class()
+local Attribute = GetBehavior():subclass()
+
+Attribute:addGetterVars{
+	getter = function(self, namevalue, result)
+		return gl.glGetVertexAttribiv(assert(self.loc), namevalue, result)
+	end,
+	-- the names might say 'ATTRIB_ARRAY', but the input is per-attribute-location
+	-- so they are really per-attribute
+	-- and the assumption of the name is that you'll only use them via bound VAO
+	-- but they work just as well with no VAO bound.
+	vars = {
+		{name='GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING', type='GLuint'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_ENABLED', type='GLuint'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_SIZE', type='GLuint'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_STRIDE', type='GLuint'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_TYPE', type='GLuint'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_NORMALIZED', type='GLuint'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_INTEGER', type='GLuint'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_LONG', type='GLuint'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_DIVISOR', type='GLuint'},
+		{name='GL_VERTEX_ATTRIB_BINDING', type='GLuint'},
+		{name='GL_VERTEX_ATTRIB_RELATIVE_OFFSET', type='GLuint'},
+		{name='GL_CURRENT_VERTEX_ATTRIB', type='GLuint'},
+--GL_CURRENT_VERTEX_ATTRIB	-- this returns four values ...
+-- also,  "All of the parameters except GL_CURRENT_VERTEX_ATTRIB represent state stored in the currently bound vertex array object."
+-- so GL_CURRENT_VERTEX_ATTRIB	is not a VAO getter variable
+-- even though it is used with glGetVertexAttrib
+	},
+}
 
 -- glVertexAttribPointer types:
 -- GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT, GL_INT, GL_UNSIGNED_INT
@@ -146,6 +175,10 @@ end
 function Attribute:setPointer(loc)
 	loc = loc or self.loc
 --if loc == -1 then error'here' end
+	-- does glVertxAttribPointer associate loc with ptr *globally*
+	-- or does it associate this *per-shader* ?
+	-- whose state are we messing with?
+	-- same question for glEnableVertexAttrib
 	gl.glVertexAttribPointer(
 		loc,
 		self.size,
