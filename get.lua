@@ -3,7 +3,7 @@ TODO GL isn't as clean an API as CL
 so the getter function might have to be more flexible.
 this currntly passes in the obj's id as the 1st arg
 this is fine with glGetProgram* stuff
-but for glGetVertexAttrib, we want the location as the first, 
+but for glGetVertexAttrib, we want the location as the first,
 	but also association of this function with the VAO (tho th VAO .id doesn't get passed into th get)
 	(does that mean this function is not associated the attribute itself? even though attribute location *IS* passed into the 1st arg? gah.)
 	(or is this associated with globally assigned attributes when no VAO is being used?)

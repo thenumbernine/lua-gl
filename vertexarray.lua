@@ -1,8 +1,6 @@
-local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
-local gl = require 'gl'
-local table = require 'ext.table'
-
 --[[
+holds state info of attributes (enabled, bound buffers/pointers, etc)
+
 usage:
 1) create VertexArray
 2) bind VertexArray
@@ -11,6 +9,11 @@ usage:
 5)	set vertex attrib pointer
 6)	enable attrib array
 --]]
+
+local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
+local gl = require 'gl'
+local table = require 'ext.table'
+
 local VertexArray = GCWrapper{
 	gctype = 'autorelease_gl_vertex_array_ptr_t',
 	ctype = 'GLuint',
@@ -20,6 +23,13 @@ local VertexArray = GCWrapper{
 	end,
 }:subclass()
 
+--[[
+args:
+	program = GLProgram to derive what the attribute type info is
+	attrs = (optional) table of ...
+		key = attribut name
+		value = what to assign it
+--]]
 function VertexArray:init(args)
 	VertexArray.super.init(self)
 	gl.glGenVertexArrays(1, self.gc.ptr)
@@ -45,6 +55,7 @@ function VertexArray:init(args)
 	end
 end
 
+-- TODO remove bind and unbind
 function VertexArray:setAttrs(attrs)
 	self:bind()
 	for _,attr in ipairs(attrs or self.attrs) do
