@@ -55,7 +55,7 @@ function VertexArray:init(args)
 	end
 end
 
--- TODO remove bind and unbind
+-- TODO remove bind and unbind?
 function VertexArray:setAttrs(attrs)
 	self:bind()
 	for _,attr in ipairs(attrs or self.attrs) do

@@ -45,8 +45,8 @@ function FrameBuffer:init(args)
 	local id = ffi.new('GLuint[1]')
 	gl.glGenFramebuffers(1, id)
 	self.id = id[0]
-
 	self:bind()
+
 	-- make a depth buffer render target only if you need it
 	self.depthID = 0
 	if args.useDepth then
@@ -57,7 +57,6 @@ function FrameBuffer:init(args)
 		gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, 0)
 		gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, self.depthID)
 	end
-	self:unbind()
 end
 
 function FrameBuffer:bind()
@@ -80,6 +79,12 @@ function FrameBuffer.check()
 		return false, errstr
 	end
 	return true
+end
+
+-- and return-self assert-version
+function FrameBuffer:assertcheck()
+	assert(self.check())
+	return self
 end
 
 -- TODO - should we bind() beforehand for assurance's sake?
@@ -164,6 +169,7 @@ function FrameBuffer:drawToCallback(index, callback, ...)
 	end
 
 	self:unbind()
+	return self
 end
 
 function FrameBuffer.drawScreenQuad()
@@ -270,6 +276,7 @@ function FrameBuffer:draw(args)
 		glreport('drawScreenFBO glPopAttrib')
 	end
 	glreport('end drawScreenFBO')
+	return self
 end
 
 return FrameBuffer

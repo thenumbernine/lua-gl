@@ -47,6 +47,8 @@ function GLShader:init(code)
 end
 
 -- used by GLShader and GLProgram
+-- TODO return false w/error? and separate 'assert' function? like FBO has for check()
+-- or meh, need case for that yet?
 function GLShader.createCheckStatus(statusEnum, logGetter)
 	return function(self, code)
 		local status = self:get(statusEnum)
