@@ -26,7 +26,8 @@ function Buffer:init(args)
 	Buffer.super.init(self)
 	gl.glGenBuffers(1, self.gc.ptr)
 	self.id = self.gc.ptr[0]
-
+	
+	self:bind()
 	assert(args, "expected args")
 	if args.data then
 		self:setData(args)
@@ -38,10 +39,12 @@ end
 
 function Buffer:bind()
 	gl.glBindBuffer(self.target, self.id)
+	return self
 end
 
 function Buffer:unbind()
 	gl.glBindBuffer(self.target, 0)
+	return self
 end
 
 --[[
@@ -68,24 +71,20 @@ function Buffer:setData(args)
 	self.data = data
 	self.size = size
 	self.usage = args.usage or gl.GL_STATIC_DRAW
-	self:bind()
 	gl.glBufferData(self.target, self.size, self.data, self.usage)
-	self:unbind()
+	return self
 end
 
 function Buffer:updateData(offset, size, data)
-	offset = offset or 0
-	size = size or self.size
-	data = data or self.data
-	self:bind()
-	gl.glBufferSubData(self.target, offset, size, data)
-	self:unbind()
+	gl.glBufferSubData(self.target, offset or 0, size or self.size, data or self.data)
+	return self
 end
 
 -- https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBindBufferBase.xhtml
 -- "target must be one of GL_ATOMIC_COUNTER_BUFFER, GL_TRANSFORM_FEEDBACK_BUFFER, GL_UNIFORM_BUFFER or GL_SHADER_STORAGE_BUFFER."
 function Buffer:bindBase(index)
 	gl.glBindBufferBase(self.target, index, self.id)
+	return self
 end
 
 return Buffer

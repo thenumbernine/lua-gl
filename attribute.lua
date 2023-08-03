@@ -203,6 +203,7 @@ function Attribute:disable(loc)
 end
 
 -- shorthand for binding to the associated buffer, setPointer, and enable
+-- TODO hmm this in light of the idea of all binds being manual
 function Attribute:set(loc)
 	if self.buffer then
 		self.buffer:bind()
