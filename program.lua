@@ -35,6 +35,8 @@ local GLComputeShader
 if op.safeindex(gl, 'GL_COMPUTE_SHADER') then
 	GLComputeShader = GLShader:subclass()
 	GLComputeShader.type = gl.GL_COMPUTE_SHADER
+
+	-- 'makeGetter' for subclasses to concat parent classes 
 end
 
 -- this doesn't work as easy as it does in webgl
@@ -189,7 +191,7 @@ GLProgram.checkLinkStatus = GLShader.createCheckStatus('GL_LINK_STATUS', functio
 -- similar to cl/getinfo.lua
 
 
-GLProgram:addGetterVars{
+GLProgram:makeGetter{
 	-- wrap it so wgl can replace glGetShaderiv
 	getter = function(self, namevalue, result)
 		return gl.glGetProgramiv(self.id, namevalue, result)

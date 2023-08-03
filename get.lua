@@ -28,7 +28,7 @@ local function GetBehavior(parent)
 	adds fields to class.getInfo and .getInfoForName
 	(or should I just index by integer and by name both?)
 	--]]
-	function template:addGetterVars(args)
+	function template:makeGetter(args)
 		self.getInfo = self.getInfo or {}
 		local getter = assert(args.getter)
 		local vars = assert(args.vars)

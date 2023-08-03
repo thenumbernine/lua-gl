@@ -14,7 +14,7 @@ local GLShader = class(GetBehavior(GCWrapper{
 	end,
 }))
 
-GLShader:addGetterVars{
+GLShader:makeGetter{
 	-- wrap it so wgl can replace glGetShaderiv
 	getter = function(self, namevalue, result)
 		return gl.glGetShaderiv(self.id, namevalue, result)

@@ -38,7 +38,7 @@ local function getterfv(self, namevalue, result)
 	return gl.glGetTextureParameterfv(self.target, namevalue, result) 
 end
 
-GLTex:addGetterVars{
+GLTex:makeGetter{
 	-- default use int
 	-- TODO map and assign based on type and on gl version
 	getter = getteriv,
@@ -47,7 +47,7 @@ GLTex:addGetterVars{
 	vars = {
 		{name='GL_TEXTURE_MAG_FILTER', type='GLuint'},
 		{name='GL_TEXTURE_MIN_FILTER', type='GLuint'},
-		{name='GL_TEXTURE_MIN_LOD', type='GLfloat', getter=getterfv},,
+		{name='GL_TEXTURE_MIN_LOD', type='GLfloat', getter=getterfv},
 		{name='GL_TEXTURE_MAX_LOD', type='GLfloat', getter=getterfv},
 		{name='GL_TEXTURE_BASE_LEVEL', type='GLuint'},
 		{name='GL_TEXTURE_MAX_LEVEL', type='GLuint'},

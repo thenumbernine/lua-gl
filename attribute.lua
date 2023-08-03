@@ -30,7 +30,7 @@ Attribute has the following args:
 --]]
 local Attribute = GetBehavior():subclass()
 
-Attribute:addGetterVars{
+Attribute:makeGetter{
 	getter = function(self, namevalue, result)
 		return gl.glGetVertexAttribiv(assert(self.loc), namevalue, result)
 	end,
@@ -164,6 +164,7 @@ function Attribute:init(args)
 	end
 
 	-- optionally associated with a shader location
+	-- technically, even without any other fields, I can still use Attribute:get() with just .loc set ...
 	self.loc = args.loc
 
 	-- optionally associate a glArrayBuffer as a field
