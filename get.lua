@@ -1,4 +1,6 @@
 --[[
+similar to cl/getinfo.lua
+
 TODO GL isn't as clean an API as CL
 so the getter function might have to be more flexible.
 this currntly passes in the obj's id as the 1st arg
@@ -56,7 +58,9 @@ local function GetBehavior(parent)
 
 		-- make sure it's a pointer of some kind (since luajit doesn't handle refs)
 		local count = infoType:match'%[(%d+)%]$'
-		if not count then
+		if count then
+			count = assert(tonumber(count))
+		else
 			count = 1
 			infoType = infoType..'[1]'
 		end
@@ -66,7 +70,6 @@ local function GetBehavior(parent)
 		-- (so tex can use self.target, program can use self.id, vao can use who knows ...)
 		-- (CL also has a clean interface for interchangeable single vs array getters
 		getter(self, nameValue, result)
-
 		glreport'here' -- check error
 
 		return unpackptr(result, count)

@@ -35,8 +35,6 @@ local GLComputeShader
 if op.safeindex(gl, 'GL_COMPUTE_SHADER') then
 	GLComputeShader = GLShader:subclass()
 	GLComputeShader.type = gl.GL_COMPUTE_SHADER
-
-	-- 'makeGetter' for subclasses to concat parent classes 
 end
 
 -- this doesn't work as easy as it does in webgl
@@ -188,15 +186,26 @@ local GLProgram = GetBehavior(GCWrapper{
 
 GLProgram.checkLinkStatus = GLShader.createCheckStatus('GL_LINK_STATUS', function(...) return gl.glGetProgramInfoLog(...) end)
 
--- similar to cl/getinfo.lua
+-- TODO implement gl.get for all the glGet* functions not associated with any objects/binds
+-- not sure if I should bother implementing them associated with getters
+-- or maybe I'll just put these 'getGlobal*'s in gl/get.lua ...
 
+local function getGlobal(self, namedparam, results)
+	gl.glGetIntegerv(namedparam, results)
+end
+
+local function getGlobal3(self, namedparam, results)
+	for i=0,2 do
+		gl.glGetIntegeri_v(namedparam, i, results+i)
+	end
+end
 
 GLProgram:makeGetter{
 	-- wrap it so wgl can replace glGetShaderiv
 	getter = function(self, namevalue, result)
 		return gl.glGetProgramiv(self.id, namevalue, result)
 	end,
-	vars = {
+	vars = table{
 		{name='GL_DELETE_STATUS', type='GLint'},
 		{name='GL_LINK_STATUS', type='GLint'},
 		{name='GL_VALIDATE_STATUS', type='GLint'},
@@ -215,7 +224,15 @@ GLProgram:makeGetter{
 		{name='GL_GEOMETRY_VERTICES_OUT', type='GLint'},
 		{name='GL_GEOMETRY_INPUT_TYPE', type='GLint'},
 		{name='GL_GEOMETRY_OUTPUT_TYPE', type='GLint'},
-	},
+	}:append(
+		GLComputeShader
+		and {
+			-- global getters, not associated with the program
+			{name='GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS', type='GLuint', getter=getGlobal},
+			{name='GL_MAX_COMPUTE_WORK_GROUP_COUNT', type='GLuint[3]', getter=getGlobal3},
+			{name='GL_MAX_COMPUTE_WORK_GROUP_SIZE', type='GLuint[3]', getter=getGlobal3},
+		} or nil
+	),
 }
 
 --[[
@@ -502,19 +519,6 @@ end
 -- should I just subclass GLProgram?
 -- then keep the original GLProgram for vertex/fragment?
 -- btw can you link vertex+fragment+compute shaders all together?
-
-
--- TODO move this from gl.program to something like gl.get
--- and have gl.get work for all the generic glGet functions not associated with other objects/binds
-local vec3i = require 'vec-ffi.vec3i'
-function GLProgram:get3(name)
-	local v = vec3i()
-	local pname = gl[name]
-	gl.glGetIntegeri_v(pname, 0, v.s+0)
-	gl.glGetIntegeri_v(pname, 1, v.s+1)
-	gl.glGetIntegeri_v(pname, 2, v.s+2)
-	return v
-end
 
 -- tex is a gl.tex object
 function GLProgram:bindImage(unit, tex, format, rw, level, layered, layer)
