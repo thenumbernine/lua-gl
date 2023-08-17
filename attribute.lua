@@ -24,13 +24,13 @@ local table = require 'ext.table'
 local op = require 'ext.op'
 
 --[[
-Attribute has the following args:
+GLAttribute has the following args:
 	size = number of channels, derived from the glslType
 	type =
 --]]
-local Attribute = GetBehavior():subclass()
+local GLAttribute = GetBehavior():subclass()
 
-Attribute:makeGetter{
+GLAttribute:makeGetter{
 	getter = function(self, namevalue, result)
 		return gl.glGetVertexAttribiv(assert(self.loc), namevalue, result)
 	end,
@@ -63,7 +63,7 @@ Attribute:makeGetter{
 -- GL_HALF_FLOAT, GL_FLOAT, GL_DOUBLE, GL_FIXED, GL_INT_2_10_10_10_REV, GL_UNSIGNED_INT_2_10_10_10_REV, GL_UNSIGNED_INT_10F_11F_11F_REV
 
 -- [[
-Attribute.getTypeAndSizeForGLSLType = table{
+GLAttribute.getTypeAndSizeForGLSLType = table{
 	{'GL_FLOAT',				{'GL_FLOAT',		1,	1}},
 	{'GL_FLOAT_VEC2',			{'GL_FLOAT',		2,	1}},
 	{'GL_FLOAT_VEC3',			{'GL_FLOAT',		3,	1}},
@@ -114,7 +114,7 @@ end):setmetatable(nil)
 --]]
 
 --[[
-Attribute fields:
+GLAttribute fields:
 	arraySize = array size.  3 for "attribute float attr[3];"
 	glslType = ex: gl.GL_FLOAT_MAT2x4
 
@@ -135,7 +135,7 @@ Attribute fields:
 		TODO remove this and make GLAttribute specific to GLProgram
 		move this to GL draw instance
 --]]
-function Attribute:init(args)
+function GLAttribute:init(args)
 	self.arraySize = args.arraySize
 	self.glslType = args.glslType
 
@@ -164,7 +164,7 @@ function Attribute:init(args)
 	end
 
 	-- optionally associated with a shader location
-	-- technically, even without any other fields, I can still use Attribute:get() with just .loc set ...
+	-- technically, even without any other fields, I can still use GLAttribute:get() with just .loc set ...
 	self.loc = args.loc
 
 	-- optionally associate a glArrayBuffer as a field
@@ -173,7 +173,7 @@ function Attribute:init(args)
 end
 
 -- assumes the buffer is bound
-function Attribute:setPointer(loc)
+function GLAttribute:setPointer(loc)
 	loc = loc or self.loc
 --if loc == -1 then error'here' end
 	-- does glVertxAttribPointer associate loc with ptr *globally*
@@ -192,19 +192,19 @@ function Attribute:setPointer(loc)
 end
 
 -- assumes the buffer is bound
-function Attribute:enable(loc)
+function GLAttribute:enable(loc)
 	gl.glEnableVertexAttribArray(loc or self.loc)
 	return self
 end
 
-function Attribute:disable(loc)
+function GLAttribute:disable(loc)
 	gl.glDisableVertexAttribArray(loc or self.loc)
 	return self
 end
 
 -- shorthand for binding to the associated buffer, setPointer, and enable
 -- TODO hmm this in light of the idea of all binds being manual
-function Attribute:set(loc)
+function GLAttribute:set(loc)
 	if self.buffer then
 		self.buffer:bind()
 	end
@@ -214,4 +214,4 @@ function Attribute:set(loc)
 	end
 end
 
-return Attribute
+return GLAttribute
