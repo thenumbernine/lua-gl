@@ -212,6 +212,7 @@ function GLAttribute:set(loc)
 	if self.buffer then
 		self.buffer:unbind()
 	end
+	return self
 end
 
 return GLAttribute

@@ -487,6 +487,9 @@ end
 -- or how about call this :setAndEnableAttrs() ?
 function GLProgram:enableAttrs()
 	if self.vao then
+		-- calls vao :bind
+		-- then calls vao:enableAttrs() which calls attr:enable() ... 
+		-- ... but isn't that saved in the VAO state?
 		self.vao:use()
 	else
 		for attrname,attr in pairs(self.attrs) do

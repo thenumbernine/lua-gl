@@ -57,10 +57,15 @@ end
 
 -- TODO remove bind and unbind?
 function GLVertexArray:setAttrs(attrs)
+	-- bind the vao
 	self:bind()
 	for _,attr in ipairs(attrs or self.attrs) do
-		attr:set()
+		-- set the attr w/buffer <-> bind buffer, set pointer (to buffer), unbind buffer
+		attr
+			:enable()
+			:set()
 	end
+	-- unbind the vao
 	self:unbind()
 	return self
 end
