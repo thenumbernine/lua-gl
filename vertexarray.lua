@@ -55,7 +55,7 @@ function GLVertexArray:init(args)
 	end
 end
 
--- TODO remove bind and unbind?
+-- TODO remove bind and unbind as per library convention?
 function GLVertexArray:setAttrs(attrs)
 	-- bind the vao
 	self:bind()

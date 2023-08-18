@@ -1,3 +1,11 @@
+--[[
+TODO 
+- get rid of createVAO / hasVAO / .vao
+- get rid of enableAttrs / disableAttrs ?
+- get rid of manually storing/binding buffers via cmdline .attrs
+- even same with .uniforms
+	instead move all this into GLSceneObject
+--]]
 local ffi = require 'ffi'
 local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
