@@ -60,8 +60,15 @@ function GLSceneObject:init(args)
 	end
 end
 
--- enable self.attrs either by binding the VAO or by manually enabling and binding them
-function GLSceneObject:enableAttrs()
+-- enable & set self.attrs either by binding the VAO or by manually enabling and binding them
+-- TODO call this 'enableAndSet' ?
+-- Correct me here if I'm wrong ...
+-- A program's currently-bound uniforms are stored per-program
+-- but a program's currently-bound attributes are not?
+-- but attributes are stored per-VAO...
+-- ... why aren't uniforms stored per-VAO as well?
+-- ... or why aren't attributes stored per-program?
+function GLSceneObject:enableAndSetAttrs()
 	if self.vao then
 		self.vao:bind()
 	else
@@ -69,9 +76,7 @@ function GLSceneObject:enableAttrs()
 			-- setPointer() vs set() ?
 			-- set() calls bind() too ...
 			-- set() is required.
-			attr
-				:enable()
-				:set()
+			attr:enableAndSet()
 		end
 	end
 end
@@ -106,8 +111,8 @@ function GLSceneObject:draw(args)
 		end
 
 		-- TODO how to handle attribute overrides?  or should I even allow it?
-		-- instead 'enableAttrs' will use VAO if present (which means no overriding per-draw-call)
-		self:enableAttrs()
+		-- instead 'enablAndSetAttrs' will use VAO if present (which means no overriding per-draw-call)
+		self:enableAndSetAttrs()
 	end
 
 	if self.geometry then

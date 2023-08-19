@@ -1,11 +1,3 @@
---[[
-TODO 
-- get rid of createVAO / hasVAO / .vao
-- get rid of enableAttrs / disableAttrs ?
-- get rid of manually storing/binding buffers via cmdline .attrs
-- even same with .uniforms
-	instead move all this into GLSceneObject
---]]
 local ffi = require 'ffi'
 local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
@@ -14,16 +6,9 @@ local op = require 'ext.op'
 local GetBehavior = require 'gl.get'
 local GLShader = require 'gl.shader'
 
-
--- for GLES1&2 which doesn't have VAO functionality
-local hasVAO = not not op.safeindex(gl, 'glGenVertexArrays')
-
-
--- optional stuff:
+-- optional:
 local GLAttribute = require 'gl.attribute'
 local GLArrayBuffer = require 'gl.arraybuffer'
--- TODO instead of storing the VAO in the GLProgram, and calling it next to a separate glDraw command with geom
---  instead, create a 'GLGeom' or 'GLObject' class that combines the shader, geometry, and binding, and store the VAO with this
 local GLVertexArray = require 'gl.vertexarray'
 
 
@@ -250,12 +235,13 @@ args:
 	geometryCode
 	computeCode
 	uniforms = key/value pair of uniform values to initialize
-	attrs = key/value pair mapping attr name to GLAttribute
-		or to GLAttribute ctor args (type & size is optionally inferred)
-		or to a GLArrayBuffer object (type & size is inferred)
-	createVAO = whether to create the VAO.  default true.
-		the .vao field is set to a VertexArray object for all the attributes specified.
+	attrs = key/value pair mapping attr name to GLAttribute (with type & size specified)
+		or to GLAttribute ctor args (where type & size can be optionally specified or inferred)
+		or to a GLArrayBuffer object (where type & size is inferred by the shader .attrs)
 	attrLocs = optional {[attr name] = loc} for binding attribute locations
+
+NOTICE that the preferred way to bind attributes to buffers is via gl.sceneobject
+however defaults can still be assigned via gl.program
 --]]
 function GLProgram:init(args)
 	self.id = gl.glCreateProgram()
@@ -384,7 +370,7 @@ and then make GLAttribute 1-1 with GLProgram's attr objects
 		-- just with location == -1 i.e. invalid
 		-- soooo ... in that case i'm throwing it away.
 		-- but i'd like to keep them for completeness
-		-- but in the case that i do keep the loc==-1, and simply do not bind them, then i still get gl errors later ...
+		-- but in the case that I do keep the loc==-1, and simply do not bind them, then I still get gl errors later ...
 		-- weird.
 		-- maybe loc==-1 is valid? and i'm in trouble for not using it?
 		if attrargs.loc ~= -1 then
@@ -397,20 +383,7 @@ and then make GLAttribute 1-1 with GLProgram's attr objects
 	end
 
 	if args.attrs then
-		if args.createVAO ~= false
-		and hasVAO
-		then
-			self.vao = GLVertexArray{
-				program = self,
-				attrs = self.attrs,
-			}
-		else
-			-- TODO
-			--self.vao = GLVertexArrayCPU ...
-		end
 		self:setAttrs()	-- in case any buffers were specified
-	else
-		assert(not args.createVAO, "you specified 'createVAO' but you didn't specify any attrs")
 	end
 end
 
@@ -425,6 +398,8 @@ function GLProgram:useNone()
 	gl.glUseProgram(0)
 	return self
 end
+
+---------------- uniforms ----------------
 
 function GLProgram:setUniforms(uniforms)
 	for k,v in pairs(uniforms) do
@@ -474,7 +449,19 @@ function GLProgram:setUniform(name, value, ...)
 	end
 end
 
--- expects attrs to be an array of GLAttributes
+---------------- attributes ----------------
+
+-- Correct me here if I'm wrong ...
+-- A program's currently-bound uniforms are stored per-program
+-- but a program's currently-bound attributes are not?
+-- but attributes are stored per-VAO...
+-- ... why aren't uniforms stored per-VAO as well?
+-- ... or why aren't attributes stored per-program?
+-- If this is the case then maybe I shouldn't have the :setAttr / :enableAttr functionality here?
+
+-- Sets all a program's attributes to their associated pointers (in attr.offset)
+-- ... or if they have buffers, binds the buffers and sets to their associated offsets (in attr.offset).
+-- Expects attrs to be an array of GLAttributes
 -- TODO better handling if it isn't?
 function GLProgram:setAttrs(attrs)
 	for name,attr in pairs(attrs or self.attrs) do
@@ -490,34 +477,18 @@ function GLProgram:setAttrs(attrs)
 	return self
 end
 
--- helper functions - same as vao
--- TODO hmm, what about a vao that isn't hardware? and put this in there?
--- or how about call this :setAndEnableAttrs() ?
-function GLProgram:enableAttrs()
-	if self.vao then
-		-- calls vao :bind
-		-- then calls vao:enableAttrs() which calls attr:enable() ... 
-		-- ... but isn't that saved in the VAO state?
-		self.vao:use()
-	else
-		for attrname,attr in pairs(self.attrs) do
-			-- setPointer() vs set() ?
-			-- set() calls bind() too ...
-			-- set() is required.
-			attr
-				:enable()
-				:set()
-		end
+function GLProgram:enableAndSetAttrs()
+	for attrname,attr in pairs(self.attrs) do
+		-- setPointer() vs set() ?
+		-- set() calls bind() too ...
+		-- set() is required.
+		attr:enableAndSet()
 	end
 	return self
 end
 function GLProgram:disableAttrs()
-	if self.vao then
-		self.vao:useNone()
-	else
-		for attrname,attr in pairs(self.attrs) do
-			attr:disable()
-		end
+	for attrname,attr in pairs(self.attrs) do
+		attr:disable()
 	end
 	return self
 end

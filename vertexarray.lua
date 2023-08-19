@@ -61,9 +61,7 @@ function GLVertexArray:setAttrs(attrs)
 	self:bind()
 	for _,attr in ipairs(attrs or self.attrs) do
 		-- set the attr w/buffer <-> bind buffer, set pointer (to buffer), unbind buffer
-		attr
-			:enable()
-			:set()
+		attr:enableAndSet()
 	end
 	-- unbind the vao
 	self:unbind()
@@ -75,7 +73,7 @@ function GLVertexArray:bind(args)
 	return self
 end
 
-function GLVertexArray.unbind()
+function GLVertexArray:unbind()
 	gl.glBindVertexArray(0)
 	return self
 end
@@ -98,17 +96,18 @@ end
 -- TODO if GLProgram:enableAttrs either calls attribute :enable and :set (to bind pointers to vertx attrib arrays)
 --   OR calls VAO:enableAttrs
 -- then shouldn't VAO:enableAttrs only call bind() and trust that the enable states have already been set?
-function GLVertexArray:use()
-	self:bind()
-	self:enableAttrs()
+-- yes.
+function GLVertexArray:bindAndEnable()
 	return self
+		:bind()
+		:enableAttrs()
 end
 
 -- shorthand for unbind + disableAttrs
-function GLVertexArray:useNone()
-	self:disableAttrs()
-	self:unbind()
+function GLVertexArray:unbindAndDisable()
 	return self
+		:disableAttrs()
+		:unbind()
 end
 
 return GLVertexArray

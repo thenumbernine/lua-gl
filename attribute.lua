@@ -215,4 +215,10 @@ function GLAttribute:set(loc)
 	return self
 end
 
+function GLAttribute:enableAndSet(loc)
+	return self
+		:enable(loc)
+		:set(loc)
+end
+
 return GLAttribute
