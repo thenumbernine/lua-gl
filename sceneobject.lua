@@ -47,7 +47,7 @@ function GLSceneObject:init(args)
 			self.attrs[k] = v
 		end
 	end
-	self.texs = args.texs
+	self.texs = args.texs or {}
 
 	if hasVAO
 	and args.createVAO ~= false
@@ -93,10 +93,8 @@ end
 
 function GLSceneObject:draw(args)
 	local texs = args and args.texs or self.texs
-	if texs then
-		for i,tex in ipairs(texs) do
-			tex:bind(i-1)
-		end
+	for i,tex in ipairs(texs) do
+		tex:bind(i-1)
 	end
 	
 	local program = args and args.program or self.program
@@ -125,10 +123,8 @@ function GLSceneObject:draw(args)
 		program:useNone()
 	end
 
-	if texs then
-		for i=#texs,1,-1 do
-			texs[i]:bind(i-1)
-		end
+	for i=#texs,1,-1 do
+		texs[i]:bind(i-1)
 	end
 end
 
