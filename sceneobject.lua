@@ -12,7 +12,6 @@ local GLArrayBuffer = require 'gl.arraybuffer'
 local gl = require 'gl'
 -- for GLES1&2 which doesn't have VAO functionality
 local hasVAO = not not op.safeindex(gl, 'glGenVertexArrays')
-print('hasVAO', hasVAO)
 
 local GLSceneObject = class()
 
