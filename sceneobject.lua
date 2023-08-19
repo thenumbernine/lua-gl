@@ -34,17 +34,19 @@ function GLSceneObject:init(args)
 	if args.attrs then
 		self.attrs = {}
 		for k,v in pairs(args.attrs) do
-			if not GLAttribute:isa(v) then
-				if GLArrayBuffer:isa(v) then
-					v = {buffer = v}
+			if self.program.attrs[k] then
+				if not GLAttribute:isa(v) then
+					if GLArrayBuffer:isa(v) then
+						v = {buffer = v}
+					end
+					-- auto populate program as well
+					if self.program then
+						v = table(self.program.attrs[k], v)
+					end
+					v = GLAttribute(v)
 				end
-				-- auto populate program as well
-				if self.program then
-					v = table(self.program.attrs[k], v)
-				end
-				v = GLAttribute(v)
+				self.attrs[k] = v
 			end
-			self.attrs[k] = v
 		end
 	end
 	self.texs = args.texs or {}
