@@ -16,6 +16,11 @@ function Geometry:init(args)
 	self.count = args.count
 	self.indexes = args.indexes	-- TODO assert if this exists then it is a ElementArrayBuffer
 	self.vertexes = args.vertexes	-- TODO assert this is GLAttribute or GLArrayBuffer
+
+	-- TODO
+	-- for indexed geometry this is the index pointer
+	-- 	for elementarraybuffer indexed geometry this is the offset into the elementarraybuffer
+	-- for non-indexed geometry this is the integer offset into the currently-bound vertex arrays.
 	self.offset = args.offset or 0
 end
 
@@ -29,14 +34,14 @@ function Geometry:draw(args)
 	local mode = self.mode
 	local count = self.count
 	local offset = self.offset
-	
+
 	--allow overrides?  for which variables?
 	if args then
 		if args.mode then mode = args.mode end
 		if args.count then count = args.count end
 		if args.offset then offset = args.offset end
 	end
-	
+
 	-- if we have .indexes then use them
 	if self.indexes then
 		self.indexes:bind()

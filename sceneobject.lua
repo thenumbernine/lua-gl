@@ -49,7 +49,7 @@ function GLSceneObject:init(args)
 			end
 		end
 	end
-	self.texs = args.texs or {}
+	self.texs = table(args.texs)
 
 	if hasVAO
 	and args.createVAO ~= false
