@@ -15,6 +15,11 @@ while glGetActiveAttrib ctypes assoc with glsltypes are only:
 2) matrix types that have >4 channels need to be assigned with multiple glVertexAttribPointer calls:
 	and each call needs a separate loc and a separate glVertexAttribDivisor call?
 
+TODO
+make this more like the gl-util version?
+just a holder for buffer, size, type, normalize, stride, offset
+(the contents of glVertexAttribPointer)
+- and then have an optional construction from within gl.program for builtin queried attributes?
 --]]
 local gl = require 'gl'
 local GetBehavior = require 'gl.get'
@@ -115,11 +120,11 @@ end):setmetatable(nil)
 
 --[[
 GLAttribute fields:
-	arraySize = array size.  3 for "attribute float attr[3];"
-	glslType = ex: gl.GL_FLOAT_MAT2x4
 
-	size = (optional) number of elements. 1,2,3,4
-	type = (optional) GL_FLOAT, etc.
+	buffer = (optional) buffer bound to this array
+
+	size = number of elements. 1,2,3,4
+	type = GL_FLOAT, etc.
 		if size and type are not defined then they are inferred from glslType
 
 	normalize = flag, true/false.
@@ -127,36 +132,45 @@ GLAttribute fields:
 		override in args
 
 	stride = override in args
-	type = override in args
+
+	offset = offset for buffers, vs CPU pointers for non-buffer attributes.
+
+- properties specific to GLAttribute's within GLProgram .attrs[]
 
 	loc = (optional) GLSL attribute location in the shader
 
-	buffer = (optional) buffer bound to this array
-		TODO remove this and make GLAttribute specific to GLProgram
-		move this to GL draw instance
+	glslType = (optional) ex: gl.GL_FLOAT_MAT2x4
+		gathered from a GLProgram
+		use this to set both the type and size simultaneously
+
+	arraySize = array size.  3 for "attribute float attr[3];"
+
+TODO make a subclass of this specific to GLProgram queried attributes.
+	it will hold .loc, .arraySize, .glslType
 --]]
 function GLAttribute:init(args)
 	self.arraySize = args.arraySize
-	self.glslType = args.glslType
+
+	self.size = args.size
+	self.type = args.type
 
 	self.normalize = args.normalize or false
 	self.stride = args.stride or 0
 	self.offset = ffi.cast('uint8_t*', args.offset)
 
-	self.size = args.size
-	self.type = args.type
+	local glslType = args.glslType
 	-- size is dimension of the data ... 1,2,3,4
 	-- type is GL_FLOAT etc
 	-- derive size and type from the glslType
-	if self.glslType
+	if glslType
 	and not (self.type and self.size)
 	then
 		if (self.type and self.size) and (not self.type or not self.size) then
 			error("you specified glslType and either type or size but not both type and size")
 		end
-		self.type, self.size = table.unpack(self.getTypeAndSizeForGLSLType[self.glslType])
+		self.type, self.size = table.unpack(self.getTypeAndSizeForGLSLType[glslType])
 		if not (self.type and self.size) then
-			error("failed to deduce type and size from glsl type "..self.glslType)
+			error("failed to deduce type and size from glsl type "..glslType)
 		end
 	end
 	if not (self.type and self.size) then
