@@ -43,7 +43,7 @@ function GradientTex:init(w, colors, repeated)
 		minFilter = gl.GL_NEAREST,
 		magFilter = gl.GL_NEAREST,
 		wrap = {
-			s = repeated and gl.GL_REPEAT or gl.GL_CLAMP,
+			s = repeated and gl.GL_REPEAT or gl.GL_CLAMP_TO_EDGE,
 		},
 	})
 end
