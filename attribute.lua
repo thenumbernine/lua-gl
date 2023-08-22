@@ -149,7 +149,6 @@ TODO make a subclass of this specific to GLProgram queried attributes.
 	it will hold .loc, .arraySize, .glslType
 --]]
 function GLAttribute:init(args)
-	self.arraySize = args.arraySize
 
 	self.size = args.size
 	self.type = args.type
@@ -177,12 +176,16 @@ function GLAttribute:init(args)
 		error("type and size were not both provided")
 	end
 
-	-- optionally associated with a shader location
+	-- optionally for GLProgram attributes
+	-- associate with a shader location
 	-- technically, even without any other fields, I can still use GLAttribute:get() with just .loc set ...
 	self.loc = args.loc
 
+	-- optional for GLProgram attributes
+	self.arraySize = args.arraySize
+
 	-- optionally associate a glArrayBuffer as a field
-	-- I'm using this in GLProgram:setAttr
+	-- I'm using this in GLProgram:setAttr and GLVertexArray:setAttr
 	self.buffer = args.buffer
 end
 
