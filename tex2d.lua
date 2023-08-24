@@ -51,6 +51,7 @@ function GLTex2D:load(args)
 	args.width = image.width
 	args.height = image.height
 	args.data = image.buffer
+	-- TODO internalFormat needs to be based image.format in the case of using a float tex
 	args.internalFormat = args.internalFormat or self.formatForChannels[image.channels]
 	args.format = args.format or self.formatForChannels[image.channels] or gl.GL_RGBA
 	args.type = args.type or self.typeForType[image.format] or gl.GL_UNSIGNED_BYTE
