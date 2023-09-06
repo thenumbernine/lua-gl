@@ -135,6 +135,8 @@ GLAttribute fields:
 
 	offset = offset for buffers, vs CPU pointers for non-buffer attributes.
 
+	divisor = (optional) divisor associated with this vertex attribute.
+
 - properties specific to GLAttribute's within GLProgram .attrs[]
 
 	loc = (optional) GLSL attribute location in the shader
@@ -156,6 +158,8 @@ function GLAttribute:init(args)
 	self.normalize = args.normalize or false
 	self.stride = args.stride or 0
 	self.offset = ffi.cast('uint8_t*', args.offset)
+
+	self.divisor = args.divisor
 
 	local glslType = args.glslType
 	-- size is dimension of the data ... 1,2,3,4
