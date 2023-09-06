@@ -57,7 +57,9 @@ end
 
 -- TODO remove bind and unbind as per library convention?
 function GLVertexArray:setAttrs(attrs)
-	--[[ hmm, no glVertexArray* in GLES3
+	--[[ hmm, no glVertexArray* in GLES3.
+	-- Neither is glVertexAttribFormat.
+	-- Neither is glVertexAttribBinding (for connecting an attribute to a bindingindex).
 	-- TODO if attr has a .buffer then is this the same as ...
 	for _,attr in ipairs(attrs or self.attrs) do
 		-- stored per-attribute + shader bound?
