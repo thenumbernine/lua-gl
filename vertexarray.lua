@@ -57,6 +57,27 @@ end
 
 -- TODO remove bind and unbind as per library convention?
 function GLVertexArray:setAttrs(attrs)
+	--[[ hmm, no glVertexArray* in GLES3
+	-- TODO if attr has a .buffer then is this the same as ...
+	for _,attr in ipairs(attrs or self.attrs) do
+		-- stored per-attribute + shader bound?
+		gl.glVertexArrayAttribFormat(
+			self.id,
+			attr.loc,
+			attr.size,
+			attr.type,
+			attr.normalize and gl.GL_TRUE or gl.GL_FALSE,
+			attr.offset)
+		-- stored per-vertex-array
+		gl.glVertexArrayVertexBuffer(
+			self.id,
+			attr.loc,	-- is "binding point" the same as "attribute location" ?
+			assert(attr.buffer).id,
+			0, --attr.offset,	-- duplicate of glVertexAttribFormat / only set once?
+			attr.stride)
+	end
+	--]]
+	-- [[
 	-- bind the vao
 	self:bind()
 	for _,attr in ipairs(attrs or self.attrs) do
@@ -65,6 +86,7 @@ function GLVertexArray:setAttrs(attrs)
 	end
 	-- unbind the vao
 	self:unbind()
+	--]]
 	return self
 end
 

@@ -26,7 +26,7 @@ function Buffer:init(args)
 	Buffer.super.init(self)
 	gl.glGenBuffers(1, self.gc.ptr)
 	self.id = self.gc.ptr[0]
-	
+
 	self:bind()
 	assert(args, "expected args")
 	if args.data then
@@ -49,9 +49,10 @@ end
 
 --[[
 args:
-	size
-	data
-	usage
+	size = size, required.
+	data = (optional) data, default is null.
+	usage = (optional) GL buffer usage.  default GL_STATIC_DRAW.
+	type = (optional) if data is a Lua table, this specifies what c type to convert it to.  default float.
 my js version has 'keep' for saving args.data ... I'll just make it default
 --]]
 function Buffer:setData(args)
@@ -59,9 +60,10 @@ function Buffer:setData(args)
 	local data = args.data
 	if type(data) == 'table' then
 		local n = #data
-		size = size or n * ffi.sizeof'float'
-		local numFloats = math.floor(size / ffi.sizeof'float')
-		local cdata = ffi.new('float[?]', numFloats)
+		local ctype = args.type or 'float'
+		size = size or n * ffi.sizeof(ctype)
+		local numFloats = math.floor(size / ffi.sizeof(ctype))
+		local cdata = ffi.new(ctype..'[?]', numFloats)
 		for i=1,math.min(numFloats, n) do
 			cdata[i-1] = data[i]
 		end
