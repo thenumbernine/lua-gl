@@ -50,6 +50,9 @@ local function GetBehavior(parent)
 		glreport'here' -- check error
 
 		local var = self.getInfo[name]
+		if not var then
+			error("failed to find getter associated with GL constant "..tostring(name))
+		end
 		-- TODO this here, and do it every time :get() is called?
 		-- or this upon construction, which means .type doesn't match whatever was provided?
 		local infoType = assert(var.type)
