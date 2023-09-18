@@ -37,13 +37,13 @@ function Buffer:init(args)
 	end
 end
 
-function Buffer:bind()
-	gl.glBindBuffer(self.target, self.id)
+function Buffer:bind(target)
+	gl.glBindBuffer(target or self.target, self.id)
 	return self
 end
 
-function Buffer:unbind()
-	gl.glBindBuffer(self.target, 0)
+function Buffer:unbind(target)
+	gl.glBindBuffer(target or self.target, 0)
 	return self
 end
 
