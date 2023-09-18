@@ -28,12 +28,13 @@ function Buffer:init(args)
 	self.id = self.gc.ptr[0]
 
 	self:bind()
-	assert(args, "expected args")
-	if args.data then
-		self:setData(args)
-	elseif args.size then
-		local empty = ffi.new('uint8_t[?]', args.size)
-		self:setData(table(args, {data=empty}))
+	if args then
+		if args.data then
+			self:setData(args)
+		elseif args.size then
+			local empty = ffi.new('uint8_t[?]', args.size)
+			self:setData(table(args, {data=empty}))
+		end
 	end
 end
 
