@@ -16,19 +16,19 @@ local hasVAO = not not op.safeindex(gl, 'glGenVertexArrays')
 local GLSceneObject = class()
 
 --[[
-args	
+args
 	geometry
 	program
 	uniforms
 	attrs
 	texs
-	createVAO (optional) set to false to diasble 
+	createVAO (optional) set this to `false` to disable
 
 also creates a .vao for saving bindings of attributes
 --]]
 function GLSceneObject:init(args)
 	args = args or {}
-	self.geometry = args.geometry	
+	self.geometry = args.geometry
 	self.program = args.program
 	self.uniforms = args.uniforms or {}
 	if args.attrs then
@@ -56,7 +56,7 @@ function GLSceneObject:init(args)
 	then
 		local GLVertexArray = require 'gl.vertexarray'
 		self.vao = GLVertexArray{
-			program = self,
+			program = self,	-- self.program?
 			attrs = self.attrs,
 		}
 	end
@@ -98,7 +98,7 @@ function GLSceneObject:draw(args)
 	for i,tex in ipairs(texs) do
 		tex:bind(i-1)
 	end
-	
+
 	local program = args and args.program or self.program
 	if program then
 		program:use()
@@ -130,4 +130,4 @@ function GLSceneObject:draw(args)
 	end
 end
 
-return GLSceneObject 
+return GLSceneObject

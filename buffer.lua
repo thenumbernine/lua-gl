@@ -19,6 +19,15 @@ args:
 	data (optional) = forwarded to setData
 	usage (optional) = forwarded to setData
 	target (optional) = this is forwarded to setData, but unlike the other fields it is not assigned to self
+
+	type (optional) = duct tape code ...
+		this is used in two places afaik
+		- ElementalArrayBuffer, where it expects a GL primitive type const (GL_UNSIGNED_INT, etc)
+			- notice that Attribute also expects GL primitive type const
+		- Buffer:setData, when used with Lua data, where it expects a string / ffi typename, for casting data
+			- TODO instead in this function I shoul derive ctype from GL type
+			- and then probably be putting the mapping between ffi types, gl primitive types, gl shader types (including vectors/matrices) all in one place
+
 my js version has dim and count instead of size, then just size = dim * count
 this makes it more compatible with GLProgram:setAttr(buffer)
 instead of only GLProgram:setAttr(attr)
@@ -27,6 +36,8 @@ function Buffer:init(args)
 	Buffer.super.init(self)
 	gl.glGenBuffers(1, self.gc.ptr)
 	self.id = self.gc.ptr[0]
+
+	self.type = args.type	-- optional
 
 	-- TODO bind even if we have no args?  or only if args are provided / setData is called?
 	self:bind()
@@ -64,6 +75,7 @@ function Buffer:setData(args)
 	local data = args.data
 	if type(data) == 'table' then
 		local n = #data
+		-- TODO derive ctype from GL type
 		local ctype = args.type or 'float'
 		size = size or n * ffi.sizeof(ctype)
 		local numFloats = math.floor(size / ffi.sizeof(ctype))
