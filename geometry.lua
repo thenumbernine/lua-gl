@@ -22,14 +22,7 @@ function Geometry:init(args)
 	-- for indexed geometry this is the index pointer
 	-- 	for elementarraybuffer indexed geometry this is the offset into the elementarraybuffer
 	-- for non-indexed geometry this is the integer offset into the currently-bound vertex arrays.
-	self.offset = args.offset
-	if not self.offset then
-		if self.indexes then
-			self.offset = ffi.cast('void*', 0)
-		else
-			self.offset = 0
-		end
-	end
+	self.offset = args.offset or 0
 end
 
 --[[
@@ -56,7 +49,7 @@ function Geometry:draw(args)
 		if not count then
 			count = self.indexes.count
 		end
-		gl.glDrawElements(mode, count, self.indexes.type, offset)
+		gl.glDrawElements(mode, count, self.indexes.type, ffi.cast('void*', offset))
 		self.indexes:unbind()
 	else
 		if not count and self.vertexes then
