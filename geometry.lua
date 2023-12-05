@@ -1,3 +1,4 @@
+local ffi = require 'ffi'
 local class = require 'ext.class'
 local gl = require 'gl'
 
@@ -21,7 +22,14 @@ function Geometry:init(args)
 	-- for indexed geometry this is the index pointer
 	-- 	for elementarraybuffer indexed geometry this is the offset into the elementarraybuffer
 	-- for non-indexed geometry this is the integer offset into the currently-bound vertex arrays.
-	self.offset = args.offset or 0
+	self.offset = args.offset
+	if not self.offset then
+		if self.indexes then
+			self.offset = ffi.cast('void*', 0)
+		else
+			self.offset = 0
+		end
+	end
 end
 
 --[[
