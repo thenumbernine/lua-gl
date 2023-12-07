@@ -32,7 +32,8 @@ local FrameBuffer = class()
 args:
 	width
 	height
-	useDepth to allocate and bind a renderbuffer associated with the depth component
+	useDepth = (optional) 'true' to allocate and bind a renderbuffer associated with the depth component
+	dest = (optional) a texture, to set color attachment upon init
 --]]
 function FrameBuffer:init(args)
 	args = args or {}
@@ -56,6 +57,11 @@ function FrameBuffer:init(args)
 		gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH_COMPONENT, self.width, self.height)
 		gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, 0)
 		gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, self.depthID)
+	end
+
+	-- TODO accept a table, and bind each index to each attachment?
+	if args.dest then
+		self:setColorAttachment(args.dest)
 	end
 end
 
