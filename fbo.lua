@@ -1,3 +1,4 @@
+-- rename file to 'framebuffer' maybe ?
 local ffi = require 'ffi'
 local class = require 'ext.class'
 local op = require 'ext.op'
@@ -118,7 +119,12 @@ end
 function FrameBuffer:setColorAttachmentTex3D(tex, index, slice, target, level)
 	if not tonumber(slice) then error("unable to convert slice to number: " ..tostring(slice)) end
 	slice = tonumber(slice)
-	gl.glFramebufferTexture3D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + (index or 0), target or gl.GL_TEXTURE_3D, tex, level or 0, slice)
+	-- legacy:
+	--gl.glFramebufferTexture3D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + (index or 0), target or gl.GL_TEXTURE_3D, tex, level or 0, slice)
+	-- new:
+	-- ... how does glFramebufferTextureLayer know what tex target to use?
+	-- or is the new standard that all texs have unique ids regardless of targets?
+	gl.glFramebufferTextureLayer(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + (index or 0), tex, level or 0, slice)
 	return self
 end
 
