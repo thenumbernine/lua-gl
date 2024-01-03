@@ -64,4 +64,21 @@ function GLTex3D:load(args)
 	args.type = args.type or self.typeForType[image.format] or gl.GL_UNSIGNED_BYTE
 end
 
+function GLTex3D:subimage(args)
+	gl.glTexSubImage3D(
+		args and args.target or self.target,
+		args and args.level or 0,
+		args and args.xoffset or 0,
+		args and args.yoffset or 0,
+		args and args.zoffset or 0,
+		args and args.width or self.width,
+		args and args.height or self.height,
+		args and args.depth or self.depth,
+		args and args.format or self.format,
+		args and args.type or self.type,
+		args and args.data or self.data
+	)
+	return self
+end
+
 return GLTex3D
