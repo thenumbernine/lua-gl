@@ -1,9 +1,8 @@
 local ffi = require 'ffi'
 local gl = require 'gl'
-local class = require 'ext.class'
 local GLTex = require 'gl.tex'
 
-local GLTex3D = class(GLTex)
+local GLTex3D = GLTex:subclass()
 
 GLTex3D.target = gl.GL_TEXTURE_3D
 

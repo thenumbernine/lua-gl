@@ -1,17 +1,16 @@
 local ffi = require 'ffi'
 local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
-local class = require 'ext.class'
 local table = require 'ext.table'
 
-local Buffer = class(GCWrapper{
+local Buffer = GCWrapper{
 	gctype = 'autorelease_gl_buffer_ptr_t',
 	ctype = 'GLuint',
 	-- retain isn't used
 	release = function(ptr)
 		return gl.glDeleteBuffers(1, ptr)
 	end,
-})
+}:subclass()
 
 --[[
 args:

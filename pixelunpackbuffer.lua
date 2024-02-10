@@ -1,8 +1,7 @@
-local class = require 'ext.class'
 local gl = require 'gl'
 local Buffer = require 'gl.buffer'
 
-local PixelUnpackBuffer = class(Buffer)
+local PixelUnpackBuffer = Buffer:subclass()
 PixelUnpackBuffer.target = gl.GL_PIXEL_UNPACK_BUFFER
 
 return PixelUnpackBuffer

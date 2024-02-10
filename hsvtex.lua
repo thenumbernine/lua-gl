@@ -1,7 +1,6 @@
-local class = require 'ext.class'
 local GradientTex = require 'gl.gradienttex'
 
-local HSVTex = class(GradientTex)
+local HSVTex = GradientTex:subclass()
 
 HSVTex.colors = {
 	{1,0,0,1},

@@ -1,8 +1,7 @@
 local gl = require 'gl'
-local class = require 'ext.class'
 local GLTex = require 'gl.tex'
 
-local GLTex2D = class(GLTex)
+local GLTex2D = GLTex:subclass()
 
 GLTex2D.target = gl.GL_TEXTURE_2D
 

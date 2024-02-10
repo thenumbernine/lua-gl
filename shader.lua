@@ -1,18 +1,17 @@
 local ffi = require 'ffi'
 local gl = require 'gl'
 local table = require 'ext.table'
-local class = require 'ext.class'
 local showcode = require 'template.showcode'
 local GetBehavior = require 'gl.get'
 local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 
-local GLShader = class(GetBehavior(GCWrapper{
+local GLShader = GetBehavior(GCWrapper{
 	gctype = 'autorelease_gl_shader_ptr_t',
 	ctype = 'GLuint',
 	release = function(ptr)
 		return gl.glDeleteShader(ptr[0])
 	end,
-}))
+}):subclass()
 
 GLShader:makeGetter{
 	-- wrap it so wgl can replace glGetShaderiv

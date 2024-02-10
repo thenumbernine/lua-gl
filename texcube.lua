@@ -1,10 +1,9 @@
 local gl = require 'gl'
 local table = require 'ext.table'
-local class = require 'ext.class'
 local GLTex = require 'gl.tex'
 local GLTex2D = require 'gl.tex2d'
 
-local GLTexCube = class(GLTex)
+local GLTexCube = GLTex:subclass()
 
 GLTexCube.target = gl.GL_TEXTURE_CUBE_MAP
 

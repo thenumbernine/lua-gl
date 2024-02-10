@@ -7,10 +7,9 @@
 
 local ffi = require 'ffi'
 local gl = require 'gl'
-local class = require 'ext.class'
 local Tex2D = require 'gl.tex2d'
 
-local GradientTex = class(Tex2D)
+local GradientTex = Tex2D:subclass()
 
 function GradientTex:init(w, colors, repeated)
 	self.colors = colors

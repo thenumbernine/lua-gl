@@ -1,5 +1,4 @@
 local table = require 'ext.table'
-local class = require 'ext.class'
 local PingPong = require 'gl.pingpong'
 local FBO = require 'gl.fbo'
 local Tex3D = require 'gl.tex3d'
@@ -8,7 +7,7 @@ local Tex3D = require 'gl.tex3d'
 -- almost identical to PingPong
 -- TODO organize better with the above class
 
-local PingPong3D = class(PingPong)
+local PingPong3D = PingPong:subclass()
 
 function PingPong3D:init(args)
 	self.hist = table()

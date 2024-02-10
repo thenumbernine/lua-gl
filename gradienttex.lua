@@ -1,6 +1,5 @@
 local ffi = require 'ffi'
 local gl = require 'gl'
-local class = require 'ext.class'
 
 -- TODO hmmmm
 -- TEXTURE_1D is allowed in latest GL
@@ -10,7 +9,7 @@ local class = require 'ext.class'
 -- or maybe I should just have a gradienttex2d option?
 local Tex1D = require 'gl.tex1d'
 
-local GradientTex = class(Tex1D)
+local GradientTex = Tex1D:subclass()
 
 function GradientTex:init(w, colors, repeated)
 	self.colors = colors

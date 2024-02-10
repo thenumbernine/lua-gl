@@ -1,8 +1,7 @@
 local gl = require 'gl'
-local class = require 'ext.class'
 local GLTex = require 'gl.tex'
 
-local GLTexBuffer = class(GLTex)
+local GLTexBuffer = GLTex:subclass()
 
 GLTexBuffer.target = gl.GL_TEXTURE_BUFFER
 
