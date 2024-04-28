@@ -511,4 +511,18 @@ function GLProgram:bindImage(unit, tex, format, rw, level, layered, layer)
 	return self
 end
 
+-- static method for getting the glsl version line
+--
+-- error: GLSL 4.60 is not supported. Supported versions are: 1.10, 1.20, 1.30, 1.40, 1.50, 3.30, 4.00, 4.10, 4.20, 4.30, 4.40, 4.50, 1.00 ES, 3.00 ES, 3.10 ES, and 3.20 ES
+-- so how do you tell the ES versions ?  or does it matter?
+-- and how do I somehow incorporate ES vs non-ES here?
+-- https://stackoverflow.com/a/27410925 this has the mapping from GLES version to GLSL ES version
+function GLProgram.getVersionPragma()
+	local strptr = gl.glGetString(gl.GL_SHADING_LANGUAGE_VERSION)
+	assert(strptr ~= nil, "failed to get GL_SHADING_LANGUAGE_VERSION")
+	local str = ffi.string(strptr)
+	local glslVersion = '#version '..str:gsub('%.', '')
+	return glslVersion
+end
+
 return GLProgram
