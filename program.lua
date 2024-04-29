@@ -2,6 +2,7 @@ local ffi = require 'ffi'
 local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
 local table = require 'ext.table'
+local string = require 'ext.string'
 local op = require 'ext.op'
 local GetBehavior = require 'gl.get'
 local GLShader = require 'gl.shader'
@@ -511,18 +512,50 @@ function GLProgram:bindImage(unit, tex, format, rw, level, layered, layer)
 	return self
 end
 
--- static method for getting the glsl version line
---
--- error: GLSL 4.60 is not supported. Supported versions are: 1.10, 1.20, 1.30, 1.40, 1.50, 3.30, 4.00, 4.10, 4.20, 4.30, 4.40, 4.50, 1.00 ES, 3.00 ES, 3.10 ES, and 3.20 ES
--- so how do you tell the ES versions ?  or does it matter?
--- and how do I somehow incorporate ES vs non-ES here?
--- https://stackoverflow.com/a/27410925 this has the mapping from GLES version to GLSL ES version
-function GLProgram.getVersionPragma()
+--[[
+static method for getting the glsl version line
+
+how do I somehow incorporate ES vs non-ES here?
+https://stackoverflow.com/a/27410925 this has the mapping from GLES version to GLSL ES version
+this says ...
+	GLSL-ES pragma '100 es' <=> GL 4.1 <=> GLSL 4.1
+	GLSL-ES pragma '300 es' <=> GL 4.3 <=> GLSL 4.3
+	GLSL-ES pragma '310 es' <=> GL 4.5 <=> GLSL 4.5
+	... and idk about 320 es
+
+--]]
+function GLProgram.getVersionPragma(es)
 	local strptr = gl.glGetString(gl.GL_SHADING_LANGUAGE_VERSION)
 	assert(strptr ~= nil, "failed to get GL_SHADING_LANGUAGE_VERSION")
-	local str = ffi.string(strptr)
-	local glslVersion = '#version '..str:gsub('%.', '')
-	return glslVersion
+	local version = ffi.string(strptr)
+	version = version:gsub('%.', '')
+	-- even when using gles, the GL_VERSION I get back corresponds to my GL (non-ES) version (is there a different constant I should be using other than GL_VERSION for the ES version?)
+	-- so instead I'll use a mapping from GLSL versions to GLSL-ES versions...
+	if es then
+		-- TODO just do this once? and maybe in another file?
+		local exts = {}
+		local extstr = gl.glGetString(gl.GL_EXTENSIONS)
+		extstr = extstr == nil and '' or string.trim(ffi.string(extstr))
+		for _,ext in ipairs(string.split(extstr, '%s+')) do
+			exts[ext] = true
+		end
+
+		if version == '460' or exts.GL_ARB_ES3_2_compatibility then
+			version = '320 es'
+		elseif version >= '450' or exts.GL_ARB_ES3_1_compatibility then
+			-- GL 4.5 core, or GL_ARB_ES3_1_compatibility, maps to #version 310 es
+			version = '310 es'
+		elseif version >= '430' or exts.GL_ARB_ES3_compatibility then
+			-- GL 4.3 core, or GL_ARB_ES3_compatibility, maps to #version 300 es
+			version = '300 es'
+		elseif version >= '410' or exts.GL_ARB_ES2_compatibility then
+			-- GL 4.1 core, or GL_ARB_ES2_compatibility, maps to ... #version 100 es ... ?
+			version = '100 es'
+		else
+			error("couldn't find a GLSL-ES version compatible with GLSL version "..tostring(version))
+		end
+	end
+	return '#version '..version
 end
 
 return GLProgram
