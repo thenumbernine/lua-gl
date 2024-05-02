@@ -231,6 +231,7 @@ GLProgram:makeGetter{
 
 --[[
 args:
+	shaders = gl.shader objects that are already compiled, to-be-attached and linked
 	vertexCode
 	fragmentCode
 	geometryCode
@@ -248,7 +249,7 @@ function GLProgram:init(args)
 	self.id = gl.glCreateProgram()
 	GLProgram.super.init(self, self.id)
 
-	local shaders = table()
+	local shaders = table(args.shaders)
 	local shaderTypes = table{
 		{'vertex', GLVertexShader},
 		{'fragment', GLFragmentShader},
