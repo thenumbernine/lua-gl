@@ -13,24 +13,6 @@ local GLArrayBuffer = require 'gl.arraybuffer'
 local GLVertexArray = require 'gl.vertexarray'
 
 
-local GLVertexShader = GLShader:subclass()
-GLVertexShader.type = gl.GL_VERTEX_SHADER
-
-local GLFragmentShader = GLShader:subclass()
-GLFragmentShader.type = gl.GL_FRAGMENT_SHADER
-
-local GLGeometryShader
-if op.safeindex(gl, 'GL_GEOMETRY_SHADER') then
-	GLGeometryShader = GLShader:subclass()
-	GLGeometryShader.type = gl.GL_GEOMETRY_SHADER
-end
-
-local GLComputeShader
-if op.safeindex(gl, 'GL_COMPUTE_SHADER') then
-	GLComputeShader = GLShader:subclass()
-	GLComputeShader.type = gl.GL_COMPUTE_SHADER
-end
-
 -- this doesn't work as easy as it does in webgl
 -- https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetActiveUniform.xhtml
 local uniformSettersForGLTypes
@@ -178,6 +160,44 @@ local GLProgram = GetBehavior(GCWrapper{
 	end,
 }):subclass()
 
+
+local GLVertexShader = GLShader:subclass()
+GLVertexShader.type = gl.GL_VERTEX_SHADER
+GLProgram.VertexShader = GLVertexShader
+
+local GLFragmentShader = GLShader:subclass()
+GLFragmentShader.type = gl.GL_FRAGMENT_SHADER
+GLProgram.FragmentShader = GLFragmentShader
+
+local GLGeometryShader
+if op.safeindex(gl, 'GL_GEOMETRY_SHADER') then
+	GLGeometryShader = GLShader:subclass()
+	GLGeometryShader.type = gl.GL_GEOMETRY_SHADER
+	GLProgram.GeometryShader = GLGeometryShader
+end
+
+local GLTessEvalShader
+if op.safeindex(gl, 'GL_TESS_EVALUATION_SHADER') then
+	GLTessEvalShader = GLShader:subclass()
+	GLTessEvalShader.type = gl.GL_GEOMETRY_SHADER
+	GLProgram.TessEvalShader = GLTessEvalShader
+end
+
+local GLTessControlShader
+if op.safeindex(gl, 'GL_TESS_CONTROL_SHADER') then
+	GLTessControlShader = GLShader:subclass()
+	GLTessControlShader.type = gl.GL_GEOMETRY_SHADER
+	GLProgram.TessControlShader = GLTessControlShader
+end
+
+local GLComputeShader
+if op.safeindex(gl, 'GL_COMPUTE_SHADER') then
+	GLComputeShader = GLShader:subclass()
+	GLComputeShader.type = gl.GL_COMPUTE_SHADER
+	GLProgram.ComputeShader = GLComputeShader
+end
+
+
 GLProgram.checkLinkStatus = GLShader.createCheckStatus('GL_LINK_STATUS', function(...) return gl.glGetProgramInfoLog(...) end)
 
 -- TODO implement gl.get for all the glGet* functions not associated with any objects/binds
@@ -234,8 +254,10 @@ args:
 	shaders = gl.shader objects that are already compiled, to-be-attached and linked
 	vertexCode
 	fragmentCode
-	geometryCode
-	computeCode
+	geometryCode		(only if available)
+	tessEvalCode		(only if available)
+	tessControlCode		(only if available)
+	computeCode			(only if available)
 	uniforms = key/value pair of uniform values to initialize
 	attrs = key/value pair mapping attr name to GLAttribute (with type & size specified)
 		or to GLAttribute ctor args (where type & size can be optionally specified or inferred)
@@ -256,6 +278,12 @@ function GLProgram:init(args)
 	}
 	if GLGeometryShader then
 		shaderTypes:insert{'geometry', GLGeometryShader}
+	end
+	if GLTessEvalShader then
+		shaderTypes:insert{'tessEval', GLTessEvalShader}
+	end
+	if GLTessControlShader then
+		shaderTypes:insert{'tessControl', GLTessControlShader}
 	end
 	if GLComputeShader then
 		shaderTypes:insert{'compute', GLComputeShader}
