@@ -40,9 +40,14 @@ function GLShader:init(code)
 	local strs = ffi.new'const char*[1]'
 	strs[0] = code
 	gl.glShaderSource(self.id, 1, strs, len)
-	gl.glCompileShader(self.id)
 
+	self:compile()
 	self:checkCompileStatus(code)
+end
+
+function GLShader:compile()
+	gl.glCompileShader(self.id)
+	return self
 end
 
 -- used by GLShader and GLProgram
@@ -70,6 +75,7 @@ function GLShader.createCheckStatus(statusEnum, logGetter)
 			s:insert(statusEnum..' failed!')
 			error(s:concat'\n')
 		end
+		return self
 	end
 end
 
