@@ -17,10 +17,13 @@ local GLSceneObject = class()
 
 --[[
 args
-	geometry
-	program
+	geometry = GLGeometry. if no metatable, implicitly constructed as GLGeometry
+	program = GLProgram. if no metatable, implicitly constructed as GLProgram
 	uniforms
-	attrs
+	attrs = keys are attribute names.
+		if a value is not a GLAttribute then it is  merged with the program's attr[] of the same name and then constructed as GLAttribute.
+		if a value is a GLArrayBuffer then it is converted into a GLAttribute with this .buffer.
+		if a value has a .buffer with no metatable then the .buffer is constructed as a GLArrayBuffer
 	texs
 	createVAO (optional) set this to `false` to disable
 
@@ -28,8 +31,23 @@ also creates a .vao for saving bindings of attributes
 --]]
 function GLSceneObject:init(args)
 	args = args or {}
+
 	self.geometry = args.geometry
+	-- construct if necessary;
+	local GLGeometry = require 'gl.geometry'
+	--if not GLGeometry:isa(self.geometry) then
+	if not getmetatable(self.geometry) then
+		self.geometry = GLGeometry(self.geometry)
+	end
+
 	self.program = args.program
+	-- construct if necessary;
+	local GLProgram = require 'gl.program'
+	--if not GLProgram:isa(self.program) then
+	if not getmetatable(self.program) then
+		self.program = GLProgram(self.program):useNone()
+	end
+
 	self.uniforms = args.uniforms or {}
 	if args.attrs then
 		self.attrs = {}
@@ -37,8 +55,15 @@ function GLSceneObject:init(args)
 			if self.program.attrs[k] then
 				if not GLAttribute:isa(v) then
 					if GLArrayBuffer:isa(v) then
+						-- if attrs[] value is an ArrayBuffer, wrap it in {buffer= }
 						v = {buffer = v}
 					end
+
+					-- how to do coercion for attrs[] is tough ...
+					if v.buffer and not getmetatable(v.buffer) then
+						v.buffer = GLArrayBuffer(v.buffer):unbind()
+					end
+
 					-- auto populate program as well
 					if self.program then
 						v = table(self.program.attrs[k], v)

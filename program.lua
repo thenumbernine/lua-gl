@@ -252,12 +252,21 @@ GLProgram:makeGetter{
 --[[
 args:
 	shaders = gl.shader objects that are already compiled, to-be-attached and linked
-	vertexCode
-	fragmentCode
-	geometryCode		(only if available)
-	tessEvalCode		(only if available)
-	tessControlCode		(only if available)
-	computeCode			(only if available)
+
+	${shaderType}Code = the code to pass on to compile this shader type
+	shaderType is one of the following:
+		vertex
+		fragment
+		geometry		(only if available)
+		tessEval		(only if available)
+		tessControl		(only if available)
+		compute			(only if available)
+
+	header (optional) passed on to each shader's ctor header
+	${shaderType}Header = passed on as the header for only that shader type
+	version (optional) passed on to each shader's ctor version
+	${shaderType}Versoin = passed on as the version for only that shader type
+
 	uniforms = key/value pair of uniform values to initialize
 	attrs = key/value pair mapping attr name to GLAttribute (with type & size specified)
 		or to GLAttribute ctor args (where type & size can be optionally specified or inferred)
@@ -294,7 +303,12 @@ function GLProgram:init(args)
 		-- TODO how about multiple vertex/fragment shaders per program?
 		-- how about just passing a 'args.shaders' to just attach all?
 		if code then
-			shaders:insert(cl(code))
+			local headers = table():append({args[field..'Header']}, {args.header})
+			shaders:insert(cl{
+				code = code,
+				version = args[field..'Version'] or args.version,
+				header = #headers > 0 and headers:concat'\n' or nil,
+			})
 		end
 	end
 

@@ -1,6 +1,7 @@
 local ffi = require 'ffi'
 local gl = require 'gl'
 local table = require 'ext.table'
+local assertindex = require 'ext.assert'.index
 local showcode = require 'template.showcode'
 local GetBehavior = require 'gl.get'
 local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
@@ -27,7 +28,34 @@ GLShader:makeGetter{
 	},
 }
 
-function GLShader:init(code)
+--[[
+args:
+	code
+	version = string to use as version
+	header = string to append to header
+if 'args' is a string then it is treated as the code
+--]]
+function GLShader:init(args)
+	local code
+	if type(args) == 'string' then
+		code = args
+	else
+		code = assertindex(args, 'code')
+		if args.header then
+			code = args.header..'\n'..code
+		end
+		local version = args.version
+		if version then
+			if version == 'latest' then
+				code = require 'gl.program'.getVersionPragma()..'\n'..code
+			elseif version == 'latest es' then
+				code = require 'gl.program'.getVersionPragma(true)..'\n'..code
+			else
+				code = '#version '..version..'\n'..code
+			end
+		end
+	end
+
 	self.id = gl.glCreateShader(self.type)
 	GLShader.super.init(self, self.id)
 
