@@ -231,17 +231,21 @@ GLProgram:makeGetter{
 		{name='GL_ACTIVE_UNIFORM_MAX_LENGTH', type='GLint'},
 		{name='GL_ACTIVE_ATOMIC_COUNTER_BUFFERS', type='GLint'},
 		{name='GL_PROGRAM_BINARY_LENGTH', type='GLint'},
-		{name='GL_COMPUTE_WORK_GROUP_SIZE', type='GLint'},
 		{name='GL_TRANSFORM_FEEDBACK_BUFFER_MODE', type='GLint'},
 		{name='GL_TRANSFORM_FEEDBACK_VARYINGS', type='GLint'},
 		{name='GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH', type='GLint'},
-		{name='GL_GEOMETRY_VERTICES_OUT', type='GLint'},
-		{name='GL_GEOMETRY_INPUT_TYPE', type='GLint'},
-		{name='GL_GEOMETRY_OUTPUT_TYPE', type='GLint'},
 	}:append(
+		GLGeometryShader
+		and {
+			{name='GL_GEOMETRY_VERTICES_OUT', type='GLint'},
+			{name='GL_GEOMETRY_INPUT_TYPE', type='GLint'},
+			{name='GL_GEOMETRY_OUTPUT_TYPE', type='GLint'},
+		} or nil
+	):append(
 		GLComputeShader
 		and {
 			-- global getters, not associated with the program
+			{name='GL_COMPUTE_WORK_GROUP_SIZE', type='GLint'},
 			{name='GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS', type='GLuint', getter=getGlobal},
 			{name='GL_MAX_COMPUTE_WORK_GROUP_COUNT', type='GLuint[3]', getter=getGlobal3},
 			{name='GL_MAX_COMPUTE_WORK_GROUP_SIZE', type='GLuint[3]', getter=getGlobal3},
