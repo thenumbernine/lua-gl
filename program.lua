@@ -575,32 +575,40 @@ function GLProgram.getVersionPragma(es)
 	local strptr = gl.glGetString(gl.GL_SHADING_LANGUAGE_VERSION)
 	assert(strptr ~= nil, "failed to get GL_SHADING_LANGUAGE_VERSION")
 	local version = ffi.string(strptr)
-	version = version:gsub('%.', '')
 	-- even when using gles, the GL_VERSION I get back corresponds to my GL (non-ES) version (is there a different constant I should be using other than GL_VERSION for the ES version?)
 	-- so instead I'll use a mapping from GLSL versions to GLSL-ES versions...
 	if es then
-		-- TODO just do this once? and maybe in another file?
-		local exts = {}
-		local extstr = gl.glGetString(gl.GL_EXTENSIONS)
-		extstr = extstr == nil and '' or string.trim(ffi.string(extstr))
-		for _,ext in ipairs(string.split(extstr, '%s+')) do
-			exts[ext] = true
-		end
-
-		if version == '460' or exts.GL_ARB_ES3_2_compatibility then
-			version = '320 es'
-		elseif version >= '450' or exts.GL_ARB_ES3_1_compatibility then
-			-- GL 4.5 core, or GL_ARB_ES3_1_compatibility, maps to #version 310 es
-			version = '310 es'
-		elseif version >= '430' or exts.GL_ARB_ES3_compatibility then
-			-- GL 4.3 core, or GL_ARB_ES3_compatibility, maps to #version 300 es
-			version = '300 es'
-		elseif version >= '410' or exts.GL_ARB_ES2_compatibility then
-			-- GL 4.1 core, or GL_ARB_ES2_compatibility, maps to ... #version 100 es ... ?
-			version = '100 es'
+		-- ugh webgl why do you have to add your crap to this?
+		local rest = version:match'^WebGL GLSL ES ([0-9%.]*)'
+		if rest then
+			version = rest:gsub('%.', '')
 		else
-			error("couldn't find a GLSL-ES version compatible with GLSL version "..tostring(version))
+			-- TODO just do this once? and maybe in another file?
+			local exts = {}
+			local extstr = gl.glGetString(gl.GL_EXTENSIONS)
+			extstr = extstr == nil and '' or string.trim(ffi.string(extstr))
+			for _,ext in ipairs(string.split(extstr, '%s+')) do
+				exts[ext] = true
+			end
+
+			if version == '460' or exts.GL_ARB_ES3_2_compatibility then
+				version = '320 es'
+			elseif version >= '450' or exts.GL_ARB_ES3_1_compatibility then
+				-- GL 4.5 core, or GL_ARB_ES3_1_compatibility, maps to #version 310 es
+				version = '310 es'
+			elseif version >= '430' or exts.GL_ARB_ES3_compatibility then
+				-- GL 4.3 core, or GL_ARB_ES3_compatibility, maps to #version 300 es
+				version = '300 es'
+			elseif version >= '410' or exts.GL_ARB_ES2_compatibility then
+				-- GL 4.1 core, or GL_ARB_ES2_compatibility, maps to ... #version 100 es ... ?
+				version = '100 es'
+			else
+				error("couldn't find a GLSL-ES version compatible with GLSL version "..tostring(version))
+			end
 		end
+	else
+		-- desktop gl is straightforward about this (usually ... I hope ...)
+		version = version:gsub('%.', '')
 	end
 	return '#version '..version
 end
