@@ -581,7 +581,7 @@ function GLProgram.getVersionPragma(es)
 		-- ugh webgl why do you have to add your crap to this?
 		local rest = version:match'^WebGL GLSL ES ([0-9%.]*)'
 		if rest then
-			version = rest:gsub('%.', '')
+			version = rest:gsub('%.', '')..' es'
 		else
 			-- TODO just do this once? and maybe in another file?
 			local exts = {}
