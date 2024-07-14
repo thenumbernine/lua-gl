@@ -164,10 +164,11 @@ function FrameBuffer:drawToCallback(index, callback, ...)
 		print(err)
 		print(debug.traceback())
 	else
-		gl.glGetIntegerv(gl.GL_DRAW_BUFFER, glint)
+		gl.glGetIntegerv(gl.GL_DRAW_BUFFER0, glint)
 		local drawbuffer = glint[0]
 		if type(index)=='number' then
-			gl.glDrawBuffer(gl.GL_COLOR_ATTACHMENT0 + index)
+			glint[0] = gl.GL_COLOR_ATTACHMENT0 + index
+			gl.glDrawBuffers(1, glint)
 			callback(...)
 		elseif type(index)=='table' then
 			-- TODO - table attachments should probably make use of glDrawBuffers for multiple draw to's
@@ -177,7 +178,8 @@ function FrameBuffer:drawToCallback(index, callback, ...)
 				callback(side, ...)
 			end
 		end
-		gl.glDrawBuffer(drawbuffer)
+		glint[0] = drawbuffer
+		gl.glDrawBuffers(1, glint)
 	end
 
 	self:unbind()
