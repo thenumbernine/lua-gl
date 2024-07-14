@@ -569,9 +569,11 @@ this says ...
 	GLSL-ES pragma '300 es' <=> GL 4.3 <=> GLSL 4.3
 	GLSL-ES pragma '310 es' <=> GL 4.5 <=> GLSL 4.5
 	... and idk about 320 es
-
 --]]
 function GLProgram.getVersionPragma(es)
+	-- should I auto-detect es?
+	if es == nil and op.safeindex(gl, 'GL_ES_VERSION_2_0') then es = true end
+
 	local strptr = gl.glGetString(gl.GL_SHADING_LANGUAGE_VERSION)
 	assert(strptr ~= nil, "failed to get GL_SHADING_LANGUAGE_VERSION")
 	local version = ffi.string(strptr)
