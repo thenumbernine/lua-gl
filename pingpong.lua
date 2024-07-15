@@ -10,7 +10,6 @@ local PingPong = class()
 args:
 	- fbo = provide your own gl.fbo object.  default one is created.
 	- numBuffers = number of buffers for the pingpong. default 2.
-	- dontAttach = dont attach the pingpong buffers to GL_COLOR_ATTACHMENT_0 through n-1
 	- the rest are forwarded to GLTex2D
 --]]
 function PingPong:init(args)
@@ -19,21 +18,10 @@ function PingPong:init(args)
 	self.width = args.width
 	self.height = args.height
 	self.index = 1	--one-based for history index.  don't forget the associated color attachment is zero-based
-	if not args.dontAttach then
-		self.fbo:bind()	-- TODO bind-upon-create? hmmm...
-	end
 	local numBuffers = args.numBuffers or 2
 	for i=1,numBuffers do
 		local tex = GLTex2D(args)
 		self.hist:insert(tex)
-		if not args.dontAttach then
-			self.fbo:setColorAttachmentTex2D(tex.id, i-1)
-		end
-	end
-	-- TODO stick with theme and don't unbind automatically upon init
-	-- or TODO maybe all objects should unbind upon init? just not upon param call?
-	if not args.dontAttach then
-		self.fbo:unbind()
 	end
 end
 
@@ -59,17 +47,17 @@ function PingPong:last()
 end
 
 function PingPong:draw(args)
-	args = table({
-		colorAttachment = self.index-1,
-		-- i'm not sure whether i want args.viewport==nil to mean use a default sized to the fbo, or don't touch it
-		-- i'm leaning towards not touching it...
-	}, args)
+	self.fbo:bind()
+	self.fbo:setColorAttachmentTex2D(self:cur().id)
+	self.fbo:unbind()
 	self.fbo:draw(args)
 end
 
 function PingPong:clear(index, color)
+	self.fbo:bind()
+	self.fbo:setColorAttachmentTex2D(self:cur().id)
+	self.fbo:unbind()
 	self:draw{
-		colorAttachment = index-1,
 		color = color,
 		resetProjection = true,
 		viewport = {0, 0, self.width, self.height},

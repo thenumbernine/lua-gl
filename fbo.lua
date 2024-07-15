@@ -164,6 +164,7 @@ function FrameBuffer:drawToCallback(index, callback, ...)
 		print(err)
 		print(debug.traceback())
 	else
+--[[
 		gl.glGetIntegerv(gl.GL_DRAW_BUFFER0, glint)
 		local drawbuffer = glint[0]
 		if type(index)=='number' then
@@ -180,6 +181,11 @@ function FrameBuffer:drawToCallback(index, callback, ...)
 		end
 		glint[0] = drawbuffer
 		gl.glDrawBuffers(1, glint)
+--]]
+-- [[ without drawBuffers ...
+-- ... but what about cubemap targets vs cubemap colormap attachments?
+		callback(...)
+--]]
 	end
 
 	self:unbind()
