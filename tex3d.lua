@@ -1,6 +1,7 @@
 local ffi = require 'ffi'
 local gl = require 'gl'
 local GLTex = require 'gl.tex'
+local GLTypes = require 'gl.types'
 
 local GLTex3D = GLTex:subclass()
 
@@ -60,7 +61,7 @@ function GLTex3D:load(args)
 	args.data = data
 	args.internalFormat = args.internalFormat or self.formatForChannels[image.channels]
 	args.format = args.format or self.formatForChannels[image.channels] or gl.GL_RGBA
-	args.type = args.type or self.typeForType[image.format] or gl.GL_UNSIGNED_BYTE
+	args.type = args.type or GLTypes.gltypeForCType[image.format] or gl.GL_UNSIGNED_BYTE
 end
 
 function GLTex3D:subimage(args)

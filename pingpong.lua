@@ -47,21 +47,22 @@ function PingPong:last()
 end
 
 function PingPong:draw(args)
-	self.fbo:bind()
-	self.fbo:setColorAttachmentTex2D(self:cur().id)
-	self.fbo:unbind()
-	self.fbo:draw(args)
+	self.fbo
+		:bind()
+		:setColorAttachmentTex2D(assert(self:cur().id))
+		:unbind()
+		:draw(args)
 end
 
 function PingPong:clear(index, color)
 	self.fbo:bind()
-	self.fbo:setColorAttachmentTex2D(self:cur().id)
-	self.fbo:unbind()
-	self:draw{
-		color = color,
-		resetProjection = true,
-		viewport = {0, 0, self.width, self.height},
-	}
+		:setColorAttachmentTex2D(assert(self:cur().id))
+		:unbind()
+		:draw{
+			color = color,
+			resetProjection = true,
+			viewport = {0, 0, self.width, self.height},
+		}
 end
 
 function PingPong:clearAll(color)

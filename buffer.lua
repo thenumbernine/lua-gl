@@ -1,7 +1,8 @@
 local ffi = require 'ffi'
+local table = require 'ext.table'
 local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
-local table = require 'ext.table'
+local GLTypes = require 'gl.types'
 
 local Buffer = GCWrapper{
 	gctype = 'autorelease_gl_buffer_ptr_t',
@@ -67,27 +68,32 @@ args:
 	usage = (optional) GL buffer usage.  default GL_STATIC_DRAW.
 	type = (optional) if data is a Lua table, this specifies what c type to convert it to.  default float.
 	target = (optional) override self.target in the glBindBuffer call, but unlike the other fields it does not assign to self.
+	count = (optional) number of elements.  computed if data is a Lua table.
 my js version has 'keep' for saving args.data ... I'll just make it default
 --]]
 function Buffer:setData(args)
 	local size = args.size
 	local data = args.data
+	local count = args.count
 	if type(data) == 'table' then
 		local n = #data
-		-- TODO derive ctype from GL type
-		local ctype = args.type or 'float'
+		local ctype = args.type and GLTypes.ctypeForGLType[args.type] or 'float'
 		size = size or n * ffi.sizeof(ctype)
-		local numFloats = math.floor(size / ffi.sizeof(ctype))
-		local cdata = ffi.new(ctype..'[?]', numFloats)
-		for i=1,math.min(numFloats, n) do
+		local numElems = math.floor(size / ffi.sizeof(ctype))
+		local cdata = ffi.new(ctype..'[?]', numElems)
+		for i=1,math.min(numElems, n) do
 			cdata[i-1] = data[i]
 		end
 		data = cdata
+		
+		-- count is read from Geometry for drawing
+		count = count or n
 	end
 	-- mind you, this is saving the cdata, even if you :setData() with Lua data ...
 	self.data = data
 	self.size = size
 	self.usage = args.usage or gl.GL_STATIC_DRAW
+	if count then self.count = count end
 	gl.glBufferData(args.target or self.target, self.size, self.data, self.usage)
 	return self
 end
