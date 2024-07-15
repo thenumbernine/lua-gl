@@ -14,7 +14,7 @@ args:
 --]]
 function PingPong:init(args)
 	self.hist = table()
-	self.fbo = args.fbo or GLFrameBuffer{width=args.width, height=args.height}
+	self.fbo = args.fbo or GLFrameBuffer{width=args.width, height=args.height}:unbind()
 	self.width = args.width
 	self.height = args.height
 	self.index = 1	--one-based for history index.  don't forget the associated color attachment is zero-based

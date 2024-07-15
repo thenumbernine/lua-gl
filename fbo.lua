@@ -56,8 +56,8 @@ function FrameBuffer:init(args)
 		self.depthID = id[0]
 		gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, self.depthID)
 		gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH_COMPONENT, self.width, self.height)
-		gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, 0)
 		gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, self.depthID)
+		gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, 0)
 	end
 
 	-- TODO accept a table, and bind each index to each attachment?
