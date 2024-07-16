@@ -51,7 +51,7 @@ function Geometry:draw(args)
 		end
 		-- TODO auto-deduce indexStart and indexEnd either from vertexes bounds or indexes contents
 		if self.indexStart and self.indexEnd then
-			gl.glDrawRangeElements(mode, count, self.indexStart, self.indexEnd, self.indexes.type, ffi.cast('void*', offset))
+			gl.glDrawRangeElements(mode, self.indexStart, self.indexEnd, count, self.indexes.type, ffi.cast('void*', offset))
 		else
 			gl.glDrawElements(mode, count, self.indexes.type, ffi.cast('void*', offset))
 		end
