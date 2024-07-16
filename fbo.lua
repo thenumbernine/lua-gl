@@ -6,6 +6,12 @@ local gl = require 'gl'
 local Tex2D = require 'gl.tex2d'
 local glreport = require 'gl.report'
 
+local defaultDepthComponent = gl.GL_DEPTH_COMPONENT
+if op.safeindex(gl, 'GL_ES_VERSION_2_0') then
+	-- seems DEPTH_COMPONENT doesn't work in webgl ...
+	defaultDepthComponent = gl.GL_DEPTH_COMPONENT16
+end
+
 local Tex3D
 if op.safeindex(gl, 'GL_TEXTURE_3D') then
 	Tex3D = require 'gl.tex3d'
@@ -55,7 +61,7 @@ function FrameBuffer:init(args)
 		gl.glGenRenderbuffers(1, id)
 		self.depthID = id[0]
 		gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, self.depthID)
-		gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH_COMPONENT, self.width, self.height)
+		gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, defaultDepthComponent, self.width, self.height)
 		gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, self.depthID)
 		gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, 0)
 	end
