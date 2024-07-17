@@ -28,9 +28,11 @@ args:
 			- TODO instead in this function I shoul derive ctype from GL type
 			- and then probably be putting the mapping between ffi types, gl primitive types, gl shader types (including vectors/matrices) all in one place
 
-my js version has dim and count instead of size, then just size = dim * count
-this makes it more compatible with GLProgram:setAttr(buffer)
-instead of only GLProgram:setAttr(attr)
+	count (optional) ...
+	dim (optional)
+		my js version has dim and count instead of size, then just size = dim * count
+		this makes it more compatible with GLProgram:setAttr(buffer)
+		instead of only GLProgram:setAttr(attr)
 --]]
 function Buffer:init(args)
 	Buffer.super.init(self)
@@ -68,13 +70,15 @@ args:
 	usage = (optional) GL buffer usage.  default GL_STATIC_DRAW.
 	type = (optional) if data is a Lua table, this specifies what c type to convert it to.  default float.
 	target = (optional) override self.target in the glBindBuffer call, but unlike the other fields it does not assign to self.
-	count = (optional) number of elements.  computed if data is a Lua table.
+	count = (optional) number of elements.  computed if data is a Lua table. used elsewhere.
+	dim = (optional) nelems per vectors, for vector arrays only. used elsewhere.
 my js version has 'keep' for saving args.data ... I'll just make it default
 --]]
 function Buffer:setData(args)
 	local size = args.size
 	local data = args.data
 	local count = args.count
+	local dim = args.dim
 	if type(data) == 'table' then
 		local n = #data
 		local ctype = args.type and GLTypes.ctypeForGLType[args.type] or 'float'
@@ -85,15 +89,24 @@ function Buffer:setData(args)
 			cdata[i-1] = data[i]
 		end
 		data = cdata
-		
+
 		-- count is read from Geometry for drawing
-		count = count or n
+		-- if it wasn't specified then assign count based on the table size and dimension
+		if not count then
+			count = n
+			if dim then
+				count = count / dim
+			end
+		end
 	end
 	-- mind you, this is saving the cdata, even if you :setData() with Lua data ...
 	self.data = data
 	self.size = size
 	self.usage = args.usage or gl.GL_STATIC_DRAW
+
+	-- extra stuff
 	if count then self.count = count end
+	self.dim = dim
 	gl.glBufferData(args.target or self.target, self.size, self.data, self.usage)
 	return self
 end

@@ -17,6 +17,9 @@ local GLSceneObject = class()
 
 --[[
 args
+	vertexes = GLArrayBuffer or ctor for vertex array
+		- passed to geometry for its vertexes for draw count determination
+		- passed to attrs.vertex .buffer= as an implicit attribute
 	geometry = GLGeometry. if no metatable, implicitly constructed as GLGeometry
 	program = GLProgram. if no metatable, implicitly constructed as GLProgram
 	uniforms
@@ -32,12 +35,23 @@ also creates a .vao for saving bindings of attributes
 function GLSceneObject:init(args)
 	args = args or {}
 
+	self.vertexes = args.vertexes
+	if self.vertexes then
+		if not getmetatable(self.vertexes) then
+			self.vertexes = GLArrayBuffer(self.vertexes)
+		end
+	end
+
 	self.geometry = args.geometry
 	-- construct if necessary;
 	local GLGeometry = require 'gl.geometry'
 	--if not GLGeometry:isa(self.geometry) then
 	if not getmetatable(self.geometry) then
 		self.geometry = GLGeometry(self.geometry)
+	end
+	-- GLGeometry ctor doesn't use so we can assign it after ctor
+	if not self.geometry.vertexes then
+		self.geometry.vertexes = self.vertexes
 	end
 
 	self.program = args.program
@@ -50,8 +64,13 @@ function GLSceneObject:init(args)
 
 	self.uniforms = args.uniforms or {}
 	if args.attrs then
+		local srcattrs = table(args.attrs)
+		if not srcattrs.vertex then
+			-- TODO should I change the .vertexes field of Geometry and SceneObject to just .vertex ? technically those are plural (multiple vertexes) while the GLSL arg is singular (processing a single vertex at a time) ...
+			srcattrs.vertex = {buffer = self.vertexes}
+		end
 		self.attrs = {}
-		for k,v in pairs(args.attrs) do
+		for k,v in pairs(srcattrs) do
 			if self.program.attrs[k] then
 				if not GLAttribute:isa(v) then
 					if GLArrayBuffer:isa(v) then
