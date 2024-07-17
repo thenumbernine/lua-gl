@@ -63,34 +63,32 @@ function GLSceneObject:init(args)
 	end
 
 	self.uniforms = args.uniforms or {}
-	if args.attrs then
-		local srcattrs = table(args.attrs)
-		if not srcattrs.vertex then
-			-- TODO should I change the .vertexes field of Geometry and SceneObject to just .vertex ? technically those are plural (multiple vertexes) while the GLSL arg is singular (processing a single vertex at a time) ...
-			srcattrs.vertex = {buffer = self.vertexes}
-		end
-		self.attrs = {}
-		for k,v in pairs(srcattrs) do
-			if self.program.attrs[k] then
-				if not GLAttribute:isa(v) then
-					if GLArrayBuffer:isa(v) then
-						-- if attrs[] value is an ArrayBuffer, wrap it in {buffer= }
-						v = {buffer = v}
-					end
-
-					-- how to do coercion for attrs[] is tough ...
-					if v.buffer and not getmetatable(v.buffer) then
-						v.buffer = GLArrayBuffer(v.buffer):unbind()
-					end
-
-					-- auto populate program as well
-					if self.program then
-						v = table(self.program.attrs[k], v)
-					end
-					v = GLAttribute(v)
+	self.attrs = {}
+	local srcattrs = table(args.attrs)
+	if not srcattrs.vertex then
+		-- TODO should I change the .vertexes field of Geometry and SceneObject to just .vertex ? technically those are plural (multiple vertexes) while the GLSL arg is singular (processing a single vertex at a time) ...
+		srcattrs.vertex = self.vertexes
+	end
+	for k,v in pairs(srcattrs) do
+		if self.program.attrs[k] then
+			if not GLAttribute:isa(v) then
+				if GLArrayBuffer:isa(v) then
+					-- if attrs[] value is an ArrayBuffer, wrap it in {buffer= }
+					v = {buffer = v}
 				end
-				self.attrs[k] = v
+
+				-- how to do coercion for attrs[] is tough ...
+				if v.buffer and not getmetatable(v.buffer) then
+					v.buffer = GLArrayBuffer(v.buffer):unbind()
+				end
+
+				-- auto populate program as well
+				if self.program then
+					v = table(self.program.attrs[k], v)
+				end
+				v = GLAttribute(v)
 			end
+			self.attrs[k] = v
 		end
 	end
 	self.texs = table(args.texs)
