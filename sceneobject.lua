@@ -18,6 +18,7 @@ local GLSceneObject = class()
 --[[
 args
 	vertexes = GLArrayBuffer or ctor for vertex array
+		- if not provided then it is taken from geometry.vertexes
 		- passed to geometry for its vertexes for draw count determination
 		- passed to attrs.vertex .buffer= as an implicit attribute
 	geometry = GLGeometry. if no metatable, implicitly constructed as GLGeometry
@@ -35,7 +36,7 @@ also creates a .vao for saving bindings of attributes
 function GLSceneObject:init(args)
 	args = args or {}
 
-	self.vertexes = args.vertexes
+	self.vertexes = args.vertexes or (args.geometry and args.geometry.vertexes)
 	if self.vertexes then
 		if not getmetatable(self.vertexes) then
 			self.vertexes = GLArrayBuffer(self.vertexes)

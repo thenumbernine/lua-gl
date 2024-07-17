@@ -9,7 +9,10 @@ args:
 	mode
 	count (optional).  required unless 'indexes' or 'vertexes' is provided.
 	indexes (optional).  specifies to use drawElements instead of drawArrays
-	vertexes (optional).  either Attribute (holding ArrayBuffer) or ArrayBuffer.  solely used for providing 'count' when 'indexes' and 'count' is not used.
+	vertexes (optional).   solely used for providing 'count' when 'indexes' and 'count' is not used.
+		- either GLAttribute (holding GLArrayBuffer)
+		- or GLArrayBuffer
+		- or if no metatable provided, used as a ctor for an GLArrayBuffer
 	offset (optional).  default 0
 --]]
 function Geometry:init(args)
@@ -17,6 +20,11 @@ function Geometry:init(args)
 	self.count = args.count
 	self.indexes = args.indexes	-- TODO assert if this exists then it is a ElementArrayBuffer
 	self.vertexes = args.vertexes	-- TODO assert this is GLAttribute or GLArrayBuffer
+
+	-- implicit-construction to match behavior of GLSceneObject constructor
+	if self.vertexes and not getmetatable(self.vertexes) then
+		self.vertexes = require 'gl.arraybuffer'(self.vertexes)
+	end
 
 	-- TODO
 	-- for indexed geometry this is the index pointer
