@@ -49,9 +49,20 @@ function Geometry:draw(args)
 		if not count then
 			count = self.indexes.count
 		end
-		-- TODO auto-deduce indexStart and indexEnd either from vertexes bounds or indexes contents
-		if self.indexStart and self.indexEnd then
-			gl.glDrawRangeElements(mode, self.indexStart, self.indexEnd, count, self.indexes.type, ffi.cast('void*', offset))
+
+		-- auto-deduce indexStart and indexEnd either from vertexes bounds or indexes contents
+		local indexStart = self.indexStart
+		local indexEnd = self.indexEnd
+		if self.vertexes
+		and self.vertexes.count
+		and not (indexStart and indexEnd)
+		then
+			indexStart = 0
+			indexEnd = self.vertexes.count - 1
+		end
+
+		if indexStart and indexEnd then
+			gl.glDrawRangeElements(mode, indexStart, indexEnd, count, self.indexes.type, ffi.cast('void*', offset))
 		else
 			gl.glDrawElements(mode, count, self.indexes.type, ffi.cast('void*', offset))
 		end

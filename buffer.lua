@@ -45,6 +45,7 @@ function Buffer:init(args)
 	self:bind()
 	if args then
 		if args.data then
+			-- TODO there's enough field setters in here that maybe I should just move the 'elseif args.size' into there ...
 			self:setData(args)
 		elseif args.size then
 			local empty = ffi.new('uint8_t[?]', args.size)
