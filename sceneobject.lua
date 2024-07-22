@@ -8,6 +8,7 @@ local table = require 'ext.table'
 local op = require 'ext.op'
 local GLAttribute = require 'gl.attribute'
 local GLArrayBuffer = require 'gl.arraybuffer'
+local GLGeometry = require 'gl.geometry'
 
 local gl = require 'gl'
 -- for GLES1&2 which doesn't have VAO functionality
@@ -22,6 +23,8 @@ args
 		- passed to geometry for its vertexes for draw count determination
 		- passed to attrs.vertex .buffer= as an implicit attribute
 	geometry = GLGeometry. if no metatable, implicitly constructed as GLGeometry
+	geometries = same as 'geometry' but multiple ... I should merge them eventually ...
+		- TODO instead of just an array here, how about a Geometries object which can handle glMultiDrawElements, or fall back on individual glDrawElements calls ...
 	program = GLProgram. if no metatable, implicitly constructed as GLProgram
 	uniforms
 	attrs = keys are attribute names.
@@ -43,16 +46,30 @@ function GLSceneObject:init(args)
 		end
 	end
 
-	self.geometry = args.geometry
-	-- construct if necessary;
-	local GLGeometry = require 'gl.geometry'
-	--if not GLGeometry:isa(self.geometry) then
-	if not getmetatable(self.geometry) then
-		self.geometry = GLGeometry(self.geometry)
+	if args.geometry then
+		self.geometry = args.geometry
+		-- construct if necessary;
+		--if not GLGeometry:isa(self.geometry) then
+		if not getmetatable(self.geometry) then
+			self.geometry = GLGeometry(self.geometry)
+		end
+		-- GLGeometry ctor doesn't use so we can assign it after ctor
+		if not self.geometry.vertexes then
+			self.geometry.vertexes = self.vertexes
+		end
 	end
-	-- GLGeometry ctor doesn't use so we can assign it after ctor
-	if not self.geometry.vertexes then
-		self.geometry.vertexes = self.vertexes
+	-- one or many?  hmm
+	if args.geometries then
+		self.geometries = table()
+		for _,geometry in ipairs(args.geometries) do
+			if not getmetatable(geometry) then
+				geometry = GLGeometry(geometry)
+			end
+			if not geometry.vertexes then
+				geometry.vertexes = self.vertexes
+			end
+			self.geometries:insert(geometry)
+		end
 	end
 
 	self.program = args.program
@@ -160,6 +177,11 @@ function GLSceneObject:draw(args)
 
 	if self.geometry then
 		self.geometry:draw()
+	end
+	if self.geometries then
+		for _,geometry in ipairs(self.geometries) do
+			geometry:draw()
+		end
 	end
 
 	if program then
