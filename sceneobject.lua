@@ -39,7 +39,7 @@ function GLSceneObject:init(args)
 	self.vertexes = args.vertexes or (args.geometry and args.geometry.vertexes)
 	if self.vertexes then
 		if not getmetatable(self.vertexes) then
-			self.vertexes = GLArrayBuffer(self.vertexes)
+			self.vertexes = GLArrayBuffer(self.vertexes):unbind()
 		end
 	end
 

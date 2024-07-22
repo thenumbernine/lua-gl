@@ -1,6 +1,8 @@
 local ffi = require 'ffi'
 local class = require 'ext.class'
 local gl = require 'gl'
+local GLArrayBuffer = require 'gl.arraybuffer'
+local GLElementArrayBuffer = require 'gl.elementarraybuffer'
 
 local Geometry = class()
 
@@ -23,7 +25,10 @@ function Geometry:init(args)
 
 	-- implicit-construction to match behavior of GLSceneObject constructor
 	if self.vertexes and not getmetatable(self.vertexes) then
-		self.vertexes = require 'gl.arraybuffer'(self.vertexes)
+		self.vertexes = GLArrayBuffer(self.vertexes):unbind()
+	end
+	if self.indexes and not getmetatable(self.indexes) then
+		self.indexes = GLElementArrayBuffer(self.indexes):unbind()
 	end
 
 	-- TODO
