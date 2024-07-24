@@ -179,14 +179,14 @@ end
 local GLTessEvalShader
 if op.safeindex(gl, 'GL_TESS_EVALUATION_SHADER') then
 	GLTessEvalShader = GLShader:subclass()
-	GLTessEvalShader.type = gl.GL_GEOMETRY_SHADER
+	GLTessEvalShader.type = gl.GL_TESS_EVALUATION_SHADER
 	GLProgram.TessEvalShader = GLTessEvalShader
 end
 
 local GLTessControlShader
 if op.safeindex(gl, 'GL_TESS_CONTROL_SHADER') then
 	GLTessControlShader = GLShader:subclass()
-	GLTessControlShader.type = gl.GL_GEOMETRY_SHADER
+	GLTessControlShader.type = gl.GL_TESS_CONTROL_SHADER
 	GLProgram.TessControlShader = GLTessControlShader
 end
 
