@@ -82,7 +82,10 @@ function Buffer:setData(args)
 	local dim = args.dim
 	if type(data) == 'table' then
 		local n = #data
-		local ctype = args.type and GLTypes.ctypeForGLType[args.type] or 'float'
+		-- TODO move the default into Buffer.type = gl.GL_FLOAT ?
+		-- but then i'd have buffers set with .type == GL_FLOAT even if they dont have .data in ctor and therefore might not really have float data ... hmm ...
+		local gltype = args.type or self.type
+		local ctype = gltype and GLTypes.ctypeForGLType[gltype] or 'float'
 		size = size or n * ffi.sizeof(ctype)
 		local numElems = math.floor(size / ffi.sizeof(ctype))
 		local cdata = ffi.new(ctype..'[?]', numElems)
