@@ -268,8 +268,16 @@ args:
 
 	header (optional) passed on to each shader's ctor header
 	${shaderType}Header = passed on as the header for only that shader type
+
 	version (optional) passed on to each shader's ctor version
-	${shaderType}Versoin = passed on as the version for only that shader type
+	${shaderType}Version = passed on as the version for only that shader type
+
+	precision (optional) passed to each shader's ctor's header
+	${shaderType}Precision = " " " for only that shader type
+
+		use precision = 'best' for whatever the best float precision is.  TODO same with int?  or separate into precFloat/precInt?  or just nah because it's only required in GLES for floats?
+		use version = 'latest' for whatever the latest GLSL version is.
+		use version = 'latest es' for whatever the latest GLSL ES version is.
 
 	uniforms = key/value pair of uniform values to initialize
 	attrs = key/value pair mapping attr name to GLAttribute (with type & size specified)
@@ -311,6 +319,7 @@ function GLProgram:init(args)
 			shaders:insert(cl{
 				code = code,
 				version = args[field..'Version'] or args.version,
+				precision = args[field..'Precision'] or args.precision,
 				header = #headers > 0 and headers:concat'\n' or nil,
 			})
 		end

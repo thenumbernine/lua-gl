@@ -31,9 +31,10 @@ GLShader:makeGetter{
 --[[
 args:
 	code
-	version = string to use as version
-	header = string to append to header
-if 'args' is a string then it is treated as the code
+	version = string to use as version number, for inserting preproc #version into the header.
+	precision = string to use as float precision, for inserting into the header.
+	header = string to append to header.
+if 'args' is a string then it is treated as the code.
 --]]
 function GLShader:init(args)
 	local code
@@ -44,6 +45,29 @@ function GLShader:init(args)
 		if args.header then
 			code = args.header..'\n'..code
 		end
+
+		local precision = args.precision
+		if precision then
+			if precision == 'best' then
+				local range = ffi.new'GLint[2]'
+				local precv = ffi.new'GLint[1]'
+				for _,info in ipairs{
+					{name='highp', param=gl.GL_HIGH_FLOAT},
+					{name='mediump', param=gl.GL_MEDIUM_FLOAT},
+					{name='lowp', param=gl.GL_LOW_FLOAT},
+					-- TODO int as well?
+				} do
+					gl.glGetShaderPrecisionFormat(self.type, info.param, range, precv)
+					if range[0] > 0 and range[1] > 0 and precv[0] > 0 then
+						precision = info.name
+						break
+					end
+				end
+				assert(precision ~= 'best', "somehow I couldn't find any valid precisions")
+			end
+			code = 'precision '..precision..' float;\n'..code
+		end
+
 		local version = args.version
 		if version then
 			if version == 'latest' then
