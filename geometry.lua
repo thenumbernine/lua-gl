@@ -16,6 +16,8 @@ args:
 		- or GLArrayBuffer
 		- or if no metatable provided, used as a ctor for an GLArrayBuffer
 	offset (optional).  default 0
+	indexStart, indexEnd (optional) default to nil, set with indexes to use glDrawRangeElements
+	instanceCount (optional) default to nil.  set to use drawArraysInstanced / drawElementsInstanced
 --]]
 function Geometry:init(args)
 	self.mode = args.mode
@@ -36,6 +38,10 @@ function Geometry:init(args)
 	-- 	for elementarraybuffer indexed geometry this is the offset into the elementarraybuffer
 	-- for non-indexed geometry this is the integer offset into the currently-bound vertex arrays.
 	self.offset = args.offset or 0
+
+	self.indexStart = args.indexStart
+	self.indexEnd = args.indexEnd
+	self.instanceCount = args.instanceCount
 end
 
 --[[
@@ -48,12 +54,14 @@ function Geometry:draw(args)
 	local mode = self.mode
 	local count = self.count
 	local offset = self.offset
+	local instanceCount = self.instanceCount
 
 	--allow overrides?  for which variables?
 	if args then
 		if args.mode then mode = args.mode end
 		if args.count then count = args.count end
 		if args.offset then offset = args.offset end
+		if args.instanceCount then instanceCount = args.instanceCount end
 	end
 
 	-- if we have .indexes then use them
@@ -63,21 +71,26 @@ function Geometry:draw(args)
 			count = self.indexes.count
 		end
 
-		-- auto-deduce indexStart and indexEnd either from vertexes bounds or indexes contents
-		local indexStart = self.indexStart
-		local indexEnd = self.indexEnd
-		if self.vertexes
-		and self.vertexes.count
-		and not (indexStart and indexEnd)
-		then
-			indexStart = 0
-			indexEnd = self.vertexes.count - 1
-		end
-
-		if indexStart and indexEnd then
-			gl.glDrawRangeElements(mode, indexStart, indexEnd, count, self.indexes.type, ffi.cast('void*', offset))
+		-- instances don't get the option of ranged elements so no point in determining the range
+		if self.instanceCount then
+			gl.glDrawElementsInstanced(mode, count, self.indexes.type, ffi.cast('void*', offset), self.instanceCount)
 		else
-			gl.glDrawElements(mode, count, self.indexes.type, ffi.cast('void*', offset))
+			-- auto-deduce indexStart and indexEnd either from vertexes bounds or indexes contents
+			local indexStart = self.indexStart
+			local indexEnd = self.indexEnd
+			if self.vertexes
+			and self.vertexes.count
+			and not (indexStart and indexEnd)
+			then
+				indexStart = 0
+				indexEnd = self.vertexes.count - 1
+			end
+
+			if indexStart and indexEnd then
+				gl.glDrawRangeElements(mode, indexStart, indexEnd, count, self.indexes.type, ffi.cast('void*', offset))
+			else
+				gl.glDrawElements(mode, count, self.indexes.type, ffi.cast('void*', offset))
+			end
 		end
 		self.indexes:unbind()
 	else
@@ -87,7 +100,10 @@ function Geometry:draw(args)
 				count = self.vertexes.buffer.count
 			end
 		end
-		if count and count > 0 then
+
+		if self.instanceCount then
+			gl.glDrawArraysInstanced(mode, offset, count, self.instanceCount)
+		else
 			gl.glDrawArrays(mode, offset, count)
 		end
 	end
