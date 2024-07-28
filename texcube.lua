@@ -30,7 +30,7 @@ function GLTexCube:create(args)
 				internalFormat = gl.GL_RGB
 			else
 				format = gl.GL_RGBA
-				internalFormat = gl.GL_RGB
+				internalFormat = gl.GL_RGBA
 			end
 		end
 		-- hijacking from GLTex2D...
