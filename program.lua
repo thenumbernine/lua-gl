@@ -289,7 +289,7 @@ NOTICE that the preferred way to bind attributes to buffers is via gl.sceneobjec
 however defaults can still be assigned via gl.program
 
 	transformFeedback = {
-		[i] = name of varying, 
+		[i] = name of varying,
 		...
 		mode = gl.GL_INTERLEAVED_ATTRIBS, gl.GL_SEPARATE_ATTRIBS
 			or 'interleaved' or 'separate'
@@ -388,75 +388,124 @@ function GLProgram:init(args)
 		}
 		info.loc = gl.glGetUniformLocation(self.id, info.name)
 		info.setters = getUniformSettersForGLType(info.type)
-		self.uniforms[i] = info
+		self.uniforms[i] = info		-- index by binding
 		self.uniforms[info.name] = info
 	end
 
---[[
-so here's my issue
-GLProgram has .attrs
-.attrs is built by glGetActiveAttrib
-it holds:
-	- name
-	- array size
-	- GLSL type
-however glVertexAttribPointer (in GLAttribute) holds
-	- dimension (1,2,3,4)
-	- C type
-	- normalize flag
-	- stride
-	- offset
-and glEnableVertexAttribArray / glDisableVertexAttribArray operates on
-	- attribute location
-... and the two do not match 1-1.  For matrix attributes, you need multiple glVertexAttribPointer calls, since glVertexAttribPointer can only specify up to 4 channels at once.
-also GLAttribute associates with GLArrayBuffer for setting when drawing
+	--[[
+	so here's my issue
+	GLProgram has .attrs
+	.attrs is built by glGetActiveAttrib
+	it holds:
+		- name
+		- array size
+		- GLSL type
+	however glVertexAttribPointer (in GLAttribute) holds
+		- dimension (1,2,3,4)
+		- C type
+		- normalize flag
+		- stride
+		- offset
+	and glEnableVertexAttribArray / glDisableVertexAttribArray operates on
+		- attribute location
+	... and the two do not match 1-1.  For matrix attributes, you need multiple glVertexAttribPointer calls, since glVertexAttribPointer can only specify up to 4 channels at once.
+	also GLAttribute associates with GLArrayBuffer for setting when drawing
 
-TODO make a GLSceneObject that combines program, geometry, and attributes
-then put the attribute -> buffer mapping information in it
-and also put attribute -> buffer mapping information in GLVertexArray
+	TODO make a GLSceneObject that combines program, geometry, and attributes
+	then put the attribute -> buffer mapping information in it
+	and also put attribute -> buffer mapping information in GLVertexArray
 
-and then make GLAttribute 1-1 with GLProgram's attr objects
+	and then make GLAttribute 1-1 with GLProgram's attr objects
 
---]]
+	--]]
 	self.attrs = {}
-	local maxAttrs = self:get'GL_ACTIVE_ATTRIBUTES'
-	local maxLen = self:get'GL_ACTIVE_ATTRIBUTE_MAX_LENGTH'
-	for i=1,maxAttrs do
-		local bufSize = maxLen+1
-		local name = ffi.new('GLchar[?]', bufSize)
+	do
+		local nameMaxLen = self:get'GL_ACTIVE_ATTRIBUTE_MAX_LENGTH'
+		local bufSize = nameMaxLen+1
+		local nameBuf = ffi.new('GLchar[?]', bufSize)
 		local length = ffi.new('GLsizei[1]', 0)
-		ffi.fill(name, bufSize)
 		local arraySize = ffi.new('GLint[1]', 0)
-		local utype = ffi.new('GLenum[1]', 0)
-		gl.glGetActiveAttrib(self.id, i-1, bufSize, length, arraySize, utype, name);
-
-		local name = ffi.string(name, length[0])
-		local attrargs
-		if args.attrs then
-			attrargs = args.attrs[name]
-			if GLArrayBuffer:isa(attrargs) then
-				attrargs = {buffer = attrargs}
+		local glslType = ffi.new('GLenum[1]', 0)
+		for index=0,self:get'GL_ACTIVE_ATTRIBUTES'-1 do
+			ffi.fill(nameBuf, bufSize)
+			gl.glGetActiveAttrib(self.id, index, bufSize, length, arraySize, glslType, nameBuf)
+			local name = ffi.string(nameBuf, length[0])
+			-- copy any ctor args into this attr, such as any to-be-bound buffers ...
+			-- ... this use-case was for programs whose attributes are bound up front.
+			-- not sure if I want to allow this anymore in favor instead of GLSceneObject being the collecting point of all attributes, shaders, geometry, etc.
+			local varargs
+			if args.attrs then
+				varargs = args.attrs[name]
+				if GLArrayBuffer:isa(varargs) then
+					varargs = {buffer = varargs}
+				end
+			end
+			varargs = table(varargs)
+			varargs.name = name
+			varargs.arraySize = arraySize[0]
+			varargs.glslType = glslType[0]
+			varargs.loc = gl.glGetAttribLocation(self.id, name)
+			-- alright here's another interesting caveat that Desktop GL supports probably thanks to backwards compatability:
+			-- if you're using a higher shader language version that doesn't require builtins (like gl_Vertex)
+			-- and your shader doesn't use this builtin
+			-- then the shader still provides a queryable vertexAttribute of it
+			-- just with location == -1 i.e. invalid
+			-- soooo ... in that case i'm throwing it away.
+			-- but i'd like to keep them for completeness
+			-- but in the case that I do keep the loc==-1, and simply do not bind them, then I still get gl errors later ...
+			-- weird.
+			-- maybe loc==-1 is valid? and i'm in trouble for not using it?
+			if varargs.loc ~= -1 then
+				self.attrs[name] = GLAttribute(varargs)
+				-- set .index here or it'll get tossed by the GLAttribute ctor
+				self.attrs[name].index = index		-- index is not the same as location ... is index the same as binding?
 			end
 		end
-		attrargs = table(attrargs)
-		attrargs.name = name
-		attrargs.arraySize = arraySize[0]
-		attrargs.glslType = utype[0]
-		attrargs.loc = gl.glGetAttribLocation(self.id, name)
-		-- alright here's another interesting caveat that Desktop GL supports probably thanks to backwards compatability:
-		-- if you're using a higher shader language version that doesn't require builtins (like gl_Vertex)
-		-- and your shader doesn't use this builtin
-		-- then the shader still provides a queryable vertexAttribute of it
-		-- just with location == -1 i.e. invalid
-		-- soooo ... in that case i'm throwing it away.
-		-- but i'd like to keep them for completeness
-		-- but in the case that I do keep the loc==-1, and simply do not bind them, then I still get gl errors later ...
-		-- weird.
-		-- maybe loc==-1 is valid? and i'm in trouble for not using it?
-		if attrargs.loc ~= -1 then
-			self.attrs[name] = GLAttribute(attrargs)
+	end
+
+	--[[ TODO
+	-- https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetTransformFeedbackVarying.xhtml
+	-- makes this all sound like all it's doing is retelling you whatever you told it in glTransformFeedbackVaryings
+	-- If that's the case then I think there's no point to holding onto this.
+	-- I thougth maybe there'd be some sort of 'loc' info like there is for in's and out's, but nah.
+	-- From the sentence "An index of 0 selects the first varying variable specified in the varyings array passed to glTransformFeedbackVaryings,"
+	-- ... it sounds like everything you pass into the .transformFeedback[] is all you'd need for the subsequent :bindBase(index) call
+	self.varyings = {}
+	do
+		local nameMaxLen = self:get'GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH'
+		local bufSize = nameMaxLen+1
+		local nameBuf = ffi.new('GLchar[?]', bufSize)
+		local length = ffi.new('GLsizei[1]', 0)
+		local arraySize = ffi.new('GLint[1]', 0)
+		local glslType = ffi.new('GLenum[1]', 0)
+		for index=0,self:get'GL_TRANSFORM_FEEDBACK_VARYINGS'-1 do
+			ffi.fill(nameBuf, bufSize)
+			gl.glGetTransformFeedbackVarying(self.id, index, bufSize, length, arraySize, glslType, nameBuf)
+			local name = ffi.string(nameBuf, length[0])
+			local varargs
+			-- TODO I think there's absolutely no purpose to ctor user-specified .varyings[] information.
+			-- except maybe for setting transformFeedback varyings
+			-- which I already set via ctor arg .transformFeedback and is handled above
+			if args.varyings then
+				varargs = args.varyings[name]
+				if GLArrayBuffer:isa(varargs) then
+					varargs = {buffer = varargs}
+				end
+			end
+			varargs = table(varargs)
+			varargs.index = index		-- index is not the same as location ... is index the same as binding?
+			varargs.name = name
+			varargs.arraySize = arraySize[0]
+			varargs.glslType = glslType[0]
+			-- feedback varyings don't have locations
+			-- but they do have bindings
+			-- but can those be set?  or retrieved?
+			--varargs.loc = gl.glGetAttribLocation(self.id, name)
+			-- and TODO should this be a GLAttribute?  should it be a superclass?
+			self.varyings[name] = varargs
 		end
 	end
+	--]]
 
 	if args.uniforms then
 		self:setUniforms(args.uniforms)
