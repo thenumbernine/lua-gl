@@ -149,6 +149,7 @@ end
 
 function Buffer:unmap(target)
 	gl.glUnmapBuffer(target or self.target)
+	return self
 end
 
 return Buffer
