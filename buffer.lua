@@ -1,4 +1,5 @@
 local ffi = require 'ffi'
+local op = require 'ext.op'
 local table = require 'ext.table'
 local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
@@ -127,6 +128,27 @@ end
 function Buffer:bindBase(index)
 	gl.glBindBufferBase(self.target, index or 0, self.id)
 	return self
+end
+
+-- offset is in bytes
+-- length is in number of elements
+-- access is specified here: https://registry.khronos.org/OpenGL-Refpages/gl4/html/glMapBufferRange.xhtml
+-- or here: https://registry.khronos.org/OpenGL-Refpages/gl4/html/glMapBuffer.xhtml
+--local hasMap = op.safeindex(gl, 'glMapBuffer')
+function Buffer:map(access, offset, length, target)
+--	if offset == nil and length == nil and hasMap then
+-- TODO I'd use glMapBuffer and glMapBufferRange interchangeable buuuuttttt...
+-- glMapBuffer uses for access GL_READ_ONLY, GL_WRITE_ONLY, or GL_READ_WRITE
+-- while glMapBufferRange uses GL_MAP_READ_BIT, GL_MAP_WRITE_BIT, and a lot more, and the values between functions aren't interchangeable.
+--		return gl.glMapBuffer(target or self.target, access)
+--	else
+-- TODO or if glMapBuffer isn't available ... then default offset to 0 and length to the buffer count minus the (offset / buffer.dim / sizeof(buffer.type))
+	return gl.glMapBufferRange(target or self.target, offset or 0, length or self.count, access)
+--	end
+end
+
+function Buffer:unmap(target)
+	gl.glUnmapBuffer(target or self.target)
 end
 
 return Buffer
