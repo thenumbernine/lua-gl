@@ -1,7 +1,7 @@
 local gl = require 'gl'
-local Buffer = require 'gl.buffer'
+local GLBuffer = require 'gl.buffer'
 
-local ShaderStorageBuffer = Buffer:subclass()
-ShaderStorageBuffer.target = gl.GL_SHADER_STORAGE_BUFFER
+local GLShaderStorageBuffer = GLBuffer:subclass()
+GLShaderStorageBuffer.target = gl.GL_SHADER_STORAGE_BUFFER
 
-return ShaderStorageBuffer
+return GLShaderStorageBuffer

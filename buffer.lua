@@ -122,8 +122,10 @@ end
 
 -- https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBindBufferBase.xhtml
 -- "target must be one of GL_ATOMIC_COUNTER_BUFFER, GL_TRANSFORM_FEEDBACK_BUFFER, GL_UNIFORM_BUFFER or GL_SHADER_STORAGE_BUFFER."
+-- Currently only used with my only use of GLShaderStorageBuffer, but I'm not even sure if I need to make separate subclasses, since buffer targets and the buffers themselves seem to be separate things ...
+-- ... and for that reason I'm tempted to make 'target' a second argument that defaults to self.target ... or maybe I should use named args ...
 function Buffer:bindBase(index)
-	gl.glBindBufferBase(self.target, index, self.id)
+	gl.glBindBufferBase(self.target, index or 0, self.id)
 	return self
 end
 

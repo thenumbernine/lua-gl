@@ -46,6 +46,7 @@ build = {
 		["gl.tex3d"] = "tex3d.lua",
 		["gl.texbuffer"] = "texbuffer.lua",
 		["gl.texcube"] = "texcube.lua",
+		["gl.transformfeedbackbuffer"] = "transformfeedbackbuffer.lua",
 		["gl.types"] = "types.lua",
 		["gl.vertexarray"] = "vertexarray.lua"
 	}

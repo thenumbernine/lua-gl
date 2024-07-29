@@ -287,6 +287,13 @@ args:
 
 NOTICE that the preferred way to bind attributes to buffers is via gl.sceneobject
 however defaults can still be assigned via gl.program
+
+	transformFeedback = {
+		[i] = name of varying, 
+		...
+		mode = gl.GL_INTERLEAVED_ATTRIBS, gl.GL_SEPARATE_ATTRIBS
+			or 'interleaved' or 'separate'
+	}
 --]]
 function GLProgram:init(args)
 	self.id = gl.glCreateProgram()
@@ -333,6 +340,22 @@ function GLProgram:init(args)
 		for k,v in pairs(args.attrLocs) do
 			gl.glBindAttribLocation(self.id, v, k);
 		end
+	end
+
+	local transformFeedback = args.transformFeedback
+	if transformFeedback then
+		local n = #transformFeedback
+		local varyings = ffi.new('char const *[?]', n)
+		for i=1,n do
+			varyings[i-1] = transformFeedback[i]
+		end
+		local mode = transformFeedback.mode
+		mode = ({
+			interleaved = gl.GL_INTERLEAVED_ATTRIBS,
+			separate = gl.GL_SEPARATE_ATTRIBS,
+		})[mode] or mode
+		if not mode then error("transformFeedback has unknown mode "..tostring(mode)) end
+		gl.glTransformFeedbackVaryings(self.id, n, varyings, mode)
 	end
 
 	gl.glLinkProgram(self.id)
