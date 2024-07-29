@@ -203,7 +203,7 @@ function GLAttribute:setPointer(loc)
 	-- same question for glEnableVertexAttrib
 	gl.glVertexAttribPointer(
 		loc,
-		self.size,
+		self.size,	-- TODO TODO just call this 'dim' to match GLBuffer ... and only use 'size' of size-in-bytes ...
 		self.type,
 		self.normalize and gl.GL_TRUE or gl.GL_FALSE,
 		self.stride,
