@@ -30,21 +30,21 @@ local function getteriv(self, namevalue, result)
 	-- GL has glGetTextureParameterfv & -iv
 	-- GLES1 has only glGetTexParameterf
 	-- GLES2 and 3 have glGetTexParameterf and -i
-	return gl.glGetTextureParameteriv(self.target, namevalue, result) 
+	return gl.glGetTextureParameteriv(self.target, namevalue, result)
 end
 
 -- hmm 'getter' means call the getter above, which is a wrapper for glGet*
 -- so mayb i have to put th branch in the getter above fr now ....
 -- another TODO is this should be getterf for GLES2 ... and for GLES1 *all* texture getters are getterf ...
 local function getterfv(self, namevalue, result)
-	return gl.glGetTextureParameterfv(self.target, namevalue, result) 
+	return gl.glGetTextureParameterfv(self.target, namevalue, result)
 end
 
 GLTex:makeGetter{
 	-- default use int
 	-- TODO map and assign based on type and on gl version
 	getter = getteriv,
-	-- https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetTexParameter.xhtml 
+	-- https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetTexParameter.xhtml
 	-- would be nice if the docs specified what getter result type was preferred
 	vars = {
 		{name='GL_TEXTURE_MAG_FILTER', type='GLuint'},
@@ -65,7 +65,7 @@ GLTex:makeGetter{
 		{name='GL_TEXTURE_COMPARE_MODE', type='GLuint'},
 		{name='GL_TEXTURE_COMPARE_FUNC', type='GLuint'},
 		{name='GL_TEXTURE_IMMUTABLE_FORMAT', type='GLuint'},
-		
+
 		-- 4.2 or later
 		{name='GL_IMAGE_FORMAT_COMPATIBILITY_TYPE', type='GLuint'},
 
@@ -179,9 +179,16 @@ GLTex.formatForChannels = {
 }
 
 -- inverse of 'formatForChannels'
-GLTex.channelsForFormat = {
+GLTex.channelsForFormat = table{
+	GL_LUMINANCE = 1,
+	GL_RGB = 3,
+	GL_RGBA = 4,
 	-- TODO this table is long.
-}
+}:map(function(v,k)
+	k = op.safeindex(gl, k)
+	if not k then return end
+	return v, k
+end):setmetatable(nil)
 
 -- static method (self not required)
 function GLTex.rupowoftwo(x)
