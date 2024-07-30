@@ -68,7 +68,7 @@ GLAttribute:makeGetter{
 -- GL_HALF_FLOAT, GL_FLOAT, GL_DOUBLE, GL_FIXED, GL_INT_2_10_10_10_REV, GL_UNSIGNED_INT_2_10_10_10_REV, GL_UNSIGNED_INT_10F_11F_11F_REV
 
 -- [[
-GLAttribute.getTypeAndSizeForGLSLType = table{
+GLAttribute.getGLTypeAndDimForGLSLType = table{
 	{'GL_FLOAT',				{'GL_FLOAT',		1,	1}},
 	{'GL_FLOAT_VEC2',			{'GL_FLOAT',		2,	1}},
 	{'GL_FLOAT_VEC3',			{'GL_FLOAT',		3,	1}},
@@ -171,7 +171,7 @@ function GLAttribute:init(args)
 		if (self.type and self.dim) and (not self.type or not self.dim) then
 			error("you specified glslType and either type or dim but not both type and dim")
 		end
-		self.type, self.dim = table.unpack(self.getTypeAndSizeForGLSLType[glslType])
+		self.type, self.dim = table.unpack(self.getGLTypeAndDimForGLSLType[glslType])
 		if not (self.type and self.dim) then
 			error("failed to deduce type and dim from glsl type "..glslType)
 		end
