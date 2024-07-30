@@ -66,7 +66,7 @@ function GLVertexArray:setAttrs(attrs)
 		gl.glVertexArrayAttribFormat(
 			self.id,
 			attr.loc,
-			attr.size,
+			attr.dim,
 			attr.type,
 			attr.normalize and gl.GL_TRUE or gl.GL_FALSE,
 			attr.offset)

@@ -16,10 +16,10 @@ local Buffer = GCWrapper{
 
 --[[
 args:
-	size = forwarded to setData
-	data (optional) = forwarded to setData
+	size = size in bytes, forwarded to setData
+	data (optional) = source data ptr, forwarded to setData
 	usage (optional) = forwarded to setData
-	target (optional) = this is forwarded to setData, but unlike the other fields it is not assigned to self
+	target (optional) = this is forwarded to setData as an override to the class's target, but unlike the other fields it is not assigned to self
 
 	type (optional) = duct tape code ...
 		this is used in two places afaik

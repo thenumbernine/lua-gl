@@ -280,9 +280,9 @@ args:
 		use version = 'latest es' for whatever the latest GLSL ES version is.
 
 	uniforms = key/value pair of uniform values to initialize
-	attrs = key/value pair mapping attr name to GLAttribute (with type & size specified)
-		or to GLAttribute ctor args (where type & size can be optionally specified or inferred)
-		or to a GLArrayBuffer object (where type & size is inferred by the shader .attrs)
+	attrs = key/value pair mapping attr name to GLAttribute (with type & dim specified)
+		or to GLAttribute ctor args (where type & dim can be optionally specified or inferred)
+		or to a GLArrayBuffer object (where type & dim is inferred by the shader .attrs)
 	attrLocs = optional {[attr name] = loc} for binding attribute locations
 
 NOTICE that the preferred way to bind attributes to buffers is via gl.sceneobject
@@ -401,7 +401,7 @@ function GLProgram:init(args)
 		- array size
 		- GLSL type
 	however glVertexAttribPointer (in GLAttribute) holds
-		- dimension (1,2,3,4)
+		- dim (1,2,3,4)
 		- C type
 		- normalize flag
 		- stride

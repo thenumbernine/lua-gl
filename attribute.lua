@@ -1,9 +1,9 @@
 --[[
 there's two ways I can define this structure:
 1) as glGetActiveAttrib: name, loc, arraySize, type (glsl type)
-2) as glVertexAttribPointer: loc, size (# channels), type (C/glsl base type), normalize, stride, offset
+2) as glVertexAttribPointer: loc, dim (# channels), type (C/glsl base type), normalize, stride, offset
 3) combine?
-	- derive size #channels and ctype from glslType
+	- derive dim #channels and ctype from glslType
 
 hmm, it seems that GLGetActiveAttrib isn't 1-1 with glVertexAttribPointer for a few reasons:
 
@@ -17,7 +17,7 @@ while glGetActiveAttrib ctypes assoc with glsltypes are only:
 
 TODO
 make this more like the gl-util version?
-just a holder for buffer, size, type, normalize, stride, offset
+just a holder for buffer, dim, type, normalize, stride, offset
 (the contents of glVertexAttribPointer)
 - and then have an optional construction from within gl.program for builtin queried attributes?
 --]]
@@ -30,7 +30,7 @@ local op = require 'ext.op'
 
 --[[
 GLAttribute has the following args:
-	size = number of channels, derived from the glslType
+	dim = number of channels, derived from the glslType
 	type =
 --]]
 local GLAttribute = GetBehavior():subclass()
@@ -123,9 +123,9 @@ GLAttribute fields:
 
 	buffer = (optional) buffer bound to this array
 
-	size = number of elements. 1,2,3,4
+	dim = number of elements. 1,2,3,4
 	type = GL_FLOAT, etc.
-		if size and type are not defined then they are inferred from glslType
+		if dim and type are not defined then they are inferred from glslType
 
 	normalize = flag, true/false.
 		initialized to false.
@@ -143,7 +143,7 @@ GLAttribute fields:
 
 	glslType = (optional) ex: gl.GL_FLOAT_MAT2x4
 		gathered from a GLProgram
-		use this to set both the type and size simultaneously
+		use this to set both the type and dim simultaneously
 
 	arraySize = array size.  3 for "attribute float attr[3];"
 
@@ -152,7 +152,7 @@ TODO make a subclass of this specific to GLProgram queried attributes.
 --]]
 function GLAttribute:init(args)
 
-	self.size = args.size
+	self.dim = args.dim
 	self.type = args.type
 
 	self.normalize = args.normalize or false
@@ -162,22 +162,22 @@ function GLAttribute:init(args)
 	self.divisor = args.divisor
 
 	local glslType = args.glslType
-	-- size is dimension of the data ... 1,2,3,4
+	-- dim is dimension of the data ... 1,2,3,4
 	-- type is GL_FLOAT etc
-	-- derive size and type from the glslType
+	-- derive dim and type from the glslType
 	if glslType
-	and not (self.type and self.size)
+	and not (self.type and self.dim)
 	then
-		if (self.type and self.size) and (not self.type or not self.size) then
-			error("you specified glslType and either type or size but not both type and size")
+		if (self.type and self.dim) and (not self.type or not self.dim) then
+			error("you specified glslType and either type or dim but not both type and dim")
 		end
-		self.type, self.size = table.unpack(self.getTypeAndSizeForGLSLType[glslType])
-		if not (self.type and self.size) then
-			error("failed to deduce type and size from glsl type "..glslType)
+		self.type, self.dim = table.unpack(self.getTypeAndSizeForGLSLType[glslType])
+		if not (self.type and self.dim) then
+			error("failed to deduce type and dim from glsl type "..glslType)
 		end
 	end
-	if not (self.type and self.size) then
-		error("type and size were not both provided")
+	if not (self.type and self.dim) then
+		error("type and dim were not both provided")
 	end
 
 	-- optionally for GLProgram attributes
@@ -203,7 +203,7 @@ function GLAttribute:setPointer(loc)
 	-- same question for glEnableVertexAttrib
 	gl.glVertexAttribPointer(
 		loc,
-		self.size,	-- TODO TODO just call this 'dim' to match GLBuffer ... and only use 'size' of size-in-bytes ...
+		self.dim,
 		self.type,
 		self.normalize and gl.GL_TRUE or gl.GL_FALSE,
 		self.stride,
