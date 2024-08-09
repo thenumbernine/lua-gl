@@ -8,12 +8,13 @@ local GetBehavior = require 'gl.get'
 
 local GLShader = GetBehavior()
 
-function GLShader:destroy()
+function GLShader:delete()
+	if self.id == nil then return end
 	gl.glDeleteShader(self.id)
 	self.id = nil
 end
 
-GLShader.__gc = GLShader.destroy
+GLShader.__gc = GLShader.delete
 
 GLShader:makeGetter{
 	-- wrap it so wgl can replace glGetShaderiv

@@ -17,7 +17,7 @@ local class = require 'ext.class'
 
 local GLVertexArray = class()
 
-function GLVertexArray:destroy()
+function GLVertexArray:delete()
 	if self.id == nil then return end
 	local ptr = ffi.new'GLuint[1]'
 	ptr[0] = self.id
@@ -25,7 +25,7 @@ function GLVertexArray:destroy()
 	self.id = nil
 end
 
-GLVertexArray.__gc = GLVertexArray.destroy
+GLVertexArray.__gc = GLVertexArray.delete
 
 --[[
 args:

@@ -153,12 +153,13 @@ end
 
 local GLProgram = GetBehavior()
 
-function GLProgram:destroy()
+function GLProgram:delete()
+	if self.id == nil then return end
 	gl.glDeleteProgram(self.id)
 	self.id = nil
 end
 
-GLProgram.__gc = GLProgram.destroy
+GLProgram.__gc = GLProgram.delete
 
 local GLVertexShader = GLShader:subclass()
 GLVertexShader.type = gl.GL_VERTEX_SHADER

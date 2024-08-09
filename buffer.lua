@@ -49,7 +49,7 @@ function Buffer:init(args)
 	end
 end
 
-function Buffer:destroy()
+function Buffer:delete()
 	if self.id == nil then return end
 	local ptr = ffi.new'GLuint[1]'
 	ptr[0] = self.id
@@ -57,7 +57,7 @@ function Buffer:destroy()
 	self.id = nil
 end
 
-Buffer.__gc = Buffer.destroy
+Buffer.__gc = Buffer.delete
 
 function Buffer:bind(target)
 	gl.glBindBuffer(target or self.target, self.id)

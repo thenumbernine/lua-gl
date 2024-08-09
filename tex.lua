@@ -98,7 +98,7 @@ function GLTex:init(args)
 	if args.generateMipmap then self:generateMipmap() end
 end
 
-function GLTex:destroy()
+function GLTex:delete()
 	if self.id == nil then return end
 	local ptr = ffi.new'GLuint[1]'
 	ptr[0] = self.id
@@ -106,7 +106,7 @@ function GLTex:destroy()
 	self.id = nil
 end
 
-GLTex.__gc = GLTex.destroy
+GLTex.__gc = GLTex.delete
 
 
 -- luajit ... why break from lua behavior on table/keys not existing?
