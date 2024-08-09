@@ -1,18 +1,19 @@
+require 'ext.gc'	-- make sure luajit can __gc lua-tables
 local ffi = require 'ffi'
 local gl = require 'gl'
 local table = require 'ext.table'
 local assertindex = require 'ext.assert'.index
 local showcode = require 'template.showcode'
 local GetBehavior = require 'gl.get'
-local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 
-local GLShader = GetBehavior(GCWrapper{
-	gctype = 'autorelease_gl_shader_ptr_t',
-	ctype = 'GLuint',
-	release = function(ptr)
-		return gl.glDeleteShader(ptr[0])
-	end,
-}):subclass()
+local GLShader = GetBehavior()
+
+function GLShader:destroy()
+	gl.glDeleteShader(self.id)
+	self.id = nil
+end
+
+GLShader.__gc = GLShader.destroy
 
 GLShader:makeGetter{
 	-- wrap it so wgl can replace glGetShaderiv
@@ -81,7 +82,6 @@ function GLShader:init(args)
 	end
 
 	self.id = gl.glCreateShader(self.type)
-	GLShader.super.init(self, self.id)
 
 	if gl.glGetError() == gl.GL_INVALID_ENUM then
 		error('the shader type '..('0x%x'):format(self.type)..' is not supported')

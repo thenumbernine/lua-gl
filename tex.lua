@@ -4,8 +4,8 @@ or how about a flag for whether to always bind before operations?
 or just never bind() before operations?
 or TODO use bind-less textures?
 --]]
+require 'ext.gc'	-- make sure luajit can __gc lua-tables
 local ffi = require 'ffi'
-local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
 local GetBehavior = require 'gl.get'
 local class = require 'ext.class'
@@ -14,14 +14,7 @@ local op = require 'ext.op'
 local bit = bit32 or require 'bit'
 local GLTypes = require 'gl.types'
 
-local GLTex = GetBehavior(GCWrapper{
-	gctype = 'autorelease_gl_tex_ptr_t',
-	ctype = 'GLuint',
-	-- retain isn't used
-	release = function(ptr)
-		return gl.glDeleteTextures(1, ptr)
-	end,
-}):subclass()
+local GLTex = GetBehavior()
 
 -- assumes tex is already bound to target
 local function getteriv(self, namevalue, result)
@@ -89,16 +82,9 @@ function GLTex:init(args)
 		args = table(args)
 	end
 
-	-- [[ have the refcount initialize with a null pointer
-	GLTex.super.init(self)
-	gl.glGenTextures(1, self.gc.ptr)
-	self.id = self.gc.ptr[0]
-	--]]
-	--[[ have it initialize with our proper pointer .. requires an extra allocation
-	local idptr = ffi.new('GLuint[1]', 0)
-	gl.glGenTextures(1, idptr)
-	GLTex.super.init(self, idptr[0])
-	--]]
+	local ptr = ffi.new'GLuint[1]'
+	gl.glGenTextures(1, ptr)
+	self.id = ptr[0]
 
 	self:bind()
 	if args.filename or args.image then
@@ -111,6 +97,17 @@ function GLTex:init(args)
 	if args.wrap then self:setWrap(args.wrap) end
 	if args.generateMipmap then self:generateMipmap() end
 end
+
+function GLTex:destroy()
+	if self.id == nil then return end
+	local ptr = ffi.new'GLuint[1]'
+	ptr[0] = self.id
+	gl.glDeleteTextures(1, ptr)
+	self.id = nil
+end
+
+GLTex.__gc = GLTex.destroy
+
 
 -- luajit ... why break from lua behavior on table/keys not existing?
 -- why does cdata throw exceptions when members are missing

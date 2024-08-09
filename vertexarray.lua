@@ -9,19 +9,23 @@ usage:
 5)	set vertex attrib pointer
 6)	enable attrib array
 --]]
-
-local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
+require 'ext.gc'	-- make sure luajit can __gc lua-tables
+local ffi = require 'ffi'
 local gl = require 'gl'
 local table = require 'ext.table'
+local class = require 'ext.class'
 
-local GLVertexArray = GCWrapper{
-	gctype = 'autorelease_gl_vertex_array_ptr_t',
-	ctype = 'GLuint',
-	-- retain isn't used
-	release = function(ptr)
-		return gl.glDeleteVertexArrays(1, ptr)
-	end,
-}:subclass()
+local GLVertexArray = class()
+
+function GLVertexArray:destroy()
+	if self.id == nil then return end
+	local ptr = ffi.new'GLuint[1]'
+	ptr[0] = self.id
+	gl.glDeleteVertexArrays(1, ptr)
+	self.id = nil
+end
+
+GLVertexArray.__gc = GLVertexArray.destroy
 
 --[[
 args:
@@ -31,9 +35,9 @@ args:
 		value = what to assign it
 --]]
 function GLVertexArray:init(args)
-	GLVertexArray.super.init(self)
-	gl.glGenVertexArrays(1, self.gc.ptr)
-	self.id = self.gc.ptr[0]
+	local ptr = ffi.new'GLuint[1]'
+	gl.glGenVertexArrays(1, ptr)
+	self.id = ptr[0]
 
 	if args.attrs then
 		local GLAttribute = require 'gl.attribute'

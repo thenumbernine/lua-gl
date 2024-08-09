@@ -1,5 +1,5 @@
+require 'ext.gc'	-- make sure luajit can __gc lua-tables
 local ffi = require 'ffi'
-local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
 local gl = require 'gl'
 local table = require 'ext.table'
 local string = require 'ext.string'
@@ -151,15 +151,14 @@ local function getUniformSettersForGLType(utype)
 	return setters
 end
 
-local GLProgram = GetBehavior(GCWrapper{
-	gctype = 'autorelease_gl_program_ptr_t',
-	ctype = 'GLuint',
-	-- retain isn't used
-	release = function(ptr)
-		return gl.glDeleteProgram(ptr[0])
-	end,
-}):subclass()
+local GLProgram = GetBehavior()
 
+function GLProgram:destroy()
+	gl.glDeleteProgram(self.id)
+	self.id = nil
+end
+
+GLProgram.__gc = GLProgram.destroy
 
 local GLVertexShader = GLShader:subclass()
 GLVertexShader.type = gl.GL_VERTEX_SHADER
@@ -297,7 +296,6 @@ however defaults can still be assigned via gl.program
 --]]
 function GLProgram:init(args)
 	self.id = gl.glCreateProgram()
-	GLProgram.super.init(self, self.id)
 
 	local shaders = table(args.shaders)
 	local shaderTypes = table{

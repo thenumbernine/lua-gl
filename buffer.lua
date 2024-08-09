@@ -1,18 +1,12 @@
+require 'ext.gc'	-- make sure luajit can __gc lua-tables
 local ffi = require 'ffi'
 local op = require 'ext.op'
 local table = require 'ext.table'
-local GCWrapper = require 'ffi.gcwrapper.gcwrapper'
+local class = require 'ext.class'
 local gl = require 'gl'
 local GLTypes = require 'gl.types'
 
-local Buffer = GCWrapper{
-	gctype = 'autorelease_gl_buffer_ptr_t',
-	ctype = 'GLuint',
-	-- retain isn't used
-	release = function(ptr)
-		return gl.glDeleteBuffers(1, ptr)
-	end,
-}:subclass()
+local Buffer = class()
 
 --[[
 args:
@@ -36,9 +30,9 @@ args:
 		instead of only GLProgram:setAttr(attr)
 --]]
 function Buffer:init(args)
-	Buffer.super.init(self)
-	gl.glGenBuffers(1, self.gc.ptr)
-	self.id = self.gc.ptr[0]
+	local ptr = ffi.new'GLuint[1]'
+	gl.glGenBuffers(1, ptr)
+	self.id = ptr[0]
 
 	self.type = args.type	-- optional
 
@@ -54,6 +48,16 @@ function Buffer:init(args)
 		end
 	end
 end
+
+function Buffer:destroy()
+	if self.id == nil then return end
+	local ptr = ffi.new'GLuint[1]'
+	ptr[0] = self.id
+	gl.glDeleteBuffers(1, ptr)
+	self.id = nil
+end
+
+Buffer.__gc = Buffer.destroy
 
 function Buffer:bind(target)
 	gl.glBindBuffer(target or self.target, self.id)
