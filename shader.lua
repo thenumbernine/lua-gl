@@ -1,6 +1,7 @@
 require 'ext.gc'	-- make sure luajit can __gc lua-tables
 local ffi = require 'ffi'
 local gl = require 'gl'
+local glreport = require 'gl.report'
 local table = require 'ext.table'
 local assertindex = require 'ext.assert'.index
 local showcode = require 'template.showcode'
@@ -39,6 +40,7 @@ args:
 if 'args' is a string then it is treated as the code.
 --]]
 function GLShader:init(args)
+glreport'GLShader:init'
 	local code
 	if type(args) == 'string' then
 		code = args
@@ -60,14 +62,22 @@ function GLShader:init(args)
 					-- TODO int as well?
 				} do
 					gl.glGetShaderPrecisionFormat(self.type, info.param, range, precv)
+glreport('glGetShaderPrecisionFormat '..info.name)
 					if range[0] > 0 and range[1] > 0 and precv[0] > 0 then
 						precision = info.name
 						break
 					end
 				end
-				assert(precision ~= 'best', "somehow I couldn't find any valid precisions")
+				-- for OSX 2.1 w/exts, glGetShaderPrecisionFormat runs but always raises GL errors
+				-- for OSX 4.1 core w/o exts ... glGetShaderPrecisionFormat doesn't exist ...
+				-- sooo whoever is over there at Apple, take your Safari team and introduce them to your GLES team,
+				-- cuz this all works perfectly fine when emulated via WebGL2 in Safari
+				--assert(precision ~= 'best', "somehow I couldn't find any valid precisions")
 			end
-			code = 'precision '..precision..' float;\n'..code
+			-- if precision == 'best' then we were asked to find the best but only found that the glGetShaderPrecisionFormat function doesn't work. *cough* OSX *cough*.
+			if precision and precision ~= 'best' then
+				code = 'precision '..precision..' float;\n'..code
+			end
 		end
 
 		local version = args.version
