@@ -170,7 +170,7 @@ end
 GLTex.resizeNPO2 = false
 
 GLTex.formatForChannels = {
-	[1] = gl.GL_LUMINANCE,
+	[1] = op.safeindex(gl, 'GL_LUMINANCE') or nil,
 	[3] = gl.GL_RGB,
 	[4] = gl.GL_RGBA,
 }
