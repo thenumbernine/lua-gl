@@ -1,6 +1,7 @@
 require 'ext.gc'	-- make sure luajit can __gc lua-tables
 local ffi = require 'ffi'
 local gl = require 'gl'
+local glreport = require 'gl.report'
 local table = require 'ext.table'
 local string = require 'ext.string'
 local op = require 'ext.op'
@@ -663,7 +664,14 @@ function GLProgram.getVersionPragma(es)
 	if es then
 		-- TODO just do this once? and maybe in another file?
 		local exts = {}
+
+		-- turns out, when using core gl (as osx now requires for 4.1 support), getting extensions causes a GL error ...
+		glreport 'before glGetString GL_EXTENSIONS'
+
 		local extstr = gl.glGetString(gl.GL_EXTENSIONS)
+
+		glreport 'after glGetString GL_EXTENSIONS'
+
 		extstr = extstr == nil and '' or string.trim(ffi.string(extstr))
 		for _,ext in ipairs(string.split(extstr, '%s+')) do
 			exts[ext] = true

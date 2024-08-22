@@ -12,17 +12,20 @@ local errors = {
 	'GL_INVALID_INDEX',
 }
 
+local function glGetErrorName(errorCode)
+	local name
+	for _,v in ipairs(errors) do
+		if errorCode == gl[v] then
+			return v
+		end
+	end
+	return nil
+end
+
 local function glreport(msg)
 	local err = gl.glGetError()
 	if err == 0 then return true, nil, err end
-
-	local name
-	for _,v in ipairs(errors) do
-		if err == gl[v] then
-			name = v
-			break
-		end
-	end
+	local name = glGetErrorName(err)
 
 	local str = msg
 	if str then
