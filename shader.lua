@@ -1,4 +1,5 @@
 require 'ext.gc'	-- make sure luajit can __gc lua-tables
+local op = require 'ext.op'
 local ffi = require 'ffi'
 local gl = require 'gl'
 local glreport = require 'gl.report'
@@ -52,31 +53,45 @@ glreport'GLShader:init'
 
 		local precision = args.precision
 		if precision then
-			if precision == 'best' then
-				local range = ffi.new'GLint[2]'
-				local precv = ffi.new'GLint[1]'
-				for _,info in ipairs{
-					{name='highp', param=gl.GL_HIGH_FLOAT},
-					{name='mediump', param=gl.GL_MEDIUM_FLOAT},
-					{name='lowp', param=gl.GL_LOW_FLOAT},
-					-- TODO int as well?
-				} do
-					gl.glGetShaderPrecisionFormat(self.type, info.param, range, precv)
+			for _,primTypeInfo in ipairs{
+				{ctype='float', low='GL_LOW_FLOAT', medium='GL_MEDIUM_FLOAT', high='GL_HIGH_FLOAT'},
+				{ctype='int', low='GL_LOW_INT', medium='GL_MEDIUM_INT', high='GL_HIGH_INT'},
+			} do
+				local bestPrec
+				local ctype = primTypeInfo.ctype
+				local lowParam = op.safeindex(gl, primTypeInfo.low)
+				local mediumParam = op.safeindex(gl, primTypeInfo.medium)
+				local highParam = op.safeindex(gl, primTypeInfo.high)
+				if precision == 'best'
+				and lowParam
+				and mediumParam
+				and highParam
+				then
+					local range = ffi.new'GLint[2]'
+					local precv = ffi.new'GLint[1]'
+					for _,info in ipairs{
+						{name = 'highp', param = highParam},
+						{name = 'mediump', param = mediumParam},
+						{name = 'lowp', param = lowParam},
+						-- TODO int as well?
+					} do
+						gl.glGetShaderPrecisionFormat(self.type, info.param, range, precv)
 glreport('glGetShaderPrecisionFormat '..info.name)
-					if range[0] > 0 and range[1] > 0 and precv[0] > 0 then
-						precision = info.name
-						break
+						if range[0] > 0 and range[1] > 0 and precv[0] > 0 then
+							bestPrec = info.name
+							break
+						end
 					end
+					-- for OSX 2.1 w/exts, glGetShaderPrecisionFormat runs but always raises GL errors
+					-- for OSX 4.1 core w/o exts ... glGetShaderPrecisionFormat doesn't exist ...
+					-- sooo whoever is over there at Apple, take your Safari team and introduce them to your GLES team,
+					-- cuz this all works perfectly fine when emulated via WebGL2 in Safari
+					--assert(precision ~= 'best', "somehow I couldn't find any valid precisions")
 				end
-				-- for OSX 2.1 w/exts, glGetShaderPrecisionFormat runs but always raises GL errors
-				-- for OSX 4.1 core w/o exts ... glGetShaderPrecisionFormat doesn't exist ...
-				-- sooo whoever is over there at Apple, take your Safari team and introduce them to your GLES team,
-				-- cuz this all works perfectly fine when emulated via WebGL2 in Safari
-				--assert(precision ~= 'best', "somehow I couldn't find any valid precisions")
-			end
-			-- if precision == 'best' then we were asked to find the best but only found that the glGetShaderPrecisionFormat function doesn't work. *cough* OSX *cough*.
-			if precision and precision ~= 'best' then
-				code = 'precision '..precision..' float;\n'..code
+				-- if precision == 'best' then we were asked to find the best but only found that the glGetShaderPrecisionFormat function doesn't work. *cough* OSX *cough*.
+				if bestPrec  then
+					code = 'precision '..bestPrec..' '..ctype..';\n'..code
+				end
 			end
 		end
 
