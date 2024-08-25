@@ -53,44 +53,50 @@ glreport'GLShader:init'
 
 		local precision = args.precision
 		if precision then
-			for _,primTypeInfo in ipairs{
-				{ctype='float', low='GL_LOW_FLOAT', medium='GL_MEDIUM_FLOAT', high='GL_HIGH_FLOAT'},
-				{ctype='int', low='GL_LOW_INT', medium='GL_MEDIUM_INT', high='GL_HIGH_INT'},
-			} do
-				local bestPrec
-				local ctype = primTypeInfo.ctype
-				local lowParam = op.safeindex(gl, primTypeInfo.low)
-				local mediumParam = op.safeindex(gl, primTypeInfo.medium)
-				local highParam = op.safeindex(gl, primTypeInfo.high)
-				if precision == 'best'
-				and lowParam
-				and mediumParam
-				and highParam
-				then
-					local range = ffi.new'GLint[2]'
-					local precv = ffi.new'GLint[1]'
+			if precision ~= 'best' then
+				-- TODO this for each type or whatever options glsl has for precision ...
+				code = 'precision '..precision..' float;\n'..code
+			else
+				local range = ffi.new'GLint[2]'
+				local precv = ffi.new'GLint[1]'
+				for _,primTypeInfo in ipairs{
+					{ctype='float', low='GL_LOW_FLOAT', medium='GL_MEDIUM_FLOAT', high='GL_HIGH_FLOAT'},
+					{ctype='int', low='GL_LOW_INT', medium='GL_MEDIUM_INT', high='GL_HIGH_INT'},
+				} do
+					local bestPrec
+					local ctype = primTypeInfo.ctype
+					local lowParam = primTypeInfo.low
+					local mediumParam = primTypeInfo.medium
+					local highParam = primTypeInfo.high
 					for _,info in ipairs{
 						{name = 'highp', param = highParam},
 						{name = 'mediump', param = mediumParam},
 						{name = 'lowp', param = lowParam},
 						-- TODO int as well?
 					} do
-						gl.glGetShaderPrecisionFormat(self.type, info.param, range, precv)
+						local paramValue = op.safeindex(gl, info.param)
+						if paramValue then
+							gl.glGetShaderPrecisionFormat(self.type, paramValue, range, precv)
+--DEBUG:print(info.param, range[0], range[1], precv[0])
 glreport('glGetShaderPrecisionFormat '..info.name)
-						if range[0] > 0 and range[1] > 0 and precv[0] > 0 then
-							bestPrec = info.name
-							break
+							if range[0] > 0 and range[1] > 0
+							and (ctype ~= 'float' or precv[0] > 0) 	-- only for floats
+							then
+--DEBUG:print('setting bestPrec', ctype, info.name)
+								bestPrec = info.name
+								break
+							end
 						end
 					end
 					-- for OSX 2.1 w/exts, glGetShaderPrecisionFormat runs but always raises GL errors
 					-- for OSX 4.1 core w/o exts ... glGetShaderPrecisionFormat doesn't exist ...
 					-- sooo whoever is over there at Apple, take your Safari team and introduce them to your GLES team,
 					-- cuz this all works perfectly fine when emulated via WebGL2 in Safari
-					--assert(precision ~= 'best', "somehow I couldn't find any valid precisions")
-				end
-				-- if precision == 'best' then we were asked to find the best but only found that the glGetShaderPrecisionFormat function doesn't work. *cough* OSX *cough*.
-				if bestPrec  then
-					code = 'precision '..bestPrec..' '..ctype..';\n'..code
+					--assert(bestPrec, "somehow I couldn't find any valid precisions")
+					-- not bestPrec then we were asked to find the best but only found that the glGetShaderPrecisionFormat function doesn't work. *cough* OSX *cough*.
+					if bestPrec  then
+						code = 'precision '..bestPrec..' '..ctype..';\n'..code
+					end
 				end
 			end
 		end
@@ -112,6 +118,10 @@ glreport('glGetShaderPrecisionFormat '..info.name)
 	if gl.glGetError() == gl.GL_INVALID_ENUM then
 		error('the shader type '..('0x%x'):format(self.type)..' is not supported')
 	end
+
+--DEBUG:print()
+--DEBUG:print(require'template.showcode'(code))
+--DEBUG:print()
 
 	local len = ffi.new'int[1]'
 	len[0] = #code
