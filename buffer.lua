@@ -1,10 +1,17 @@
 require 'ext.gc'	-- make sure luajit can __gc lua-tables
 local ffi = require 'ffi'
+local vector = require 'ffi.cpp.vector-lua'
 local op = require 'ext.op'
+local assertindex = require 'ext.assert'.index
+local asserteq = require 'ext.assert'.eq
 local table = require 'ext.table'
 local class = require 'ext.class'
+local vec2f = require 'vec-ffi.vec2f'
+local vec3f = require 'vec-ffi.vec3f'
+local vec4f = require 'vec-ffi.vec4f'
 local gl = require 'gl'
 local GLTypes = require 'gl.types'
+
 
 local Buffer = class()
 
@@ -37,6 +44,20 @@ function Buffer:init(args)
 	self.type = args.type	-- optional
 	self.dim = args.dim
 	self.count = args.count
+
+	if args.useVec then
+		local dim = assertindex(args, 'dim')
+		local vec = vector(assertindex({
+			'float',
+			'vec2f_t',
+			'vec3f_t',
+			'vec4f_t'
+		}, dim), self.count or 0)
+		self.vec = vec
+		assert(not self.data)
+		args.data = self.vec.v
+		args.size = ffi.sizeof(vec.type) * vec.capacity
+	end
 
 	-- TODO bind even if we have no args?  or only if args are provided / setData is called?
 	self:bind()
@@ -122,6 +143,7 @@ function Buffer:setData(args)
 	return self
 end
 
+-- TODO put offset 2nd or last to default to zero
 function Buffer:updateData(offset, size, data)
 	gl.glBufferSubData(self.target, offset or 0, size or self.size, data or self.data)
 	return self
@@ -156,6 +178,35 @@ end
 function Buffer:unmap(target)
 	gl.glUnmapBuffer(target or self.target)
 	return self
+end
+
+-- Use this function with buffers initialized with .useVec=true ...
+-- It will remember their old capacity, and resize the GPU buffer if it changes.
+function Buffer:beginUpdate(checkCapacity)
+	local vec = assert(self.vec, "use beginVtx with GLBuffers initialized with useVec=true")
+	self.oldcap = vec.capacity
+	if checkCapacity then asserteq(self.oldcap, checkCapacity) end
+	vec:resize(0)
+end
+
+function Buffer:endUpdate(checkCapacity)
+	local vec = assert(self.vec, "use beginVtx with GLBuffers initialized with useVec=true")
+	if checkCapacity then asserteq(vec.capacity, checkCapacity) end
+	if vec.capacity ~= self.oldcap then
+		self:bind()
+			:setData{
+				data = vec.v,
+				dim = self.dim,
+				count = vec.capacity,
+				size = ffi.sizeof(vec.type) * vec.capacity,
+			}
+	else
+		-- data cap hasn't resized / data ptr hasn't moved / just copy
+		asserteq(vec.v, self.data)
+		self:bind()
+			-- only need to upload as much as we're using
+			:updateData(0, ffi.sizeof(vec.type) * vec.size)
+	end
 end
 
 return Buffer

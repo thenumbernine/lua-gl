@@ -195,4 +195,22 @@ function GLSceneObject:draw(args)
 	end
 end
 
+-- Use this function with attributes' buffers that are initialized with .useVec=true ...
+-- It will remember their old capacity, and resize the GPU buffer if it changes.
+function GLSceneObject:beginUpdate()
+	local vtxbuf = self.attrs.vertex.buffer
+	for _,attr in pairs(self.attrs) do
+		attr.buffer:beginUpdate(vtxbuf.vec.capacity)
+	end
+end
+
+function GLSceneObject:endUpdate()
+	local vtxbuf = self.attrs.vertex.buffer
+	for name,attr in pairs(self.attrs) do
+		attr.buffer:endUpdate(vtxbuf.vec.capacity)
+	end
+	self.geometry.count = #vtxbuf.vec
+	self:draw()
+end
+
 return GLSceneObject
