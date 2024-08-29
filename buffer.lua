@@ -35,6 +35,8 @@ function Buffer:init(args)
 	self.id = ptr[0]
 
 	self.type = args.type	-- optional
+	self.dim = args.dim
+	self.count = args.count
 
 	-- TODO bind even if we have no args?  or only if args are provided / setData is called?
 	self:bind()

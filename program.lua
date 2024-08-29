@@ -7,11 +7,8 @@ local string = require 'ext.string'
 local op = require 'ext.op'
 local GetBehavior = require 'gl.get'
 local GLShader = require 'gl.shader'
-
--- optional:
 local GLAttribute = require 'gl.attribute'
 local GLArrayBuffer = require 'gl.arraybuffer'
-local GLVertexArray = require 'gl.vertexarray'
 
 
 -- this doesn't work as easy as it does in webgl
