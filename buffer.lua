@@ -182,11 +182,13 @@ end
 
 -- Use this function with buffers initialized with .useVec=true ...
 -- It will remember their old capacity, and resize the GPU buffer if it changes.
+-- 'checkCapacity' is in case you have multiple attributes, you can verify their sizes all match vs some baseline ('vertex' attribute perhaps?)
 function Buffer:beginUpdate(checkCapacity)
 	local vec = assert(self.vec, "use beginVtx with GLBuffers initialized with useVec=true")
 	self.oldcap = vec.capacity
 	if checkCapacity then asserteq(self.oldcap, checkCapacity) end
 	vec:resize(0)
+	return vec
 end
 
 function Buffer:endUpdate(checkCapacity)
