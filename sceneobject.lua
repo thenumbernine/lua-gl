@@ -153,6 +153,13 @@ function GLSceneObject:disableAttrs()
 	end
 end
 
+--[[
+args:
+	texs = override textures
+	program = override program
+	uniforms = additional uniforms
+	... maybe TODO should 'geometry' be override geometry, additional geometry, or geometry args ... ? meh?
+--]]
 function GLSceneObject:draw(args)
 	local texs = args and args.texs or self.texs
 	for i,tex in ipairs(texs) do

@@ -45,23 +45,32 @@ function Geometry:init(args)
 end
 
 --[[
-args:
-	mode : overrides mode
-	count : overrides count
-	offset : overrides offset
---]]
-function Geometry:draw(args)
-	local mode = self.mode
-	local count = self.count
-	local offset = self.offset
-	local instanceCount = self.instanceCount
 
+draw(mode, count, offset, instanceCount)
+draw(args)
+	args:
+		mode : overrides mode
+		count : overrides count
+		offset : overrides offset
+		instanceCount : overrides instanceCount
+--]]
+function Geometry:draw(mode, count, offset, instanceCount)
 	--allow overrides?  for which variables?
-	if args then
+	if type(mode) == 'table' then
+		local args = mode
+		mode = self.mode
+		count = self.count
+		offset = self.offset
+		instanceCount = self.instanceCount
 		if args.mode then mode = args.mode end
 		if args.count then count = args.count end
 		if args.offset then offset = args.offset end
 		if args.instanceCount then instanceCount = args.instanceCount end
+	else
+		mode = mode or self.mode
+		count = count or self.count
+		offset = offset or self.offset
+		instanceCount = instanceCount or self.instanceCount
 	end
 
 	-- if we have .indexes then use them
