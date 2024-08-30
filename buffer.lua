@@ -18,11 +18,11 @@ local Buffer = class()
 --[[
 args:
 	size = size in bytes, forwarded to setData
-	data (optional) = source data ptr, forwarded to setData
-	usage (optional) = forwarded to setData
-	target (optional) = this is forwarded to setData as an override to the class's target, but unlike the other fields it is not assigned to self
+	data = (optional) source data ptr, forwarded to setData
+	usage = (optional) GL buffer usage.  default GL_STATIC_DRAW.
+	target = (optional) this is forwarded to setData as an override to the class's target, but unlike the other fields it is not assigned to self
 
-	type (optional) = duct tape code ...
+	type = (optional) duct tape code ...
 		this is used in two places afaik
 		- ElementalArrayBuffer, where it expects a GL primitive type const (GL_UNSIGNED_INT, etc)
 			- notice that Attribute also expects GL primitive type const
@@ -44,6 +44,7 @@ function Buffer:init(args)
 	self.type = args.type	-- optional
 	self.dim = args.dim
 	self.count = args.count
+	self.usage = args.usage or gl.GL_STATIC_DRAW
 
 	if args.useVec then
 		local dim = assertindex(args, 'dim')
@@ -96,7 +97,7 @@ end
 args:
 	size = size, required.
 	data = (optional) data, default is null.
-	usage = (optional) GL buffer usage.  default GL_STATIC_DRAW.
+	usage = (optional) GL buffer usage.
 	type = (optional) if data is a Lua table, this specifies what c type to convert it to.  default float.
 	target = (optional) override self.target in the glBindBuffer call, but unlike the other fields it does not assign to self.
 	count = (optional) number of elements.  computed if data is a Lua table. used elsewhere.
@@ -134,7 +135,7 @@ function Buffer:setData(args)
 	-- mind you, this is saving the cdata, even if you :setData() with Lua data ...
 	self.data = data
 	self.size = size
-	self.usage = args.usage or gl.GL_STATIC_DRAW
+	self.usage = args.usage or self.usage
 
 	-- extra stuff
 	if count then self.count = count end
