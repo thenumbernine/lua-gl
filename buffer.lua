@@ -132,15 +132,16 @@ function Buffer:setData(args)
 			end
 		end
 	end
+
 	-- mind you, this is saving the cdata, even if you :setData() with Lua data ...
 	self.data = data
 	self.size = size
 	self.usage = args.usage or self.usage
+	self.count = count or self.count
+	self.dim = dim or self.dim
 
-	-- extra stuff
-	if count then self.count = count end
-	self.dim = dim
 	gl.glBufferData(args.target or self.target, self.size, self.data, self.usage)
+
 	return self
 end
 
