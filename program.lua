@@ -573,6 +573,7 @@ function GLProgram:setUniform(name, value, ...)
 			error("failed to find array setter for uniform "..name)
 		end
 	end
+	return self
 end
 
 ---------------- attributes ----------------
