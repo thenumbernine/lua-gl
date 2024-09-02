@@ -536,7 +536,7 @@ end
 
 function GLProgram:setUniform(name, value, ...)
 	local info = self.uniforms[name]
-	if not info then return end
+	if not info then return self end
 	local valueType = type(value)
 	local setters = info.setters
 	local loc = info.loc
