@@ -209,13 +209,13 @@ end
 
 local oldvp = ffi.new('GLuint[4]')
 function FrameBuffer:draw(args)
---DEBUG:glreport('begin drawScreenFBO')
+--DEBUG(gl.fbo):glreport('begin drawScreenFBO')
 	if args.viewport then
 		local vp = args.viewport
 		gl.glGetIntegerv(gl.GL_VIEWPORT, oldvp)
 		gl.glViewport(vp[1], vp[2], vp[3], vp[4])
 	end
---DEBUG:glreport('drawScreenFBO glViewport')
+--DEBUG(gl.fbo):glreport('drawScreenFBO glViewport')
 	if args.resetProjection then
 		gl.glMatrixMode(gl.GL_PROJECTION)
 		gl.glPushMatrix()
@@ -225,7 +225,7 @@ function FrameBuffer:draw(args)
 		gl.glPushMatrix()
 		gl.glLoadIdentity()
 	end
---DEBUG:glreport('drawScreenFBO resetProjection')
+--DEBUG(gl.fbo):glreport('drawScreenFBO resetProjection')
 	if args.shader then
 		local sh = args.shader
 		if type(sh) == 'table' then
@@ -234,30 +234,30 @@ function FrameBuffer:draw(args)
 			gl.glUseProgram(sh)
 		end
 	end
---DEBUG:glreport('drawScreenFBO glUseProgram')
+--DEBUG(gl.fbo):glreport('drawScreenFBO glUseProgram')
 	if args.uniforms then
 		assert(args.shader)
 		for k,v in pairs(args.uniforms) do
 			args.shader:setUniform(k,v)	-- uniformf only, but that still supports vectors =)
---DEBUG:glreport('drawScreenFBO glUniform '..tostring(k)..' '..tostring(v))
+--DEBUG(gl.fbo):glreport('drawScreenFBO glUniform '..tostring(k)..' '..tostring(v))
 		end
 	end
 	if args.texs then
 		for i,t in ipairs(args.texs) do
 			gl.glActiveTexture(gl.GL_TEXTURE0+i-1)
---DEBUG:glreport('drawScreenFBO glActiveTexture '..tostring(gl.GL_TEXTURE0+i-1))
+--DEBUG(gl.fbo):glreport('drawScreenFBO glActiveTexture '..tostring(gl.GL_TEXTURE0+i-1))
 			if type(t) == 'table' then	-- assume tables are texture objects
 				t:bind()
---DEBUG:glreport('drawScreenFBO glBindTexture '..tostring(t.target)..', '..tostring(t.id))
+--DEBUG(gl.fbo):glreport('drawScreenFBO glBindTexture '..tostring(t.target)..', '..tostring(t.id))
 			else -- texture2d by default
 				gl.glBindTexture(gl.GL_TEXTURE_2D, t)
---DEBUG:glreport('drawScreenFBO glBindTexture '..tostring(t))
+--DEBUG(gl.fbo):glreport('drawScreenFBO glBindTexture '..tostring(t))
 			end
 		end
 	end
 	if args.color then
 		gl.glColor(args.color)
---DEBUG:glreport('drawScreenFBO glColor')
+--DEBUG(gl.fbo):glreport('drawScreenFBO glColor')
 	end
 	if args.dest then
 		-- TODO extra bind here and in drawToCallback ... hmmmm
@@ -265,44 +265,44 @@ function FrameBuffer:draw(args)
 			:bind()
 			:setColorAttachment(args.dest, 0)
 	end
---DEBUG:glreport('drawScreenFBO before callback')
+--DEBUG(gl.fbo):glreport('drawScreenFBO before callback')
 
 	-- no one seems to use fbo:draw... at all...
 	-- so why preserve a function that no one uses?
 	-- why not just merge it in here?
 	self:drawToCallback(args.colorAttachment or 0, args.callback or self.drawScreenQuad)
 
---DEBUG:glreport('drawScreenFBO after callback')
+--DEBUG(gl.fbo):glreport('drawScreenFBO after callback')
 	if args.texs then
 		for i=#args.texs,1,-1 do	-- step -1 so we end up at zero
 			local t = args.texs[i]
 			gl.glActiveTexture(gl.GL_TEXTURE0+i-1)
---DEBUG:glreport('drawScreenFBO glActiveTexture '..(gl.GL_TEXTURE0+i-1))
+--DEBUG(gl.fbo):glreport('drawScreenFBO glActiveTexture '..(gl.GL_TEXTURE0+i-1))
 			if type(t) == 'table' then
 				gl.glBindTexture(t.target, 0)
---DEBUG:glreport('drawScreenFBO glBindTexture '..tostring(t.target)..', 0')
+--DEBUG(gl.fbo):glreport('drawScreenFBO glBindTexture '..tostring(t.target)..', 0')
 			else
 				gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
---DEBUG:glreport('drawScreenFBO glBindTexture '..(gl.GL_TEXTURE_2D)..', 0')
+--DEBUG(gl.fbo):glreport('drawScreenFBO glBindTexture '..(gl.GL_TEXTURE_2D)..', 0')
 			end
 		end
 	end
 	if args.shader then
 		gl.glUseProgram(0)
---DEBUG:glreport('drawScreenFBO glUseProgram nil')
+--DEBUG(gl.fbo):glreport('drawScreenFBO glUseProgram nil')
 	end
 	if args.resetProjection then
 		gl.glMatrixMode(gl.GL_PROJECTION)
 		gl.glPopMatrix()
 		gl.glMatrixMode(gl.GL_MODELVIEW)
 		gl.glPopMatrix()
---DEBUG:glreport('drawScreenFBO resetProjection')
+--DEBUG(gl.fbo):glreport('drawScreenFBO resetProjection')
 	end
 	if args.viewport then
 		gl.glViewport(oldvp[0], oldvp[1], oldvp[2], oldvp[3])
---DEBUG:glreport('drawScreenFBO glViewport')
+--DEBUG(gl.fbo):glreport('drawScreenFBO glViewport')
 	end
---DEBUG:glreport('end drawScreenFBO')
+--DEBUG(gl.fbo):glreport('end drawScreenFBO')
 	return self
 end
 

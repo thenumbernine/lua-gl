@@ -77,12 +77,12 @@ glreport'GLShader:init'
 						local paramValue = op.safeindex(gl, info.param)
 						if paramValue then
 							gl.glGetShaderPrecisionFormat(self.type, paramValue, range, precv)
---DEBUG:print(info.param, range[0], range[1], precv[0])
+--DEBUG(gl.shader):print(info.param, range[0], range[1], precv[0])
 glreport('glGetShaderPrecisionFormat '..info.name)
 							if range[0] > 0 and range[1] > 0
 							and (ctype ~= 'float' or precv[0] > 0) 	-- only for floats
 							then
---DEBUG:print('setting bestPrec', ctype, info.name)
+--DEBUG(gl.shader):print('setting bestPrec', ctype, info.name)
 								bestPrec = info.name
 								break
 							end
@@ -119,9 +119,9 @@ glreport('glGetShaderPrecisionFormat '..info.name)
 		error('the shader type '..('0x%x'):format(self.type)..' is not supported')
 	end
 
---DEBUG:print()
---DEBUG:print(require'template.showcode'(code))
---DEBUG:print()
+--DEBUG(gl.shader):print()
+--DEBUG(gl.shader):print(require'template.showcode'(code))
+--DEBUG(gl.shader):print()
 
 	local len = ffi.new'int[1]'
 	len[0] = #code
