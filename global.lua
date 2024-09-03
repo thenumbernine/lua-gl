@@ -89,7 +89,7 @@ local function makeDoubleN(name, count)
 end
 
 -- TODO getters-with-num-getters are very exceptional to the gl.get system and are going to make me rewrite everything ...
--- TODO TODO even worse, if some params are used with glGet*v then they return one thing, 
+-- TODO TODO even worse, if some params are used with glGet*v then they return one thing,
 --  while if they are used with glGet*i_v then they return another ...
 local function makeInts(name, numName)
 	return {
@@ -100,7 +100,7 @@ local function makeInts(name, numName)
 			if not num[1] then return num end
 			num = num[1]
 			asserttype(num, 'number')
-			
+
 			-- if it's a getter that gets the whole array ...
 			local result = ffi.new('GLint[?]', num)
 			gl.glGetIntegerv(nameParam, result)
@@ -120,7 +120,18 @@ end
 -- likewise getters might have a non-indexed getter
 --  so I will call the i_v or the regular depending on if an argument is used
 local glSafeCall = require 'gl.error'.glSafeCall
-local function makeVec(name, ctype, getterName, indexedGetterName)
+local function makeVec(args)
+	local name = assertindex(args, 'name')
+	local getterName = assertindex(args, 'getterName')
+	local indexedGetterName = assertindex(args, 'indexedGetterName')
+	local ctype = assertindex(args, 'type')
+	local count = args.count
+	if count then
+		ctype = ctype .. '[' .. count .. ']'
+	else
+		count = 1
+	end
+
 	local getter = op.safeindex(gl, getterName)
 	local indexedGetter = op.safeindex(gl, indexedGetterName)
 	return {
@@ -134,7 +145,7 @@ local function makeVec(name, ctype, getterName, indexedGetterName)
 				local success, msg = glSafeCall(getterName, nameParam, result)
 				-- TODO gl.get template:get getter() has no way to report errors ...
 				if not success then return table{nil, msg} end
-				return table{result[0]}
+				return range(0,count-1):mapi(function(i) return result[i] end)
 			else
 				if not indexedGetter then
 					return nil, indexedGetterName..' not found'
@@ -142,7 +153,7 @@ local function makeVec(name, ctype, getterName, indexedGetterName)
 				local index = select('#', ...)
 				local success, msg = glSafeCall(indexedGetterName, nameParam, index, result)
 				if not success then return table{nil, msg} end
-				return table{result[0]}
+				return range(0,count-1):mapi(function(i) return result[i] end)
 			end
 		end,
 		postxform = function(self, result, count)
@@ -151,11 +162,23 @@ local function makeVec(name, ctype, getterName, indexedGetterName)
 	}
 end
 
-local function makeIntVec(name)
-	return makeVec(name, 'GLint', 'glGetIntegerv', 'glGetIntegeri_v')
+local function makeIntVec(name, count)
+	return makeVec{
+		name = name,
+		type = 'GLint',
+		getterName = 'glGetIntegerv',
+		indexedGetterName = 'glGetIntegeri_v',
+		count = count,
+	}
 end
-local function makeInt64Vec(name)
-	return makeVec(name, 'GLint64', 'glGetInteger64v', 'glGetInteger64i_v')
+local function makeInt64Vec(name, count)
+	return makeVec{
+		name = name,
+		type = 'GLint64',
+		getterName = 'glGetInteger64v',
+		indexedGetterName = 'glGetInteger64i_v',
+		count = count,
+	}
 end
 
 local version
@@ -250,11 +273,11 @@ GLGlobal:makeGetter{
 		makeInt'GL_DITHER',
 		makeInt'GL_DOUBLEBUFFER',					-- gl 4 but not gles 300
 		makeInt'GL_MAX_DRAW_BUFFERS',
-		
-		-- TODO Is this accepted both for glGetIntegerv and glGetIntegeri_v?  
+
+		-- TODO Is this accepted both for glGetIntegerv and glGetIntegeri_v?
 		-- Does it return different results for each?
 		-- TODO There's an argument for adding extra params to :get() here - to get specific indexes instead of getting everything
-		makeIntVec('GL_DRAW_BUFFER', 'GL_MAX_DRAW_BUFFERS'),
+		makeIntVec'GL_DRAW_BUFFER', -- sized GL_MAX_DRAW_BUFFERS
 
 		makeInt'GL_ACTIVE_TEXTURE',
 		makeInt'GL_ARRAY_BUFFER_BINDING',
@@ -389,49 +412,21 @@ GLGlobal:makeGetter{
 		makeInt'GL_TEXTURE_BINDING_RECTANGLE',
 		makeInt'GL_TEXTURE_COMPRESSION_HINT',
 		makeInt64'GL_TIMESTAMP',
+		makeInt'GL_MAX_TRANSFORM_FEEDBACK_BUFFERS',
 		-- which is the max for these?
-		--[[ TODO
-		if type(maxShaderStorageBufferBindings) ~= 'string' then
-			for i=0,maxShaderStorageBufferBindings-1 do
-				--makeIntIndex('GL_TRANSFORM_FEEDBACK_BUFFER_BINDING', i)
-			end
-			for i=0,maxShaderStorageBufferBindings-1 do
-				--makeInt64Index('GL_TRANSFORM_FEEDBACK_BUFFER_START', i)
-			end
-			for i=0,maxShaderStorageBufferBindings-1 do
-				--makeInt64Index('GL_TRANSFORM_FEEDBACK_BUFFER_SIZE', i)
-			end
-			--makeInt64Index('GL_TRANSFORM_FEEDBACK_BINDING', i)	-- gles 300 but not gl 4
-			makeInt'GL_MAX_TRANSFORM_FEEDBACK_BUFFERS',
-			--makeIntIndex'GL_TRANSFORM_FEEDBACK_ACTIVE',	-- gles 300 but not gl 4
-			--makeIntIndex'GL_TRANSFORM_FEEDBACK_PAUSED',	-- gles 300 but not gl 4
-			-- which is the max for these?
-			for i=0,maxShaderStorageBufferBindings-1 do
-				--makeIntIndex('GL_UNIFORM_BUFFER_BINDING', i)
-			end
-			for i=0,maxShaderStorageBufferBindings-1 do
-				--makeInt64Index('GL_UNIFORM_BUFFER_SIZE', i)
-			end
-			for i=0,maxShaderStorageBufferBindings-1 do
-				--makeInt64Index('GL_UNIFORM_BUFFER_START', i)
-			end
-			if version >= 4.3 then
-				-- which is the max for these?
-				for i=0,maxShaderStorageBufferBindings-1 do
-					--makeIntIndex('GL_VERTEX_BINDING_DIVISOR', i)	-- gl 4 but not gles 300
-				end
-				for i=0,maxShaderStorageBufferBindings-1 do
-					--makeIntIndex('GL_VERTEX_BINDING_OFFSET', i)	-- gl 4 but not gles 300
-				end
-				for i=0,maxShaderStorageBufferBindings-1 do
-					--makeIntIndex('GL_VERTEX_BINDING_STRIDE', i)	-- gl 4 but not gles 300
-				end
-				for i=0,maxShaderStorageBufferBindings-1 do
-					--makeIntIndex('GL_VERTEX_BINDING_BUFFER', i)	-- gl 4 but not gles 300
-				end
-			end
-		end
-		--]]
+		makeIntVec'GL_TRANSFORM_FEEDBACK_BUFFER_BINDING',	-- sized i think by GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS
+		makeInt64Vec'GL_TRANSFORM_FEEDBACK_BUFFER_START',	-- sized i think by GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS
+		makeInt64Vec'GL_TRANSFORM_FEEDBACK_BUFFER_SIZE',	-- sized i think by GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS
+		makeInt64Vec'GL_TRANSFORM_FEEDBACK_BINDING',		-- sized i think by GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS, gles 300 but not gl 4
+		makeIntVec'GL_TRANSFORM_FEEDBACK_ACTIVE',	-- gles 300 but not gl 4
+		makeIntVec'GL_TRANSFORM_FEEDBACK_PAUSED',	-- gles 300 but not gl 4
+		makeIntVec'GL_UNIFORM_BUFFER_BINDING',
+		makeInt64Vec'GL_UNIFORM_BUFFER_SIZE',
+		makeInt64Vec'GL_UNIFORM_BUFFER_START',
+		makeIntVec'GL_VERTEX_BINDING_DIVISOR',	-- gl 4 but not gles 300
+		makeIntVec'GL_VERTEX_BINDING_OFFSET',	-- gl 4 but not gles 300
+		makeIntVec'GL_VERTEX_BINDING_STRIDE',	-- gl 4 but not gles 300
+		makeIntVec'GL_VERTEX_BINDING_BUFFER',	-- gl 4 but not gles 300
 		makeInt'GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT',
 		makeInt'GL_UNPACK_ALIGNMENT',
 		makeInt'GL_UNPACK_IMAGE_HEIGHT',
@@ -446,12 +441,7 @@ GLGlobal:makeGetter{
 		version < 4.1 and {} or {
 			--print'GL version >= 4.1:'
 			makeInt'GL_MAX_VIEWPORTS',
-			--[[ TODO
-			local maxViewports = makeInt'GL_MAX_VIEWPORTS',
-			for i=0,maxViewports-1 do
-				makeInt4Index('GL_VIEWPORT', i)
-			end
-			--]]
+			makeIntVec('GL_VIEWPORT', 4),	-- sized GL_MAX_VIEWPORTS
 			makeInt'GL_VIEWPORT_SUBPIXEL_BITS',
 			makeIntN('GL_VIEWPORT_BOUNDS_RANGE', 2),
 			makeInt'GL_LAYER_PROVOKING_VERTEX',
@@ -480,14 +470,8 @@ GLGlobal:makeGetter{
 			makeInt'GL_MAX_COMPUTE_ATOMIC_COUNTER_BUFFERS',
 			makeInt'GL_MAX_COMBINED_COMPUTE_UNIFORM_COMPONENTS',
 			makeInt'GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS',
-			--[[ TODO
-			print('GL_MAX_COMPUTE_WORK_GROUP_COUNT', range(0,2):mapi(function(i)
-				return getIntIndex('GL_MAX_COMPUTE_WORK_GROUP_COUNT', i)
-			end):concat' ')
-			print('GL_MAX_COMPUTE_WORK_GROUP_SIZE', range(0,2):mapi(function(i)
-				return getIntIndex('GL_MAX_COMPUTE_WORK_GROUP_SIZE', i)
-			end):concat' ')
-			--]]
+			makeIntVec'GL_MAX_COMPUTE_WORK_GROUP_COUNT',
+			makeIntVec'GL_MAX_COMPUTE_WORK_GROUP_SIZE'
 			makeInt'GL_DISPATCH_INDIRECT_BUFFER_BINDING',
 			makeInt'GL_MAX_DEBUG_GROUP_STACK_DEPTH',
 			makeInt'GL_DEBUG_GROUP_STACK_DEPTH',
@@ -533,4 +517,4 @@ GLGlobal:makeGetter{
 	):setmetatable(nil),
 }
 local glGlobal = GLGlobal()
-return glGlobal 
+return glGlobal

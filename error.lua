@@ -30,7 +30,7 @@ return a string of an error code with name and optional message
 --]]
 local function glGetStrForError(errorCode, msg)
 	local name = glGetErrorName(errorCode)
-	
+
 	local str = msg and msg..': ' or ''
 	str = str..(' (0x%04x)'):format(errorCode)
 	if name then
@@ -40,7 +40,7 @@ local function glGetStrForError(errorCode, msg)
 end
 
 --[[
-return 
+return
 	- true if no glGetError
 	- nil and the error message if there is an error
 --]]

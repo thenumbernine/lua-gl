@@ -58,7 +58,7 @@ local function GetBehavior(parent)
 		if var.notfound then
 			return nil, tostring(name).." not defined"
 		end
-		
+
 		-- TODO this here, and do it every time :get() is called?
 		-- or this upon construction, which means .type doesn't match whatever was provided?
 		local infoType = assert(var.type)
@@ -78,7 +78,7 @@ local function GetBehavior(parent)
 		-- GL not so much, so instead of passing the id first I'll pass the object first and let the implementer decide what to do with it
 		-- (so tex can use self.target, program can use self.id, vao can use who knows ...)
 		-- (CL also has a clean interface for interchangeable single vs array getters
-		
+
 		-- Ok here's a weakness in the design ...
 		-- All the original glGet's accept the return param
 		-- ... so it makes sense to create the result buffer up front.
