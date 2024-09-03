@@ -8,15 +8,16 @@ local GLGlobal = GetBehavior()
 local function makeString(name)
 	return {
 		name = name,
-		type = 'GLchar*',	-- result is [1] of these ...
+		type = 'GLubyte const *',	-- result is [1] of these ...
 		getter = function(self, nameParam, result)
-			-- this will pass to gl.get's template:get() correctly ...
-			-- but that will return a char* ... not a Lua string ... soo ...
-			-- ... TODO post-transform wrapper just for this function
 			result[0] = gl.glGetString(nameParam)
 		end,
+		-- this will pass to gl.get's template:get() correctly ...
+		-- but that will return a char* ... not a Lua string ... soo ...
+		-- ... post-transform wrapper just for this function
 		postxform = function(self, result, count)
 			asserteq(count, 1)
+			if result[0] == nil then return nil end
 			return ffi.string(result[0])
 		end
 	}
@@ -111,6 +112,7 @@ GLGlobal:makeGetter{
 		makeString'GL_RENDERER',
 		makeString'GL_VERSION',
 		makeString'GL_SHADING_LANGUAGAE',
+		makeString'GL_EXTENSIONS',
 		makeInt'GL_MAJOR_VERSION',
 		makeInt'GL_MINOR_VERSION',
 		makeInt'GL_ACTIVE_TEXTURE',
@@ -464,13 +466,6 @@ GLGlobal:makeGetter{
 				end
 			end
 		end
-
-		local strptr = gl.glGetString(gl.GL_EXTENSIONS)
-		local str = ffi.string(strptr)
-		print('GL_EXTENSIONS', '\n\t'..(str:trim():split' ',:sort():concat
-			--' '
-			'\n\t'
-		))
 	--]==]
 	):setmetatable(nil),
 }

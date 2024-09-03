@@ -47,7 +47,7 @@ local function GetBehavior(parent)
 	end
 
 	function template:get(name)
-		glreport'here' -- check error
+		glreport'gl.get begin' -- clear error
 
 		local var = self.getInfo[name]
 		if not var then
@@ -73,7 +73,7 @@ local function GetBehavior(parent)
 		-- (so tex can use self.target, program can use self.id, vao can use who knows ...)
 		-- (CL also has a clean interface for interchangeable single vs array getters
 		getter(self, nameValue, result)
-		glreport'here' -- check error
+		glreport'gl.get getter' -- check error
 
 		if var.postxform then
 			return var.postxform(self, result, count)
