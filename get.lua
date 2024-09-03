@@ -41,23 +41,29 @@ local function GetBehavior(parent)
 				table.insert(self.getInfo, var)
 				self.getInfo[var.name] = var
 			else
+				var.notfound = true
 				var.getter = nil
+				self.getInfo[var.name] = var
 			end
 		end
 	end
 
-	function template:get(name)
+	function template:get(name, ...)
 		glreport'gl.get begin' -- clear error
 
 		local var = self.getInfo[name]
 		if not var then
-			error("failed to find getter associated with GL constant "..tostring(name))
+			return nil, "failed to find getter associated with "..tostring(name)
 		end
+		if var.notfound then
+			return nil, tostring(name).." not defined"
+		end
+		
 		-- TODO this here, and do it every time :get() is called?
 		-- or this upon construction, which means .type doesn't match whatever was provided?
 		local infoType = assert(var.type)
 		local getter = assert(var.getter)
-		local nameValue = assert(gl[name])
+		local nameValue = assert(gl[name])	-- TODO gl[name] will error if it's not present ... use op.safeindex?
 
 		-- make sure it's a pointer of some kind (since luajit doesn't handle refs)
 		local count = infoType:match'%[(%d+)%]$'
@@ -72,8 +78,19 @@ local function GetBehavior(parent)
 		-- GL not so much, so instead of passing the id first I'll pass the object first and let the implementer decide what to do with it
 		-- (so tex can use self.target, program can use self.id, vao can use who knows ...)
 		-- (CL also has a clean interface for interchangeable single vs array getters
-		getter(self, nameValue, result)
-		glreport'gl.get getter' -- check error
+		
+		-- Ok here's a weakness in the design ...
+		-- All the original glGet's accept the return param
+		-- ... so it makes sense to create the result buffer up front.
+		-- But then some arguments need a buffer of multiple primitives ...
+		-- ... so it makes sense to specify the array size up front.
+		-- Now comes getters with separate params for the array size and the results
+		-- ... so now I need to allocate the result in the getter.
+		-- 	This is exceptional behavior so I'm still keeping the .type and .result around
+		--  ... but for varying sized glGet's, the original allocate result isn't needed.
+		result = getter(self, nameValue, result, ...) or result
+		local success, str = require 'gl.error'.glGetErrorStr'getter failed'
+		if not success then return nil, str end
 
 		if var.postxform then
 			return var.postxform(self, result, count)

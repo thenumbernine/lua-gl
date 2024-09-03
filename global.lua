@@ -1,6 +1,9 @@
 local ffi = require 'ffi'
 local table = require 'ext.table'
+local range = require 'ext.range'
+local op = require 'ext.op'
 local asserteq = require 'ext.assert'.eq
+local asserttype = require 'ext.assert'.type
 local gl = require 'gl'
 local GetBehavior = require 'gl.get'
 local GLGlobal = GetBehavior()
@@ -28,7 +31,7 @@ local function makeBoolean(name)
 		name = name,
 		type = 'GLboolean',
 		getter = function(self, nameParam, result)
-			return gl.glGetBooleanv(nameParam, result)
+			gl.glGetBooleanv(nameParam, result)
 		end,
 	}
 end
@@ -38,7 +41,7 @@ local function makeInt(name)
 		name = name,
 		type = 'GLint',
 		getter = function(self, nameParam, result)
-			return gl.glGetIntegerv(nameParam, result)
+			gl.glGetIntegerv(nameParam, result)
 		end,
 	}
 end
@@ -48,7 +51,7 @@ local function makeInt64(name)
 		name = name,
 		type = 'GLint64',
 		getter = function(self, nameParam, result)
-			return gl.glGetInteger64v(nameParam, result)
+			gl.glGetInteger64v(nameParam, result)
 		end,
 	}
 end
@@ -58,7 +61,7 @@ local function makeFloat(name)
 		name = name,
 		type = 'GLfloat',
 		getter = function(self, nameParam, result)
-			return gl.glGetFloatv(nameParam, result)
+			gl.glGetFloatv(nameParam, result)
 		end,
 	}
 end
@@ -68,21 +71,91 @@ local function makeDouble(name)
 		name = name,
 		type = 'GLdouble',
 		getter = function(self, nameParam, result)
-			return gl.glGetDoublev(nameParam, result)
+			gl.glGetDoublev(nameParam, result)
 		end,
 	}
 end
 
 local function makeIntN(name, count)
 	local var = makeInt(name)
-	var.count = count
+	var.type = var.type..'['..count..']'
 	return var
 end
 
 local function makeDoubleN(name, count)
 	local var = makeDouble(name)
-	var.count = count
+	var.type = var.type..'['..count..']'
 	return var
+end
+
+-- TODO getters-with-num-getters are very exceptional to the gl.get system and are going to make me rewrite everything ...
+-- TODO TODO even worse, if some params are used with glGet*v then they return one thing, 
+--  while if they are used with glGet*i_v then they return another ...
+local function makeInts(name, numName)
+	return {
+		name = name,
+		type = 'GLbyte',	-- .type is used for the initial result alloc, which isn't used for varying sized glGet's
+		getter = function(self, nameParam, result, ...)
+			local num = table.pack(self:get(numName))
+			if not num[1] then return num end
+			num = num[1]
+			asserttype(num, 'number')
+			
+			-- if it's a getter that gets the whole array ...
+			local result = ffi.new('GLint[?]', num)
+			gl.glGetIntegerv(nameParam, result)
+			return range(0,num-1):mapi(function(i)
+				return result[i]
+			end)
+		end,
+		postxform = function(self, result, count)
+			return result:unpack()	-- it's a Lua table so don't unpackptr
+		end,
+	}
+end
+
+-- this makes getters assocaited with the *i_v indexed gl getters
+-- makeIntVec will often have a count-associated param like makeInts
+-- but that's entirely arbitrary
+-- likewise getters might have a non-indexed getter
+--  so I will call the i_v or the regular depending on if an argument is used
+local glSafeCall = require 'gl.error'.glSafeCall
+local function makeVec(name, ctype, getterName, indexedGetterName)
+	local getter = op.safeindex(gl, getterName)
+	local indexedGetter = op.safeindex(gl, indexedGetterName)
+	return {
+		name = name,
+		type = ctype,
+		getter = function(self, nameParam, result, ...)
+			if select('#', ...) == 0 then
+				if not getter then
+					return nil, getterName..' not found'
+				end
+				local success, msg = glSafeCall(getterName, nameParam, result)
+				-- TODO gl.get template:get getter() has no way to report errors ...
+				if not success then return table{nil, msg} end
+				return table{result[0]}
+			else
+				if not indexedGetter then
+					return nil, indexedGetterName..' not found'
+				end
+				local index = select('#', ...)
+				local success, msg = glSafeCall(indexedGetterName, nameParam, index, result)
+				if not success then return table{nil, msg} end
+				return table{result[0]}
+			end
+		end,
+		postxform = function(self, result, count)
+			return result:unpack()
+		end,
+	}
+end
+
+local function makeIntVec(name)
+	return makeVec(name, 'GLint', 'glGetIntegerv', 'glGetIntegeri_v')
+end
+local function makeInt64Vec(name)
+	return makeVec(name, 'GLint64', 'glGetInteger64v', 'glGetInteger64i_v')
 end
 
 local version
@@ -161,8 +234,8 @@ GLGlobal:makeGetter{
 
 		makeInt'GL_LOGIC_OP_MODE',					-- gl 4 but not gles 300
 
-		-- TODO
-		--makeInts('GL_NUM_COMPRESSED_TEXTURE_FORMATS', 'GL_COMPRESSED_TEXTURE_FORMATS'),
+		makeInt'GL_NUM_COMPRESSED_TEXTURE_FORMATS',
+		makeInts('GL_COMPRESSED_TEXTURE_FORMATS', 'GL_NUM_COMPRESSED_TEXTURE_FORMATS'),
 
 	-- and at this point I'm giving up on flagging all getters that cause segfaults  ... 3 out of the first 16 is too much
 		makeInt'GL_CONTEXT_FLAGS',					-- gl 4 but not gles 300
@@ -176,13 +249,12 @@ GLGlobal:makeGetter{
 		makeInt'GL_DEPTH_WRITEMASK',
 		makeInt'GL_DITHER',
 		makeInt'GL_DOUBLEBUFFER',					-- gl 4 but not gles 300
-		makeInt'GL_DRAW_BUFFER',
-		--[[ TODO
-		local maxDrawBuffers = makeInt'GL_MAX_DRAW_BUFFERS',
-		for i=0,maxDrawBuffers-1 do
-			makeIntIndex('GL_DRAW_BUFFER', i)
-		end
-		--]]
+		makeInt'GL_MAX_DRAW_BUFFERS',
+		
+		-- TODO Is this accepted both for glGetIntegerv and glGetIntegeri_v?  
+		-- Does it return different results for each?
+		-- TODO There's an argument for adding extra params to :get() here - to get specific indexes instead of getting everything
+		makeIntVec('GL_DRAW_BUFFER', 'GL_MAX_DRAW_BUFFERS'),
 
 		makeInt'GL_ACTIVE_TEXTURE',
 		makeInt'GL_ARRAY_BUFFER_BINDING',
@@ -265,8 +337,8 @@ GLGlobal:makeGetter{
 		makeInt'GL_PACK_SKIP_ROWS',
 		makeInt'GL_PACK_SWAP_BYTES',			-- gl 4 but not gles 300
 		makeInt'GL_PRIMITIVE_RESTART_INDEX',			-- gl 4 but not gles 300
-		-- TODO
-		--makeInts('GL_NUM_PROGRAM_BINARY_FORMATS', 'GL_PROGRAM_BINARY_FORMATS',)
+		makeInt'GL_NUM_PROGRAM_BINARY_FORMATS',
+		makeInts('GL_PROGRAM_BINARY_FORMATS', 'GL_NUM_PROGRAM_BINARY_FORMATS'),
 		makeInt'GL_PROGRAM_POINT_SIZE',			-- gl 4 but not gles 300
 		makeInt'GL_PROVOKING_VERTEX',			-- gl 4 but not gles 300
 		makeInt'GL_PRIMITIVE_RESTART_FIXED_INDEX',	-- gles 300 but not gl 4
@@ -284,20 +356,10 @@ GLGlobal:makeGetter{
 		makeInt'GL_SHADER_BINARY_FORMATS',	-- gles 300 but not gl 4
 		makeInt'GL_SHADER_COMPILER',
 		makeInt'GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT',	-- gl 4 but not gles 300
-		--[[ TODO
-		local maxShaderStorageBufferBindings = makeInt'GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS',	-- gl 4 but not gles 300
-		if type(maxShaderStorageBufferBindings) ~= 'string' then
-			for i=0,maxShaderStorageBufferBindings-1 do
-				--makeIntIndex('GL_SHADER_STORAGE_BUFFER_BINDING', i)	-- can be indexed, but whats the index range?
-			end
-			for i=0,maxShaderStorageBufferBindings-1 do
-				--makeInt64Index('GL_SHADER_STORAGE_BUFFER_START', i)	-- can be indexed, but whats the index range?
-			end
-			for i=0,maxShaderStorageBufferBindings-1 do
-				--makeInt64Index('GL_SHADER_STORAGE_BUFFER_SIZE', i)	-- can be indexed, but whats the index range?
-			end
-		end
-		--]]
+		makeInt'GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS',	-- gl 4 but not gles 300
+		makeInt64Vec'GL_SHADER_STORAGE_BUFFER_BINDING',	-- can be indexed, but whats the index range?
+		makeInt64Vec'GL_SHADER_STORAGE_BUFFER_START',	-- can be indexed, but whats the index range?
+		makeInt64Vec'GL_SHADER_STORAGE_BUFFER_SIZE',	-- can be indexed, but whats the index range?
 		makeInt'GL_STENCIL_BACK_FAIL',
 		makeInt'GL_STENCIL_BACK_FUNC',
 		makeInt'GL_STENCIL_BACK_PASS_DEPTH_FAIL',
@@ -383,6 +445,7 @@ GLGlobal:makeGetter{
 	}:append(
 		version < 4.1 and {} or {
 			--print'GL version >= 4.1:'
+			makeInt'GL_MAX_VIEWPORTS',
 			--[[ TODO
 			local maxViewports = makeInt'GL_MAX_VIEWPORTS',
 			for i=0,maxViewports-1 do
@@ -393,8 +456,8 @@ GLGlobal:makeGetter{
 			makeIntN('GL_VIEWPORT_BOUNDS_RANGE', 2),
 			makeInt'GL_LAYER_PROVOKING_VERTEX',
 			makeInt'GL_VIEWPORT_INDEX_PROVOKING_VERTEX',
-			-- TODO
-			--makeInts('GL_NUM_SHADER_BINARY_FORMATS', 'GL_SHADER_BINARY_FORMATS',)
+			makeInt'GL_NUM_SHADER_BINARY_FORMATS',
+			makeInts('GL_SHADER_BINARY_FORMATS', 'GL_NUM_SHADER_BINARY_FORMATS'),
 		}
 	):append(
 		version < 4.2 and {} or {
