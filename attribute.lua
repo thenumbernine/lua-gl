@@ -171,7 +171,9 @@ function GLAttribute:init(args)
 		if (self.type and self.dim) and (not self.type or not self.dim) then
 			error("you specified glslType and either type or dim but not both type and dim")
 		end
-		self.type, self.dim = table.unpack(self.getGLTypeAndDimForGLSLType[glslType])
+		self.type, self.dim = table.unpack(self.getGLTypeAndDimForGLSLType[glslType]
+			or error('missing getGLTypeAndDimForGLSLType['..glslType..']')
+		)
 		if not (self.type and self.dim) then
 			error("failed to deduce type and dim from glsl type "..glslType)
 		end

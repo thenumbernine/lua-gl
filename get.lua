@@ -75,7 +75,11 @@ local function GetBehavior(parent)
 		getter(self, nameValue, result)
 		glreport'here' -- check error
 
-		return unpackptr(result, count)
+		if var.postxform then
+			return var.postxform(self, result, count)
+		else
+			return unpackptr(result, count)
+		end
 	end
 
 	return template
