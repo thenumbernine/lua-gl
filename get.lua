@@ -15,6 +15,8 @@ local ffi = require 'ffi'
 local class = require 'ext.class'
 local table = require 'ext.table'
 local op = require 'ext.op'
+local asserttype = require 'ext.assert'.type
+local assertindex = require 'ext.assert'.index
 local gl = require 'gl'
 local glreport = require 'gl.report'
 local glSafeCall = require 'gl.error'.glSafeCall
@@ -24,33 +26,64 @@ local function unpackptr(p, n)
 	return p[0], unpackptr(p+1, n-1)
 end
 
-local function returnLastArgAsType(name, ctype, count)
-	count = count or 1
+local function makeRetLastArg(args)
+	local name = assert(args.name)		-- function name to lookup
+	local lookup = args.lookup			-- any arguments to try to convert from string to number via lookup in gl namespace
+	local ctype = assert(args.ctype)	-- result ctype
+	local count = args.count or 1		-- result array size
+
 	return function(...)
 		local resultPtr = ffi.new(ctype..'[?]', count)
 		local args = table.pack(...)
+		if lookup then
+			for _,i in ipairs(lookup) do
+				if not (i >= 1 and i <= args.n) then error("got an out of bounds lookup index "..tostring(i)) end
+				local v = args[i]
+				local t = type(v)
+				if t == 'string' then
+					local value = op.safeindex(gl, v)
+					if not value then
+						return nil, tostring(v).." not defined"
+					end
+					args[i] = value
+				elseif not (t == 'number' or t == 'cdata') then
+					return nil, name.." arg "..i.." must be type string or number, found "..t
+				end
+			end
+		end
 		args.n = args.n + 1
 		args[args.n] = resultPtr
 		local success, msg = glSafeCall(name, args:unpack())
-		if not success then return success, msg end
+		if not success then return nil, msg end
 		return unpackptr(resultPtr, count)
 	end
 end
 
-local boolean = returnLastArgAsType('glGetBooleanv', 'GLboolean')
-local int = returnLastArgAsType('glGetIntegerv', 'GLint')
-local int64 = returnLastArgAsType('glGetInteger64v', 'GLint64')
-local float = returnLastArgAsType('glGetFloatv', 'GLfloat')
-local double = returnLastArgAsType('glGetDoublev', 'GLdouble')
+local boolean = makeRetLastArg{name='glGetBooleanv', ctype='GLboolean', lookup={1}}
+local int = makeRetLastArg{name='glGetIntegerv', ctype='GLint', lookup={1}}
+local int64 = makeRetLastArg{name='glGetInteger64v', ctype='GLint64', lookup={1}}
+local float = makeRetLastArg{name='glGetFloatv', ctype='GLfloat', lookup={1}}
+local double = makeRetLastArg{name='glGetDoublev', ctype='GLdouble', lookup={1}}
 
-local booleanIndex = returnLastArgAsType('glGetBooleani_v', 'GLboolean')
-local intIndex = returnLastArgAsType('glGetIntegeri_v', 'GLint')
-local int64Index = returnLastArgAsType('glGetInteger64i_v', 'GLint64')
-local floatIndex = returnLastArgAsType('glGetFloati_v', 'GLfloat')
-local doubleIndex = returnLastArgAsType('glGetDoublei_v', 'GLdouble')
+local booleanIndex = makeRetLastArg{name='glGetBooleani_v', ctype='GLboolean', lookup={1}}
+local intIndex = makeRetLastArg{name='glGetIntegeri_v', ctype='GLint', lookup={1}}
+local int64Index = makeRetLastArg{name='glGetInteger64i_v', ctype='GLint64', lookup={1}}
+local floatIndex = makeRetLastArg{name='glGetFloati_v', ctype='GLfloat', lookup={1}}
+local doubleIndex = makeRetLastArg{name='glGetDoublei_v', ctype='GLdouble', lookup={1}}
 
-local function string(...)
-	local success, value = glSafeCall('glGetString', ...)
+local function string(param, ...)
+	local t = type(param)
+	if t == 'string' then
+		local value = op.safeindex(gl, param)
+		if not value then
+			return nil, tostring(param).." not defined"
+		end
+		param = value
+	elseif not (t == 'number' or t == 'cdata') then
+		return nil, name.." arg 1 must be type string or number, found "..t
+	end
+
+	local success, value = glSafeCall('glGetString', param, ...)
 	if not success then return nil, value end
 	return ffi.string(value)
 end
@@ -65,22 +98,28 @@ local function behavior(parent)
 	--]]
 	function template:makeGetter(args)
 		self.getInfo = self.getInfo or {}
+		self.getInfoArray = self.getInfoArray or table()
 		local getter = assert(args.getter)
 		local vars = assert(args.vars)
 		for _,var in ipairs(vars) do
-			if op.safeindex(gl, var.name) then
+			local name = assertindex(var, 'name')
+			asserttype(name, 'string')
+			var.nameValue = op.safeindex(gl, name)
+			if var.nameValue then
 				-- keep any per-variable assigned getter if it was specified
 				var.getter = var.getter or getter
 				table.insert(self.getInfo, var)
-				if self.getInfo[var.name] then
-					error(var.name.." added twice")
+				if self.getInfo[name] then
+					error(name.." added twice")
 				end
-				self.getInfo[var.name] = var
 			else
 				var.notfound = true
-				var.getter = nil
-				self.getInfo[var.name] = var
+				var.getter = function()
+					return nil, name..' not defined'
+				end
 			end
+			self.getInfo[name] = var
+			self.getInfoArray:insert(var)	-- if you want to cycle them in order ...
 		end
 	end
 
@@ -91,30 +130,8 @@ local function behavior(parent)
 		if not var then
 			return nil, "failed to find getter associated with "..tostring(name)
 		end
-		if var.notfound then
-			return nil, tostring(name).." not defined"
-		end
 
-		-- TODO this here, and do it every time :get() is called?
-		-- or this upon construction, which means .type doesn't match whatever was provided?
-		local getter = assert(var.getter)
-		local nameValue = assert(gl[name])	-- TODO gl[name] will error if it's not present ... use op.safeindex?
-
-		-- CL has a clean association of getters and classes, and always has the class' object's id first
-		-- GL not so much, so instead of passing the id first I'll pass the object first and let the implementer decide what to do with it
-		-- (so tex can use self.target, program can use self.id, vao can use who knows ...)
-		-- (CL also has a clean interface for interchangeable single vs array getters
-
-		-- Ok here's a weakness in the design ...
-		-- All the original glGet's accept the return param
-		-- ... so it makes sense to create the result buffer up front.
-		-- But then some arguments need a buffer of multiple primitives ...
-		-- ... so it makes sense to specify the array size up front.
-		-- Now comes getters with separate params for the array size and the results
-		-- ... so now I need to allocate the result in the getter.
-		-- 	This is exceptional behavior so I'm still keeping the .type and .result around
-		--  ... but for varying sized glGet's, the original allocate result isn't needed.
-		return getter(self, nameValue, ...)
+		return var.getter(self, var.nameValue, ...)
 	end
 
 	return template
@@ -123,7 +140,7 @@ end
 return {
 	-- make a convenient return-based getter for the glGet* functions
 	behavior = behavior,
-	returnLastArgAsType = returnLastArgAsType,
+	makeRetLastArg = makeRetLastArg,
 	boolean = boolean,
 	int = int,
 	int64 = int64,

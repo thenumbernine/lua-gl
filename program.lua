@@ -198,7 +198,11 @@ end
 
 GLProgram.checkLinkStatus = GLShader.createCheckStatus('GL_LINK_STATUS', function(...) return gl.glGetProgramInfoLog(...) end)
 
-local glRetProgrami = GLGet.returnLastArgAsType('glGetProgramiv', 'GLint')
+local glRetProgrami = GLGet.makeRetLastArg{
+	name = 'glGetProgramiv',
+	ctype = 'GLint',
+	lookup = {2},
+}
 GLProgram:makeGetter{
 	-- wrap it so wgl can replace glGetShaderiv
 	getter = function(self, nameValue)

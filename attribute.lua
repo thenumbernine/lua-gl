@@ -35,7 +35,11 @@ GLAttribute has the following args:
 --]]
 local GLAttribute = GLGet.behavior():subclass()
 
-local glRetVertexAttribi = GLGet.returnLastArgAsType('glGetVertexAttribiv', 'GLint')
+local glRetVertexAttribi = GLGet.makeRetLastArg{
+	name = 'glGetVertexAttribiv',
+	ctype = 'GLint',
+	lookup = {2},
+}
 GLAttribute:makeGetter{
 	getter = function(self, nameValue)
 		return glRetVertexAttribi(self.loc, nameValue)

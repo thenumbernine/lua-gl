@@ -2,7 +2,6 @@ local ffi = require 'ffi'
 local table = require 'ext.table'
 local range = require 'ext.range'
 local op = require 'ext.op'
-local asserteq = require 'ext.assert'.eq
 local asserttype = require 'ext.assert'.type
 local assertindex = require 'ext.assert'.index
 local gl = require 'gl'
@@ -71,7 +70,12 @@ local function makeN(var, count)
 end
 
 local function makeBooleanN(name, count)
-	local glRetBooleanN = GLGet.returnLastArgAsType('glGetBooleanv', 'GLboolean', count)
+	local glRetBooleanN = GLGet.makeRetLastArg{
+		name = 'glGetBooleanv',
+		lookup = {1},
+		ctype = 'GLboolean',
+		count = count,
+	}
 	return {
 		name = name,
 		getter = function(self, nameValue)
@@ -81,7 +85,12 @@ local function makeBooleanN(name, count)
 end
 
 local function makeIntN(name, count)
-	local glRetIntN = GLGet.returnLastArgAsType('glGetIntegerv', 'GLint', count)
+	local glRetIntN = GLGet.makeRetLastArg{
+		name = 'glGetIntegerv',
+		lookup = {1},
+		ctype = 'GLint',
+		count = count,
+	}
 	return {
 		name = name,
 		getter = function(self, nameValue)
@@ -91,7 +100,12 @@ local function makeIntN(name, count)
 end
 
 local function makeDoubleN(name, count)
-	local glRetDoubleN = GLGet.returnLastArgAsType('glGetDoublev', 'GLdouble', count)
+	local glRetDoubleN = GLGet.makeRetLastArg{
+		name = 'glGetDoublev',
+		lookup = {1},
+		ctype = 'GLdouble',
+		count = count,
+	}
 	return {
 		name = name,
 		getter = function(self, nameValue)
@@ -184,20 +198,28 @@ end
 
 local version
 local tmp = xpcall(function()
-	local int = ffi.new'GLint[1]'
-	gl.glGetIntegerv(gl.GL_MAJOR_VERSION, int)
-	local major = int[0]
-	gl.glGetIntegerv(gl.GL_MINOR_VERSION, int)
-	local minor = int[0]
+	local major = assert(GLGet.int'GL_MAJOR_VERSION')
+	local minor = assert(GLGet.int'GL_MINOR_VERSION')
 	version = major + .1 * minor
 end, function(err)
-	print('first attempt to get gl version failed')
-	print(err..'\n'..debug.traceback())
+	print('first attempt to get gl version failed: '..err)
 end) or xpcall(function()
-	version = tonumber(ffi.string(gl.glGetString(gl.GL_VERSION)):split'%s+'[1])
+	version = (GLGet.string'GL_VERSION' or ''):split'%s+'[1]
+	version = assert(tonumber(version), 'failed to parse '..tostring(version))
 end, function(err)
-	print('second attempt to get gl version failed')
-	print(err..'\n'..debug.traceback())
+	print('second attempt to get gl version failed: '..err)
+	-- look for GL_VERSION's defined ...
+	--major * 100 + minor
+	for _,v in ipairs{101, 102, 103, 104, 105, 200, 201, 300, 301, 302, 303, 400, 401, 402, 403, 404, 405, 406} do
+		local b = math.floor(v % 100)
+		local a = math.floor((v - b) / 100)
+		local k = 'GL_VERSION_'..a..'_'..b
+print('testing', k, op.safeindex(gl, k))
+		if op.safeindex(gl, k)
+			then return a + .1 * b
+		end
+	end
+	error("exhausted all options")
 end) or error("couldn't get the GL version")
 
 GLGlobal:makeGetter{
@@ -211,8 +233,8 @@ GLGlobal:makeGetter{
 		makeString'GL_RENDERER',
 		makeString'GL_VERSION',
 		makeString'GL_EXTENSIONS',
-		makeInt'GL_ACCUM_ALPHA_BITS',
 		makeInt'GL_ACCUM_CLEAR_VALUE',
+		makeInt'GL_ACCUM_ALPHA_BITS',
 		makeInt'GL_ACCUM_BLUE_BITS',
 		makeInt'GL_ACCUM_GREEN_BITS',
 		makeInt'GL_ACCUM_RED_BITS',
@@ -223,7 +245,6 @@ GLGlobal:makeGetter{
 		makeInt'GL_ALPHA_BITS',				-- gles 300 but not gl 4 ?
 		makeInt'GL_DEPTH_BITS',				-- gles 300 but not gl 4 ?
 		makeInt'GL_STENCIL_BITS',			-- gles 300 but not gl 4
-		makeInt'GL_DEPTH_BITS',
 		makeInt'GL_INDEX_BITS',
 
 		makeDouble'GL_RED_BIAS',
@@ -298,7 +319,7 @@ GLGlobal:makeGetter{
 		makeInt'GL_FOG_MODE',
 		makeDouble'GL_FOG_START',
 		makeInt'GL_FRONT_FACE',						-- gles 300 but not gl 4
-		makeInt'GL_GENERATE_MIPMAP_HINT',
+		makeInt'GL_GENERATE_MIPMAP_HINT',			-- gles 300 but not gl 4
 		makeBoolean'GL_HISTOGRAM',
 		makeInt'GL_INDEX_CLEAR_VALUE',
 		makeBoolean'GL_INDEX_MODE',
@@ -628,7 +649,6 @@ GLGlobal:makeGetter{
 		makeInt'GL_RENDERBUFFER_BINDING',
 		makeInt'GL_SAMPLER_BINDING',
 
-		makeInt'GL_GENERATE_MIPMAP_HINT',			-- gles 300 but not gl 4
 		makeInt'GL_IMPLEMENTATION_COLOR_READ_FORMAT',
 		makeInt'GL_IMPLEMENTATION_COLOR_READ_TYPE',
 
@@ -766,7 +786,6 @@ GLGlobal:makeGetter{
 			makeInt'GL_MAX_VERTEX_ATTRIB_BINDINGS',
 		}
 	):append(
-	--[==[ TODO
 		table{
 			'GL_VERTEX_SHADER',
 			'GL_FRAGMENT_SHADER',
@@ -774,19 +793,35 @@ GLGlobal:makeGetter{
 			'GL_TESS_EVALUATION_SHADER',
 			'GL_TESS_CONTROL_SHADER',
 			'GL_COMPUTE_SHADER',
-		}:mapi(function(shaderTypeParam)
-			if require 'ext.op'.safeindex(gl, shaderTypeParam) then
-				for _,precParam in ipairs{
-					'GL_LOW_FLOAT', 'GL_MEDIUM_FLOAT', 'GL_HIGH_FLOAT',
-					'GL_LOW_INT', 'GL_MEDIUM_INT', 'GL_HIGH_INT',
-				} do
-					local range = ffi.new'GLint[2]'
-					local precision = ffi.new'GLint[1]'
-					gl.glGetShaderPrecisionFormat(gl[shaderTypeParam], gl[precParam], range, precision)
-					print(shaderTypeParam, precParam, 'range={'..range[0]..', '..range[1]..'},\tprecision='..precision[0])
-				end
-			end
-		end
+		}:mapi(function(shaderTypeParamName)
+			return {
+				name = shaderTypeParamName,
+				getter = function(self, nameValue, precParamName)
+					local precParamValue
+					-- TODO this number-or-string for all gl.get's ?
+					local typePrecParamName = type(precParamName)
+					if typePrecParamName == 'number' then
+						precParamValue = precParamName
+					elseif typePrecParamName == 'string' then
+						precParamValue = op.safeindex(gl, precParamName)
+						if not precParamValue then
+							return nil, tostring(precParamName)..' not defined'
+						end
+					else
+						return nil, "precision "..tostring(precParamName).." must be a string or number, found type "..tostring(typePrecParamName)
+					end
+
+					-- or I could just double-wrap makeRetLastArg ...
+					-- ... but nah I can't cuz inside it does a safecall ...
+					-- ... I'd need a separate wrapper for determining-of-available and returning-fail otherwise ...
+					local rangePtr = ffi.new'GLint[2]'
+					local precisionPtr = ffi.new'GLint[1]'
+					local success, msg = glSafeCall('glGetShaderPrecisionFormat', nameValue, precParamValue, rangePtr, precisionPtr)
+					if not success then return nil, msg end
+					return rangePtr[0], rangePtr[1], precisionPtr[0]
+				end,
+			}
+		end)
 	--]==]
 	):setmetatable(nil),
 }

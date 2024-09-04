@@ -16,7 +16,11 @@ local GLTypes = require 'gl.types'
 
 local GLTex = GLGet.behavior()
 
-local glRetTexParami = GLGet.returnLastArgAsType('glGetTextureParameteriv', 'GLint')
+local glRetTexParami = GLGet.makeRetLastArg{
+	name = 'glGetTextureParameteriv',
+	ctype = 'GLint',
+	lookup = {1, 2},
+}
 local function getteri(self, nameValue)
 	-- if we're GL 4.5 then we can use glGetTextureParameter* which accepts self.id (like glGetProgram and like the whole CL API)
 	-- but otherwise (incl all GLES) we have to use glGetTexParameter*
@@ -29,12 +33,21 @@ end
 -- hmm 'getter' means call the getter above, which is a wrapper for glGet*
 -- so mayb i have to put th branch in the getter above fr now ....
 -- another TODO is this should be getterf for GLES2 ... and for GLES1 *all* texture getters are getterf ...
-local glRetTexParamf = GLGet.returnLastArgAsType('glGetTextureParameterfv', 'GLfloat')
+local glRetTexParamf = GLGet.makeRetLastArg{
+	name = 'glGetTextureParameterfv',
+	ctype = 'GLfloat',
+	lookup = {1, 2},
+}
 local function glRetTexParamfForObj(self, nameValue)
 	return glRetTexParamf(self.target, nameValue)
 end
 
-local glRetTexParamf4 = GLGet.returnLastArgAsType('glGetTextureParameterfv', 'GLfloat', 4)
+local glRetTexParamf4 = GLGet.makeRetLastArg{
+	name = 'glGetTextureParameterfv',
+	lookup = {1, 2},
+	ctype = 'GLfloat',
+	count = 4,
+}
 local function glRetTexParamf4ForObj(self, nameValue)
 	return glRetTexParamf4(self.target, nameValue)
 end

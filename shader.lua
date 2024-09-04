@@ -18,7 +18,11 @@ end
 
 GLShader.__gc = GLShader.delete
 
-local glRetShaderi = GLGet.returnLastArgAsType('glGetShaderiv', 'GLint')
+local glRetShaderi = GLGet.makeRetLastArg{
+	name = 'glGetShaderiv',
+	ctype = 'GLint',
+	lookup = {2},
+}
 GLShader:makeGetter{
 	-- wrap it so wgl can replace glGetShaderiv
 	getter = function(self, nameValue)
