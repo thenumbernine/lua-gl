@@ -653,9 +653,8 @@ function GLProgram.getVersionPragma(es)
 	-- should I auto-detect es?
 	if es == nil and op.safeindex(gl, 'GL_ES_VERSION_2_0') then es = true end
 
-	local strptr = gl.glGetString(gl.GL_SHADING_LANGUAGE_VERSION)
-	assert(strptr ~= nil, "failed to get GL_SHADING_LANGUAGE_VERSION")
-	local version = ffi.string(strptr)
+	local glGlobal = require 'gl.global'
+	local version = assert(glGlobal:get'GL_SHADING_LANGUAGE_VERSION')
 	version = version:gsub('%.', '')
 	-- even when using gles, the GL_VERSION I get back corresponds to my GL (non-ES) version (is there a different constant I should be using other than GL_VERSION for the ES version?)
 	-- so instead I'll use a mapping from GLSL versions to GLSL-ES versions...
@@ -664,13 +663,7 @@ function GLProgram.getVersionPragma(es)
 		local exts = {}
 
 		-- turns out, when using core gl (as osx now requires for 4.1 support), getting extensions causes a GL error ...
-		glreport 'before glGetString GL_EXTENSIONS'
-
-		local extstr = gl.glGetString(gl.GL_EXTENSIONS)
-
-		glreport 'after glGetString GL_EXTENSIONS'
-
-		extstr = extstr == nil and '' or string.trim(ffi.string(extstr))
+		local extstr = string.trim(glGlobal:get'GL_EXTENSIONS' or '')
 		for _,ext in ipairs(string.split(extstr, '%s+')) do
 			exts[ext] = true
 		end

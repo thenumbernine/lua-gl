@@ -4,6 +4,7 @@ local range = require 'ext.range'
 local op = require 'ext.op'
 local asserteq = require 'ext.assert'.eq
 local asserttype = require 'ext.assert'.type
+local assertindex = require 'ext.assert'.index
 local gl = require 'gl'
 local GetBehavior = require 'gl.get'
 local GLGlobal = GetBehavior()
@@ -207,7 +208,7 @@ GLGlobal:makeGetter{
 		makeString'GL_VENDOR',
 		makeString'GL_RENDERER',
 		makeString'GL_VERSION',
-		makeString'GL_SHADING_LANGUAGAE',
+		makeString'GL_SHADING_LANGUAGE_VERSION',
 		makeString'GL_EXTENSIONS',
 		makeInt'GL_MAJOR_VERSION',
 		makeInt'GL_MINOR_VERSION',
@@ -471,7 +472,7 @@ GLGlobal:makeGetter{
 			makeInt'GL_MAX_COMBINED_COMPUTE_UNIFORM_COMPONENTS',
 			makeInt'GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS',
 			makeIntVec'GL_MAX_COMPUTE_WORK_GROUP_COUNT',
-			makeIntVec'GL_MAX_COMPUTE_WORK_GROUP_SIZE'
+			makeIntVec'GL_MAX_COMPUTE_WORK_GROUP_SIZE',
 			makeInt'GL_DISPATCH_INDIRECT_BUFFER_BINDING',
 			makeInt'GL_MAX_DEBUG_GROUP_STACK_DEPTH',
 			makeInt'GL_DEBUG_GROUP_STACK_DEPTH',

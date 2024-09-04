@@ -157,7 +157,7 @@ function GLShader.createCheckStatus(statusEnum, logGetter)
 			s:insert(ffi.string(log))
 
 			for _,get in ipairs(self.getInfo) do
-				s:insert(get.name..': '..self:get(get.name))
+				s:insert(get.name..': '..table{self:get(get.name)}:mapi(tostring):concat' ')
 			end
 
 			s:insert(statusEnum..' failed!')
