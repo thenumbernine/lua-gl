@@ -37,20 +37,23 @@ local function returnLastArgAsType(name, ctype, count)
 	end
 end
 
+local boolean = returnLastArgAsType('glGetBooleanv', 'GLboolean')
 local int = returnLastArgAsType('glGetIntegerv', 'GLint')
 local int64 = returnLastArgAsType('glGetInteger64v', 'GLint64')
 local float = returnLastArgAsType('glGetFloatv', 'GLfloat')
 local double = returnLastArgAsType('glGetDoublev', 'GLdouble')
 
+local booleanIndex = returnLastArgAsType('glGetBooleani_v', 'GLboolean')
 local intIndex = returnLastArgAsType('glGetIntegeri_v', 'GLint')
+local int64Index = returnLastArgAsType('glGetInteger64i_v', 'GLint64')
+local floatIndex = returnLastArgAsType('glGetFloati_v', 'GLfloat')
+local doubleIndex = returnLastArgAsType('glGetDoublei_v', 'GLdouble')
 
 local function string(...)
 	local success, value = glSafeCall('glGetString', ...)
 	if not success then return nil, value end
 	return ffi.string(value)
 end
-
-local boolean = returnLastArgAsType('glGetBooleanv', 'GLboolean')
 
 local function behavior(parent)
 	local template = class(parent)
@@ -69,6 +72,9 @@ local function behavior(parent)
 				-- keep any per-variable assigned getter if it was specified
 				var.getter = var.getter or getter
 				table.insert(self.getInfo, var)
+				if self.getInfo[var.name] then
+					error(var.name.." added twice")
+				end
 				self.getInfo[var.name] = var
 			else
 				var.notfound = true
@@ -116,13 +122,17 @@ end
 
 return {
 	-- make a convenient return-based getter for the glGet* functions
+	behavior = behavior,
 	returnLastArgAsType = returnLastArgAsType,
+	boolean = boolean,
 	int = int,
 	int64 = int64,
 	float = float,
 	double = double,
+	booleanIndex = booleanIndex,
 	intIndex = intIndex,
+	int64Index = int64Index,
+	floatIndex = floatIndex,
+	doubleIndex = doubleIndex,
 	string = string,
-	boolean = boolean,
-	behavior = behavior,
 }
