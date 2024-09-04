@@ -1,4 +1,6 @@
 local gl = require 'gl'
+local op = require 'ext.op'
+local table = require 'ext.table'
 
 local glErrors = {
 	'GL_NO_ERROR',

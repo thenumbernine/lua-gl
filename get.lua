@@ -13,16 +13,46 @@ and for textures we want the 1st parameter to be the texture-target, not the .id
 --]]
 local ffi = require 'ffi'
 local class = require 'ext.class'
+local table = require 'ext.table'
 local op = require 'ext.op'
 local gl = require 'gl'
 local glreport = require 'gl.report'
+local glSafeCall = require 'gl.error'.glSafeCall
 
 local function unpackptr(p, n)
 	if n <= 0 then return end
 	return p[0], unpackptr(p+1, n-1)
 end
 
-local function GetBehavior(parent)
+local function returnLastArgAsType(name, ctype, count)
+	count = count or 1
+	return function(...)
+		local resultPtr = ffi.new(ctype..'[?]', count)
+		local args = table.pack(...)
+		args.n = args.n + 1
+		args[args.n] = resultPtr
+		local success, msg = glSafeCall(name, args:unpack())
+		if not success then return success, msg end
+		return unpackptr(resultPtr, count)
+	end
+end
+
+local int = returnLastArgAsType('glGetIntegerv', 'GLint')
+local int64 = returnLastArgAsType('glGetInteger64v', 'GLint64')
+local float = returnLastArgAsType('glGetFloatv', 'GLfloat')
+local double = returnLastArgAsType('glGetDoublev', 'GLdouble')
+
+local intIndex = returnLastArgAsType('glGetIntegeri_v', 'GLint')
+
+local function string(...)
+	local success, value = glSafeCall('glGetString', ...)
+	if not success then return nil, value end
+	return ffi.string(value)
+end
+
+local boolean = returnLastArgAsType('glGetBooleanv', 'GLboolean')
+
+local function behavior(parent)
 	local template = class(parent)
 
 	--[[
@@ -61,19 +91,9 @@ local function GetBehavior(parent)
 
 		-- TODO this here, and do it every time :get() is called?
 		-- or this upon construction, which means .type doesn't match whatever was provided?
-		local infoType = assert(var.type)
 		local getter = assert(var.getter)
 		local nameValue = assert(gl[name])	-- TODO gl[name] will error if it's not present ... use op.safeindex?
 
-		-- make sure it's a pointer of some kind (since luajit doesn't handle refs)
-		local count = infoType:match'%[(%d+)%]$'
-		if count then
-			count = assert(tonumber(count))
-		else
-			count = 1
-			infoType = infoType..'[1]'
-		end
-		local result = ffi.new(infoType)
 		-- CL has a clean association of getters and classes, and always has the class' object's id first
 		-- GL not so much, so instead of passing the id first I'll pass the object first and let the implementer decide what to do with it
 		-- (so tex can use self.target, program can use self.id, vao can use who knows ...)
@@ -88,18 +108,21 @@ local function GetBehavior(parent)
 		-- ... so now I need to allocate the result in the getter.
 		-- 	This is exceptional behavior so I'm still keeping the .type and .result around
 		--  ... but for varying sized glGet's, the original allocate result isn't needed.
-		result = getter(self, nameValue, result, ...) or result
-		local success, str = require 'gl.error'.glGetErrorStr'getter failed'
-		if not success then return nil, str end
-
-		if var.postxform then
-			return var.postxform(self, result, count)
-		else
-			return unpackptr(result, count)
-		end
+		return getter(self, nameValue, ...)
 	end
 
 	return template
 end
 
-return GetBehavior
+return {
+	-- make a convenient return-based getter for the glGet* functions
+	returnLastArgAsType = returnLastArgAsType,
+	int = int,
+	int64 = int64,
+	float = float,
+	double = double,
+	intIndex = intIndex,
+	string = string,
+	boolean = boolean,
+	behavior = behavior,
+}

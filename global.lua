@@ -6,33 +6,24 @@ local asserteq = require 'ext.assert'.eq
 local asserttype = require 'ext.assert'.type
 local assertindex = require 'ext.assert'.index
 local gl = require 'gl'
-local GetBehavior = require 'gl.get'
-local GLGlobal = GetBehavior()
+local GLGet = require 'gl.get'
+
+local GLGlobal = GLGet.behavior()
 
 local function makeString(name)
 	return {
 		name = name,
-		type = 'GLubyte const *',	-- result is [1] of these ...
-		getter = function(self, nameParam, result)
-			result[0] = gl.glGetString(nameParam)
+		getter = function(self, nameValue)
+			return GLGet.string(nameValue)
 		end,
-		-- this will pass to gl.get's template:get() correctly ...
-		-- but that will return a char* ... not a Lua string ... soo ...
-		-- ... post-transform wrapper just for this function
-		postxform = function(self, result, count)
-			asserteq(count, 1)
-			if result[0] == nil then return nil end
-			return ffi.string(result[0])
-		end
 	}
 end
 
 local function makeBoolean(name)
 	return {
 		name = name,
-		type = 'GLboolean',
-		getter = function(self, nameParam, result)
-			gl.glGetBooleanv(nameParam, result)
+		getter = function(self, nameValue)
+			return GLGet.boolean(nameValue)
 		end,
 	}
 end
@@ -40,9 +31,8 @@ end
 local function makeInt(name)
 	return {
 		name = name,
-		type = 'GLint',
-		getter = function(self, nameParam, result)
-			gl.glGetIntegerv(nameParam, result)
+		getter = function(self, nameValue)
+			return GLGet.int(nameValue)
 		end,
 	}
 end
@@ -50,9 +40,8 @@ end
 local function makeInt64(name)
 	return {
 		name = name,
-		type = 'GLint64',
-		getter = function(self, nameParam, result)
-			gl.glGetInteger64v(nameParam, result)
+		getter = function(self, nameValue)
+			return GLGet.int64(nameValue)
 		end,
 	}
 end
@@ -60,9 +49,8 @@ end
 local function makeFloat(name)
 	return {
 		name = name,
-		type = 'GLfloat',
-		getter = function(self, nameParam, result)
-			gl.glGetFloatv(nameParam, result)
+		getter = function(self, nameValue)
+			return GLGet.float(nameValue)
 		end,
 	}
 end
@@ -70,23 +58,36 @@ end
 local function makeDouble(name)
 	return {
 		name = name,
-		type = 'GLdouble',
-		getter = function(self, nameParam, result)
-			gl.glGetDoublev(nameParam, result)
+		getter = function(self, nameValue)
+			return GLGet.double(nameValue)
 		end,
 	}
 end
 
+local function makeN(var, count)
+	local oldGetter = assertindex(var, 'getter')
+	var.getter = function(...)
+	end
+end
+
 local function makeIntN(name, count)
-	local var = makeInt(name)
-	var.type = var.type..'['..count..']'
-	return var
+	local glRetIntN = GLGet.returnLastArgAsType('glGetIntegerv', 'GLint', count)
+	return {
+		name = name,
+		getter = function(self, nameValue)
+			return glRetIntN(nameValue)
+		end,
+	}
 end
 
 local function makeDoubleN(name, count)
-	local var = makeDouble(name)
-	var.type = var.type..'['..count..']'
-	return var
+	local glRetDoubleN = GLGet.returnLastArgAsType('glGetDoublev', 'GLdouble', count)
+	return {
+		name = name,
+		getter = function(self, nameValue)
+			return glRetDoubleN(nameValue)
+		end,
+	}
 end
 
 -- TODO getters-with-num-getters are very exceptional to the gl.get system and are going to make me rewrite everything ...
@@ -95,22 +96,18 @@ end
 local function makeInts(name, numName)
 	return {
 		name = name,
-		type = 'GLbyte',	-- .type is used for the initial result alloc, which isn't used for varying sized glGet's
-		getter = function(self, nameParam, result, ...)
+		getter = function(self, nameValue, result, ...)
 			local num = table.pack(self:get(numName))
-			if not num[1] then return num end
+			if not num[1] then return num:unpack() end
 			num = num[1]
 			asserttype(num, 'number')
 
 			-- if it's a getter that gets the whole array ...
 			local result = ffi.new('GLint[?]', num)
-			gl.glGetIntegerv(nameParam, result)
+			gl.glGetIntegerv(nameValue, result)
 			return range(0,num-1):mapi(function(i)
 				return result[i]
-			end)
-		end,
-		postxform = function(self, result, count)
-			return result:unpack()	-- it's a Lua table so don't unpackptr
+			end):unpack(1,num)
 		end,
 	}
 end
@@ -123,42 +120,38 @@ end
 local glSafeCall = require 'gl.error'.glSafeCall
 local function makeVec(args)
 	local name = assertindex(args, 'name')
+	local ctype = assertindex(args, 'type')
 	local getterName = assertindex(args, 'getterName')
 	local indexedGetterName = assertindex(args, 'indexedGetterName')
-	local ctype = assertindex(args, 'type')
-	local count = args.count
-	if count then
-		ctype = ctype .. '[' .. count .. ']'
-	else
-		count = 1
-	end
+	local count = args.count or 1
 
 	local getter = op.safeindex(gl, getterName)
 	local indexedGetter = op.safeindex(gl, indexedGetterName)
 	return {
 		name = name,
-		type = ctype,
-		getter = function(self, nameParam, result, ...)
+		getter = function(self, nameValue, ...)
+require 'gl.report' 'here'
 			if select('#', ...) == 0 then
+--print('performing', getterName, name, ...)
 				if not getter then
 					return nil, getterName..' not found'
 				end
-				local success, msg = glSafeCall(getterName, nameParam, result)
+				local result = ffi.new(ctype..'[?]', count)
+				local success, msg = glSafeCall(getterName, nameValue, result)
 				-- TODO gl.get template:get getter() has no way to report errors ...
-				if not success then return table{nil, msg} end
-				return range(0,count-1):mapi(function(i) return result[i] end)
+				if not success then return nil, msg end
+				return range(0,count-1):mapi(function(i) return result[i] end):unpack(1, count)
 			else
+--print('performing indexed', indexedGetterName, name, ...)
 				if not indexedGetter then
 					return nil, indexedGetterName..' not found'
 				end
+				local result = ffi.new(ctype..'[?]', count)
 				local index = select('#', ...)
-				local success, msg = glSafeCall(indexedGetterName, nameParam, index, result)
-				if not success then return table{nil, msg} end
-				return range(0,count-1):mapi(function(i) return result[i] end)
+				local success, msg = glSafeCall(indexedGetterName, nameValue, index, result)
+				if not success then return nil, msg end
+				return range(0,count-1):mapi(function(i) return result[i] end):unpack(1, count)
 			end
-		end,
-		postxform = function(self, result, count)
-			return result:unpack()
 		end,
 	}
 end
@@ -244,7 +237,7 @@ GLGlobal:makeGetter{
 		makeInt'GL_POLYGON_OFFSET_POINT',			-- gl 4 but not gles 300
 
 		makeInt'GL_BLEND',
-		makeInt'GL_BLEND_COLOR',						-- getting this causes a segfault upon exit ... gl driver bug?
+		makeDoubleN('GL_BLEND_COLOR', 4),
 		makeInt'GL_BLEND_DST_ALPHA',
 		makeInt'GL_BLEND_DST_RGB',
 		makeInt'GL_BLEND_EQUATION_RGB',
@@ -252,9 +245,9 @@ GLGlobal:makeGetter{
 		makeInt'GL_BLEND_SRC_ALPHA',
 		makeInt'GL_BLEND_SRC_RGB',
 
-		makeInt'GL_COLOR_CLEAR_VALUE',				-- segfault upon exit
+		makeDoubleN('GL_COLOR_CLEAR_VALUE', 4),
 		makeInt'GL_COLOR_LOGIC_OP',					-- gl 4 but not gles 300
-		makeInt'GL_COLOR_WRITEMASK',
+		makeIntN('GL_COLOR_WRITEMASK', 4),
 
 		makeInt'GL_LOGIC_OP_MODE',					-- gl 4 but not gles 300
 

@@ -22,7 +22,7 @@ just a holder for buffer, dim, type, normalize, stride, offset
 - and then have an optional construction from within gl.program for builtin queried attributes?
 --]]
 local gl = require 'gl'
-local GetBehavior = require 'gl.get'
+local GLGet = require 'gl.get'
 local ffi = require 'ffi'
 local class = require 'ext.class'
 local table = require 'ext.table'
@@ -33,29 +33,30 @@ GLAttribute has the following args:
 	dim = number of channels, derived from the glslType
 	type =
 --]]
-local GLAttribute = GetBehavior():subclass()
+local GLAttribute = GLGet.behavior():subclass()
 
+local glRetVertexAttribi = GLGet.returnLastArgAsType('glGetVertexAttribiv', 'GLint')
 GLAttribute:makeGetter{
-	getter = function(self, namevalue, result)
-		return gl.glGetVertexAttribiv(assert(self.loc), namevalue, result)
+	getter = function(self, nameValue)
+		return glRetVertexAttribi(self.loc, nameValue)
 	end,
 	-- the names might say 'ATTRIB_ARRAY', but the input is per-attribute-location
 	-- so they are really per-attribute
 	-- and the assumption of the name is that you'll only use them via bound VAO
 	-- but they work just as well with no VAO bound.
 	vars = {
-		{name='GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING', type='GLuint'},
-		{name='GL_VERTEX_ATTRIB_ARRAY_ENABLED', type='GLuint'},
-		{name='GL_VERTEX_ATTRIB_ARRAY_SIZE', type='GLuint'},
-		{name='GL_VERTEX_ATTRIB_ARRAY_STRIDE', type='GLuint'},
-		{name='GL_VERTEX_ATTRIB_ARRAY_TYPE', type='GLuint'},
-		{name='GL_VERTEX_ATTRIB_ARRAY_NORMALIZED', type='GLuint'},
-		{name='GL_VERTEX_ATTRIB_ARRAY_INTEGER', type='GLuint'},
-		{name='GL_VERTEX_ATTRIB_ARRAY_LONG', type='GLuint'},
-		{name='GL_VERTEX_ATTRIB_ARRAY_DIVISOR', type='GLuint'},
-		{name='GL_VERTEX_ATTRIB_BINDING', type='GLuint'},
-		{name='GL_VERTEX_ATTRIB_RELATIVE_OFFSET', type='GLuint'},
-		{name='GL_CURRENT_VERTEX_ATTRIB', type='GLuint'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_ENABLED'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_SIZE'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_STRIDE'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_TYPE'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_NORMALIZED'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_INTEGER'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_LONG'},
+		{name='GL_VERTEX_ATTRIB_ARRAY_DIVISOR'},
+		{name='GL_VERTEX_ATTRIB_BINDING'},
+		{name='GL_VERTEX_ATTRIB_RELATIVE_OFFSET'},
+		{name='GL_CURRENT_VERTEX_ATTRIB'},
 --GL_CURRENT_VERTEX_ATTRIB	-- this returns four values ...
 -- also,  "All of the parameters except GL_CURRENT_VERTEX_ATTRIB represent state stored in the currently bound vertex array object."
 -- so GL_CURRENT_VERTEX_ATTRIB	is not a VAO getter variable

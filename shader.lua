@@ -6,9 +6,9 @@ local glreport = require 'gl.report'
 local table = require 'ext.table'
 local assertindex = require 'ext.assert'.index
 local showcode = require 'template.showcode'
-local GetBehavior = require 'gl.get'
+local GLGet = require 'gl.get'
 
-local GLShader = GetBehavior()
+local GLShader = GLGet.behavior()
 
 function GLShader:delete()
 	if self.id == nil then return end
@@ -18,17 +18,18 @@ end
 
 GLShader.__gc = GLShader.delete
 
+local glRetShaderi = GLGet.returnLastArgAsType('glGetShaderiv', 'GLint')
 GLShader:makeGetter{
 	-- wrap it so wgl can replace glGetShaderiv
-	getter = function(self, namevalue, result)
-		return gl.glGetShaderiv(self.id, namevalue, result)
+	getter = function(self, nameValue)
+		return glRetShaderi(self.id, nameValue)
 	end,
 	vars = {
-		{name='GL_SHADER_TYPE', type='GLint'},
-		{name='GL_DELETE_STATUS', type='GLint'},
-		{name='GL_COMPILE_STATUS', type='GLint'},
-		{name='GL_INFO_LOG_LENGTH', type='GLint'},
-		{name='GL_SHADER_SOURCE_LENGTH', type='GLint'},
+		{name='GL_SHADER_TYPE'},
+		{name='GL_DELETE_STATUS'},
+		{name='GL_COMPILE_STATUS'},
+		{name='GL_INFO_LOG_LENGTH'},
+		{name='GL_SHADER_SOURCE_LENGTH'},
 	},
 }
 

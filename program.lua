@@ -5,7 +5,7 @@ local glreport = require 'gl.report'
 local table = require 'ext.table'
 local string = require 'ext.string'
 local op = require 'ext.op'
-local GetBehavior = require 'gl.get'
+local GLGet = require 'gl.get'
 local GLShader = require 'gl.shader'
 local GLAttribute = require 'gl.attribute'
 local GLArrayBuffer = require 'gl.arraybuffer'
@@ -149,7 +149,7 @@ local function getUniformSettersForGLType(utype)
 	return setters
 end
 
-local GLProgram = GetBehavior()
+local GLProgram = GLGet.behavior()
 
 function GLProgram:delete()
 	if self.id == nil then return end
@@ -198,55 +198,33 @@ end
 
 GLProgram.checkLinkStatus = GLShader.createCheckStatus('GL_LINK_STATUS', function(...) return gl.glGetProgramInfoLog(...) end)
 
--- TODO implement gl.get for all the glGet* functions not associated with any objects/binds
--- not sure if I should bother implementing them associated with getters
--- or maybe I'll just put these 'getGlobal*'s in gl/get.lua ...
-
-local function getGlobal(self, namedparam, results)
-	gl.glGetIntegerv(namedparam, results)
-end
-
-local function getGlobal3(self, namedparam, results)
-	for i=0,2 do
-		gl.glGetIntegeri_v(namedparam, i, results+i)
-	end
-end
-
+local glRetProgrami = GLGet.returnLastArgAsType('glGetProgramiv', 'GLint')
 GLProgram:makeGetter{
 	-- wrap it so wgl can replace glGetShaderiv
-	getter = function(self, namevalue, result)
-		return gl.glGetProgramiv(self.id, namevalue, result)
+	getter = function(self, nameValue)
+		return glRetProgrami(self.id, nameValue)
 	end,
 	vars = table{
-		{name='GL_DELETE_STATUS', type='GLint'},
-		{name='GL_LINK_STATUS', type='GLint'},
-		{name='GL_VALIDATE_STATUS', type='GLint'},
-		{name='GL_INFO_LOG_LENGTH', type='GLint'},
-		{name='GL_ATTACHED_SHADERS', type='GLint'},
-		{name='GL_ACTIVE_ATTRIBUTES', type='GLint'},
-		{name='GL_ACTIVE_ATTRIBUTE_MAX_LENGTH', type='GLint'},
-		{name='GL_ACTIVE_UNIFORMS', type='GLint'},
-		{name='GL_ACTIVE_UNIFORM_MAX_LENGTH', type='GLint'},
-		{name='GL_ACTIVE_ATOMIC_COUNTER_BUFFERS', type='GLint'},
-		{name='GL_PROGRAM_BINARY_LENGTH', type='GLint'},
-		{name='GL_TRANSFORM_FEEDBACK_BUFFER_MODE', type='GLint'},
-		{name='GL_TRANSFORM_FEEDBACK_VARYINGS', type='GLint'},
-		{name='GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH', type='GLint'},
+		{name='GL_DELETE_STATUS'},
+		{name='GL_LINK_STATUS'},
+		{name='GL_VALIDATE_STATUS'},
+		{name='GL_INFO_LOG_LENGTH'},
+		{name='GL_ATTACHED_SHADERS'},
+		{name='GL_ACTIVE_ATTRIBUTES'},
+		{name='GL_ACTIVE_ATTRIBUTE_MAX_LENGTH'},
+		{name='GL_ACTIVE_UNIFORMS'},
+		{name='GL_ACTIVE_UNIFORM_MAX_LENGTH'},
+		{name='GL_ACTIVE_ATOMIC_COUNTER_BUFFERS'},
+		{name='GL_PROGRAM_BINARY_LENGTH'},
+		{name='GL_TRANSFORM_FEEDBACK_BUFFER_MODE'},
+		{name='GL_TRANSFORM_FEEDBACK_VARYINGS'},
+		{name='GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH'},
 	}:append(
 		GLGeometryShader
 		and {
-			{name='GL_GEOMETRY_VERTICES_OUT', type='GLint'},
-			{name='GL_GEOMETRY_INPUT_TYPE', type='GLint'},
-			{name='GL_GEOMETRY_OUTPUT_TYPE', type='GLint'},
-		} or nil
-	):append(
-		GLComputeShader
-		and {
-			-- global getters, not associated with the program
-			{name='GL_COMPUTE_WORK_GROUP_SIZE', type='GLint'},
-			{name='GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS', type='GLuint', getter=getGlobal},
-			{name='GL_MAX_COMPUTE_WORK_GROUP_COUNT', type='GLuint[3]', getter=getGlobal3},
-			{name='GL_MAX_COMPUTE_WORK_GROUP_SIZE', type='GLuint[3]', getter=getGlobal3},
+			{name='GL_GEOMETRY_VERTICES_OUT'},
+			{name='GL_GEOMETRY_INPUT_TYPE'},
+			{name='GL_GEOMETRY_OUTPUT_TYPE'},
 		} or nil
 	),
 }

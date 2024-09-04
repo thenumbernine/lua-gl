@@ -7,71 +7,77 @@ or TODO use bind-less textures?
 require 'ext.gc'	-- make sure luajit can __gc lua-tables
 local ffi = require 'ffi'
 local gl = require 'gl'
-local GetBehavior = require 'gl.get'
+local GLGet = require 'gl.get'
 local class = require 'ext.class'
 local table = require 'ext.table'
 local op = require 'ext.op'
 local bit = bit32 or require 'bit'
 local GLTypes = require 'gl.types'
 
-local GLTex = GetBehavior()
+local GLTex = GLGet.behavior()
 
--- assumes tex is already bound to target
-local function getteriv(self, namevalue, result)
+local glRetTexParami = GLGet.returnLastArgAsType('glGetTextureParameteriv', 'GLint')
+local function getteri(self, nameValue)
 	-- if we're GL 4.5 then we can use glGetTextureParameter* which accepts self.id (like glGetProgram and like the whole CL API)
 	-- but otherwise (incl all GLES) we have to use glGetTexParameter*
 	-- GL has glGetTextureParameterfv & -iv
 	-- GLES1 has only glGetTexParameterf
 	-- GLES2 and 3 have glGetTexParameterf and -i
-	return gl.glGetTextureParameteriv(self.target, namevalue, result)
+	return glRetTexParami(self.target, nameValue)
 end
 
 -- hmm 'getter' means call the getter above, which is a wrapper for glGet*
 -- so mayb i have to put th branch in the getter above fr now ....
 -- another TODO is this should be getterf for GLES2 ... and for GLES1 *all* texture getters are getterf ...
-local function getterfv(self, namevalue, result)
-	return gl.glGetTextureParameterfv(self.target, namevalue, result)
+local glRetTexParamf = GLGet.returnLastArgAsType('glGetTextureParameterfv', 'GLfloat')
+local function glRetTexParamfForObj(self, nameValue)
+	return glRetTexParamf(self.target, nameValue)
+end
+
+local glRetTexParamf4 = GLGet.returnLastArgAsType('glGetTextureParameterfv', 'GLfloat', 4)
+local function glRetTexParamf4ForObj(self, nameValue)
+	return glRetTexParamf4(self.target, nameValue)
 end
 
 GLTex:makeGetter{
 	-- default use int
 	-- TODO map and assign based on type and on gl version
-	getter = getteriv,
+	getter = getteri,
 	-- https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetTexParameter.xhtml
 	-- would be nice if the docs specified what getter result type was preferred
 	vars = {
-		{name='GL_TEXTURE_MAG_FILTER', type='GLuint'},
-		{name='GL_TEXTURE_MIN_FILTER', type='GLuint'},
-		{name='GL_TEXTURE_MIN_LOD', type='GLfloat', getter=getterfv},
-		{name='GL_TEXTURE_MAX_LOD', type='GLfloat', getter=getterfv},
-		{name='GL_TEXTURE_BASE_LEVEL', type='GLuint'},
-		{name='GL_TEXTURE_MAX_LEVEL', type='GLuint'},
-		{name='GL_TEXTURE_SWIZZLE_R', type='GLuint'},
-		{name='GL_TEXTURE_SWIZZLE_G', type='GLuint'},
-		{name='GL_TEXTURE_SWIZZLE_B', type='GLuint'},
-		{name='GL_TEXTURE_SWIZZLE_A', type='GLuint'},
-		{name='GL_TEXTURE_SWIZZLE_RGBA', type='GLuint[4]'},
-		{name='GL_TEXTURE_WRAP_S', type='GLuint'},
-		{name='GL_TEXTURE_WRAP_T', type='GLuint'},
-		{name='GL_TEXTURE_WRAP_R', type='GLuint'},
-		{name='GL_TEXTURE_BORDER_COLOR', type='GLfloat[4]', getter=getterfv},
-		{name='GL_TEXTURE_COMPARE_MODE', type='GLuint'},
-		{name='GL_TEXTURE_COMPARE_FUNC', type='GLuint'},
-		{name='GL_TEXTURE_IMMUTABLE_FORMAT', type='GLuint'},
+		{name='GL_TEXTURE_MAG_FILTER'},
+		{name='GL_TEXTURE_MIN_FILTER'},
+		{name='GL_TEXTURE_MIN_LOD', getter=glRetTexParamfForObj},
+		{name='GL_TEXTURE_MAX_LOD', getter=glRetTexParamfForObj},
+		{name='GL_TEXTURE_BASE_LEVEL'},
+		{name='GL_TEXTURE_MAX_LEVEL'},
+		{name='GL_TEXTURE_SWIZZLE_R'},
+		{name='GL_TEXTURE_SWIZZLE_G'},
+		{name='GL_TEXTURE_SWIZZLE_B'},
+		{name='GL_TEXTURE_SWIZZLE_A'},
+		{name='GL_TEXTURE_SWIZZLE_RGBA', getter=glRetTexParamf4ForObj},
+		{name='GL_TEXTURE_WRAP_S'},
+		{name='GL_TEXTURE_WRAP_T'},
+		{name='GL_TEXTURE_WRAP_R'},
+		{name='GL_TEXTURE_BORDER_COLOR', getter=glRetTexParamf4ForObj},
+		{name='GL_TEXTURE_COMPARE_MODE'},
+		{name='GL_TEXTURE_COMPARE_FUNC'},
+		{name='GL_TEXTURE_IMMUTABLE_FORMAT'},
 
 		-- 4.2 or later
-		{name='GL_IMAGE_FORMAT_COMPATIBILITY_TYPE', type='GLuint'},
+		{name='GL_IMAGE_FORMAT_COMPATIBILITY_TYPE'},
 
 		-- 4.3 or later
-		{name='GL_DEPTH_STENCIL_TEXTURE_MODE', type='GLuint'},
-		{name='GL_TEXTURE_VIEW_MIN_LEVEL', type='GLuint'},
-		{name='GL_TEXTURE_VIEW_NUM_LEVELS', type='GLuint'},
-		{name='GL_TEXTURE_VIEW_MIN_LAYER', type='GLuint'},
-		{name='GL_TEXTURE_VIEW_NUM_LAYERS', type='GLuint'},
-		{name='GL_TEXTURE_IMMUTABLE_LEVELS', type='GLuint'},
+		{name='GL_DEPTH_STENCIL_TEXTURE_MODE'},
+		{name='GL_TEXTURE_VIEW_MIN_LEVEL'},
+		{name='GL_TEXTURE_VIEW_NUM_LEVELS'},
+		{name='GL_TEXTURE_VIEW_MIN_LAYER'},
+		{name='GL_TEXTURE_VIEW_NUM_LAYERS'},
+		{name='GL_TEXTURE_IMMUTABLE_LEVELS'},
 
 		-- 4.5 or later
-		{name='GL_TEXTURE_TARGET', type='GLuint'},
+		{name='GL_TEXTURE_TARGET'},
 	},
 }
 
