@@ -12,61 +12,43 @@ local GLGlobal = GLGet.behavior()
 local function makeString(name)
 	return {
 		name = name,
-		getter = function(self, nameValue)
-			return GLGet.string(nameValue)
-		end,
+		getter = function(self, nameValue) return GLGet.string(nameValue) end,
 	}
 end
 
 local function makeBoolean(name)
 	return {
 		name = name,
-		getter = function(self, nameValue)
-			return GLGet.boolean(nameValue)
-		end,
+		getter = function(self, nameValue) return GLGet.boolean(nameValue) end,
 	}
 end
 
 local function makeInt(name)
 	return {
 		name = name,
-		getter = function(self, nameValue)
-			return GLGet.int(nameValue)
-		end,
+		getter = function(self, nameValue) return GLGet.int(nameValue) end,
 	}
 end
 
 local function makeInt64(name)
 	return {
 		name = name,
-		getter = function(self, nameValue)
-			return GLGet.int64(nameValue)
-		end,
+		getter = function(self, nameValue) return GLGet.int64(nameValue) end,
 	}
 end
 
 local function makeFloat(name)
 	return {
 		name = name,
-		getter = function(self, nameValue)
-			return GLGet.float(nameValue)
-		end,
+		getter = function(self, nameValue) return GLGet.float(nameValue) end,
 	}
 end
 
 local function makeDouble(name)
 	return {
 		name = name,
-		getter = function(self, nameValue)
-			return GLGet.double(nameValue)
-		end,
+		getter = function(self, nameValue) return GLGet.double(nameValue) end,
 	}
-end
-
-local function makeN(var, count)
-	local oldGetter = assertindex(var, 'getter')
-	var.getter = function(...)
-	end
 end
 
 local function makeBooleanN(name, count)
@@ -197,17 +179,19 @@ local function makeInt64Vec(name, count)
 end
 
 local version
+require 'gl.report''before determining GL version'
 local tmp = xpcall(function()
 	local major = assert(GLGet.int'GL_MAJOR_VERSION')
 	local minor = assert(GLGet.int'GL_MINOR_VERSION')
 	version = major + .1 * minor
 end, function(err)
-	print('first attempt to get gl version failed: '..err)
+	print('first attempt to get gl version failed: '..tostring(err))
 end) or xpcall(function()
 	version = (GLGet.string'GL_VERSION' or ''):split'%s+'[1]
 	version = assert(tonumber(version), 'failed to parse '..tostring(version))
 end, function(err)
-	print('second attempt to get gl version failed: '..err)
+	print('second attempt to get gl version failed: '..tostring(err))
+end) or xpcall(function()
 	-- look for GL_VERSION's defined ...
 	--major * 100 + minor
 	for _,v in ipairs{101, 102, 103, 104, 105, 200, 201, 300, 301, 302, 303, 400, 401, 402, 403, 404, 405, 406} do
@@ -219,8 +203,13 @@ print('testing', k, op.safeindex(gl, k))
 			then return a + .1 * b
 		end
 	end
-	error("exhausted all options")
-end) or error("couldn't get the GL version")
+	error("exhausted all versions")
+end, function(err)
+    print('third attempt to get gl version failed: '..tostring(err))
+end) or (function()
+    print("couldn't get the GL version ... assuming 1.1")
+    version = 1.1
+end)()
 
 GLGlobal:makeGetter{
 	getter = function(self, nameValue, result)
