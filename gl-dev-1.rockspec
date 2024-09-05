@@ -20,6 +20,7 @@ build = {
 		["gl.buffer"] = "buffer.lua",
 		["gl.call"] = "call.lua",
 		["gl.elementarraybuffer"] = "elementarraybuffer.lua",
+		["gl.error"] = "error.lua",
 		["gl.fbo"] = "fbo.lua",
 		["gl.geometry"] = "geometry.lua",
 		["gl.get"] = "get.lua",
