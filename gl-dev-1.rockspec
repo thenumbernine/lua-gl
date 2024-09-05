@@ -24,6 +24,7 @@ build = {
 		["gl.fbo"] = "fbo.lua",
 		["gl.geometry"] = "geometry.lua",
 		["gl.get"] = "get.lua",
+		["gl.global"] = "global.lua",
 		["gl"] = "gl.lua",
 		["gl.gradienttex"] = "gradienttex.lua",
 		["gl.gradienttex2d"] = "gradienttex2d.lua",
