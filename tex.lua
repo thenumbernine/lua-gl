@@ -105,6 +105,7 @@ function GLTex:init(args)
 	gl.glGenTextures(1, ptr)
 	self.id = ptr[0]
 
+	self.target = args.target	-- if we override then do so before :bind()
 	self:bind()
 	if args.filename or args.image then
 		self:load(args)
