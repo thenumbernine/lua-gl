@@ -73,8 +73,8 @@ local function getUniformSettersForGLType(utype)
 			GL_SAMPLER_2D_MULTISAMPLE_ARRAY = {glsltype='sampler2DMSArray'},
 			GL_SAMPLER_CUBE_SHADOW = {glsltype='samplerCubeShadow'},
 			GL_SAMPLER_BUFFER = {glsltype='samplerBuffer'},
-			GL_SAMPLER_2D_RECT = {glsltype='sampler2DRect'},
-			GL_SAMPLER_2D_RECT_SHADOW = {glsltype='sampler2DRectShadow'},
+			GL_SAMPLER_2D_RECT = {arg='glUniform1i', glsltype='sampler2DRect'},
+			GL_SAMPLER_2D_RECT_SHADOW = {arg='glUniform1i', glsltype='sampler2DRectShadow'},
 			GL_INT_SAMPLER_1D = {arg='glUniform1i', glsltype='isampler1D'},
 			GL_INT_SAMPLER_2D = {arg='glUniform1i', glsltype='isampler2D'},
 			GL_INT_SAMPLER_3D = {arg='glUniform1i', glsltype='isampler3D'},
@@ -84,7 +84,7 @@ local function getUniformSettersForGLType(utype)
 			GL_INT_SAMPLER_2D_MULTISAMPLE = {glsltype='isampler2DMS'},
 			GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY = {glsltype='isampler2DMSArray'},
 			GL_INT_SAMPLER_BUFFER = {glsltype='isamplerBuffer'},
-			GL_INT_SAMPLER_2D_RECT = {glsltype='isampler2DRect'},
+			GL_INT_SAMPLER_2D_RECT = {arg='glUniform1i', glsltype='isampler2DRect'},
 			GL_UNSIGNED_INT_SAMPLER_1D = {arg='glUniform1i', glsltype='usampler1D'},
 			GL_UNSIGNED_INT_SAMPLER_2D = {arg='glUniform1i', glsltype='usampler2D'},
 			GL_UNSIGNED_INT_SAMPLER_3D = {arg='glUniform1i', glsltype='usampler3D'},
@@ -95,31 +95,31 @@ local function getUniformSettersForGLType(utype)
 			GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY = {arg='glUniform1i', glsltype='usampler2DMSArray'},
 			GL_UNSIGNED_INT_SAMPLER_BUFFER = {arg='glUniform1i', glsltype='usamplerBuffer'},
 			GL_UNSIGNED_INT_SAMPLER_2D_RECT = {arg='glUniform1i', glsltype='usampler2DRect'},
-			GL_IMAGE_1D = {glsltype='image1D'},
-			GL_IMAGE_2D = {glsltype='image2D'},
-			GL_IMAGE_3D = {glsltype='image3D'},
-			GL_IMAGE_2D_RECT = {glsltype='image2DRect'},
+			GL_IMAGE_1D = {arg='glUniform1i', glsltype='image1D'},
+			GL_IMAGE_2D = {arg='glUniform1i', glsltype='image2D'},
+			GL_IMAGE_3D = {arg='glUniform1i', glsltype='image3D'},
+			GL_IMAGE_2D_RECT = {arg='glUniform1i', glsltype='image2DRect'},
 			GL_IMAGE_CUBE = {glsltype='imageCube'},
 			GL_IMAGE_BUFFER = {glsltype='imageBuffer'},
 			GL_IMAGE_1D_ARRAY = {glsltype='image1DArray'},
 			GL_IMAGE_2D_ARRAY = {glsltype='image2DArray'},
 			GL_IMAGE_2D_MULTISAMPLE = {glsltype='image2DMS'},
 			GL_IMAGE_2D_MULTISAMPLE_ARRAY = {glsltype='image2DMSArray'},
-			GL_INT_IMAGE_1D = {glsltype='iimage1D'},
-			GL_INT_IMAGE_2D = {glsltype='iimage2D'},
-			GL_INT_IMAGE_3D = {glsltype='iimage3D'},
-			GL_INT_IMAGE_2D_RECT = {glsltype='iimage2DRect'},
-			GL_INT_IMAGE_CUBE = {glsltype='iimageCube'},
+			GL_INT_IMAGE_1D = {arg='glUniform1i', glsltype='iimage1D'},
+			GL_INT_IMAGE_2D = {arg='glUniform1i', glsltype='iimage2D'},
+			GL_INT_IMAGE_3D = {arg='glUniform1i', glsltype='iimage3D'},
+			GL_INT_IMAGE_2D_RECT = {arg='glUniform1i', glsltype='iimage2DRect'},
+			GL_INT_IMAGE_CUBE = {arg='glUniform1i', glsltype='iimageCube'},
 			GL_INT_IMAGE_BUFFER = {glsltype='iimageBuffer'},
 			GL_INT_IMAGE_1D_ARRAY = {glsltype='iimage1DArray'},
 			GL_INT_IMAGE_2D_ARRAY = {glsltype='iimage2DArray'},
 			GL_INT_IMAGE_2D_MULTISAMPLE = {glsltype='iimage2DMS'},
 			GL_INT_IMAGE_2D_MULTISAMPLE_ARRAY = {glsltype='iimage2DMSArray'},
-			GL_UNSIGNED_INT_IMAGE_1D = {glsltype='uimage1D'},
-			GL_UNSIGNED_INT_IMAGE_2D = {glsltype='uimage2D'},
-			GL_UNSIGNED_INT_IMAGE_3D = {glsltype='uimage3D'},
-			GL_UNSIGNED_INT_IMAGE_2D_RECT = {glsltype='uimage2DRect'},
-			GL_UNSIGNED_INT_IMAGE_CUBE = {glsltype='uimageCube'},
+			GL_UNSIGNED_INT_IMAGE_1D = {arg='glUniform1i', glsltype='uimage1D'},
+			GL_UNSIGNED_INT_IMAGE_2D = {arg='glUniform1i', glsltype='uimage2D'},
+			GL_UNSIGNED_INT_IMAGE_3D = {arg='glUniform1i', glsltype='uimage3D'},
+			GL_UNSIGNED_INT_IMAGE_2D_RECT = {arg='glUniform1i', glsltype='uimage2DRect'},
+			GL_UNSIGNED_INT_IMAGE_CUBE = {arg='glUniform1i', glsltype='uimageCube'},
 			GL_UNSIGNED_INT_IMAGE_BUFFER = {glsltype='uimageBuffer'},
 			GL_UNSIGNED_INT_IMAGE_1D_ARRAY = {glsltype='uimage1DArray'},
 			GL_UNSIGNED_INT_IMAGE_2D_ARRAY = {glsltype='uimage2DArray'},
@@ -533,12 +533,12 @@ function GLProgram:setUniform(name, value, ...)
 		elseif setters.mat then
 			setters.mat(loc, 1, false, value)
 		else
-			error("failed to find array setter for uniform "..name)
+			error("failed to find array setter for uniform "..name..' type '..info.type)
 		end
-	elseif valueType ~= 'table'then
+	elseif valueType ~= 'table' then
 		local setter = setters.arg
 		if not setter then
-			error("failed to find non-array setter for uniform "..name)
+			error("failed to find non-array setter for uniform "..name..' type '..info.type)
 		end
 		setter(loc, value, ...)
 	else
@@ -552,7 +552,7 @@ function GLProgram:setUniform(name, value, ...)
 			-- TODO c data conversion
 			setters.mat(loc, 1, false, value)
 		else
-			error("failed to find array setter for uniform "..name)
+			error("failed to find array setter for uniform "..name..' type '..info.type)
 		end
 	end
 	return self
