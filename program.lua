@@ -34,9 +34,9 @@ local function getUniformSettersForGLType(utype)
 			GL_INT_VEC3 = {arg='glUniform3i', type='int', count=3, vec=gl.glUniform3iv, glsltype='ivec3'},
 			GL_INT_VEC4 = {arg='glUniform4i', type='int', count=4, vec=gl.glUniform4iv, glsltype='ivec4'},
 			GL_UNSIGNED_INT = {arg='glUniform1ui', glsltype='unsigned int'},
-			GL_UNSIGNED_INT_VEC2 = {arg='glUniform2ui', type='unsigned int', count=2, vec=gl.glUniform2iv, glsltype='uvec2'},
-			GL_UNSIGNED_INT_VEC3 = {arg='glUniform3ui', type='unsigned int', count=3, vec=gl.glUniform3iv, glsltype='uvec3'},
-			GL_UNSIGNED_INT_VEC4 = {arg='glUniform4ui', type='unsigned int', count=4, vec=gl.glUniform4iv, glsltype='uvec4'},
+			GL_UNSIGNED_INT_VEC2 = {arg='glUniform2ui', type='unsigned int', count=2, vec=gl.glUniform2uiv, glsltype='uvec2'},
+			GL_UNSIGNED_INT_VEC3 = {arg='glUniform3ui', type='unsigned int', count=3, vec=gl.glUniform3uiv, glsltype='uvec3'},
+			GL_UNSIGNED_INT_VEC4 = {arg='glUniform4ui', type='unsigned int', count=4, vec=gl.glUniform4uiv, glsltype='uvec4'},
 			GL_BOOL = {arg='glUniform1i', glsltype='bool'},
 			GL_BOOL_VEC2 = {arg='glUniform2i', type='int', count=2, vec=gl.glUniform2iv, glsltype='bvec2'},
 			GL_BOOL_VEC3 = {arg='glUniform3i', type='int', count=3, vec=gl.glUniform3iv, glsltype='bvec3'},
@@ -541,8 +541,10 @@ function GLProgram:setUniform(name, value, ...)
 			error("failed to find non-array setter for uniform "..name..' type '..info.type)
 		end
 		setter(loc, value, ...)
-	else
-		if setters.vec then
+	else	-- table
+		if setters.arg then
+			setters.arg(loc, table.unpack(value, 1, setters.count))
+		elseif setters.vec then
 			local cdata = ffi.new(setters.type..'['..setters.count..']')
 			for i=1,setters.count do
 				cdata[i-1] = value[i]
