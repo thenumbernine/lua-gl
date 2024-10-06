@@ -152,12 +152,6 @@ GLAttribute fields:
 		gathered from a GLProgram
 		use this to set both the type and dim simultaneously
 
-		https://registry.khronos.org/OpenGL-Refpages/gl4/html/glVertexAttribPointer.xhtml
-		- if .glslType is present and is an int-type then glVertexAttribIPointer should be used? right? that's what the docs say glVertexAttribIPointer is to be used with.
-			but it reads like glVertexAttribIPointer can only accept int-CPU-side-data ... but forums https://stackoverflow.com/a/18926905 say that it's to be used with int-GPU-side-data ...
-			SMH
-		- but glVertexAttribLPointer is only used with GL_DOUBLE ... so the L doesn't stand for 'long', it stands for 'double' ... ?
-
 	arraySize = array size.  3 for "attribute float attr[3];"
 
 TODO make a subclass of this specific to GLProgram queried attributes.
@@ -211,10 +205,18 @@ end
 -- assumes the buffer is bound
 function GLAttribute:setPointer(loc)
 	loc = loc or self.loc
-	-- TODO add an option for glVertexAttribIPointer
-	-- but how to determine which to use?
-	-- if self.type specifies the CPU-side data, should self.glslType store the GPU-side data?
-	-- 	and would we want separate variables for the underlying storage (float vs int) versus the dimension storage (vec3 vs ivec3) ?
+--[[
+TODO add an option for glVertexAttribIPointer
+but how to determine which to use?
+if self.type specifies the CPU-side data, should self.glslType store the GPU-side data?
+and would we want separate variables for the underlying storage (float vs int) versus the dimension storage (vec3 vs ivec3) ?
+
+https://registry.khronos.org/OpenGL-Refpages/gl4/html/glVertexAttribPointer.xhtml
+- if .glslType is present and is an int-type then glVertexAttribIPointer should be used? right? that's what the docs say glVertexAttribIPointer is to be used with.
+	but it reads like glVertexAttribIPointer can only accept int-CPU-side-data ... but forums https://stackoverflow.com/a/18926905 say that it's to be used with int-GPU-side-data ...
+	SMH
+- but glVertexAttribLPointer is only used with GL_DOUBLE ... so the L doesn't stand for 'long', it stands for 'double' ... ?
+--]]
 	local glslPrimType
 	if self.glslType then
 		glslPrimType = self.getGLTypeAndDimForGLSLType[self.glslType][1]
