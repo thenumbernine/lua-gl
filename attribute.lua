@@ -130,6 +130,7 @@ GLAttribute fields:
 
 	dim = number of elements. 1,2,3,4
 	type = GL_FLOAT, etc.
+		specifies the CPU-side data type
 		if dim and type are not defined then they are inferred from glslType
 
 	normalize = flag, true/false.
@@ -147,8 +148,15 @@ GLAttribute fields:
 	loc = (optional) GLSL attribute location in the shader
 
 	glslType = (optional) ex: gl.GL_FLOAT_MAT2x4
+		specifies the GPU-side data type
 		gathered from a GLProgram
 		use this to set both the type and dim simultaneously
+
+		https://registry.khronos.org/OpenGL-Refpages/gl4/html/glVertexAttribPointer.xhtml
+		- if .glslType is present and is an int-type then glVertexAttribIPointer should be used? right? that's what the docs say glVertexAttribIPointer is to be used with.
+			but it reads like glVertexAttribIPointer can only accept int-CPU-side-data ... but forums https://stackoverflow.com/a/18926905 say that it's to be used with int-GPU-side-data ...
+			SMH
+		- but glVertexAttribLPointer is only used with GL_DOUBLE ... so the L doesn't stand for 'long', it stands for 'double' ... ?
 
 	arraySize = array size.  3 for "attribute float attr[3];"
 
@@ -166,21 +174,21 @@ function GLAttribute:init(args)
 
 	self.divisor = args.divisor
 
-	local glslType = args.glslType
+	self.glslType = args.glslType
 	-- dim is dimension of the data ... 1,2,3,4
 	-- type is GL_FLOAT etc
 	-- derive dim and type from the glslType
-	if glslType
+	if self.glslType
 	and not (self.type and self.dim)
 	then
 		if (self.type and self.dim) and (not self.type or not self.dim) then
 			error("you specified glslType and either type or dim but not both type and dim")
 		end
-		self.type, self.dim = table.unpack(self.getGLTypeAndDimForGLSLType[glslType]
-			or error('missing getGLTypeAndDimForGLSLType['..glslType..']')
+		self.type, self.dim = table.unpack(self.getGLTypeAndDimForGLSLType[self.glslType]
+			or error('missing getGLTypeAndDimForGLSLType['..self.glslType..']')
 		)
 		if not (self.type and self.dim) then
-			error("failed to deduce type and dim from glsl type "..glslType)
+			error("failed to deduce type and dim from glsl type "..self.glslType)
 		end
 	end
 	if not (self.type and self.dim) then
@@ -203,19 +211,40 @@ end
 -- assumes the buffer is bound
 function GLAttribute:setPointer(loc)
 	loc = loc or self.loc
---if loc == -1 then error'here' end
-	-- does glVertxAttribPointer associate loc with ptr *globally*
-	-- or does it associate this *per-shader* ?
-	-- whose state are we messing with?
-	-- same question for glEnableVertexAttrib
-	gl.glVertexAttribPointer(
-		loc,
-		self.dim,
-		self.type,
-		self.normalize and gl.GL_TRUE or gl.GL_FALSE,
-		self.stride,
-		self.offset
-	)
+	-- TODO add an option for glVertexAttribIPointer
+	-- but how to determine which to use?
+	-- if self.type specifies the CPU-side data, should self.glslType store the GPU-side data?
+	-- 	and would we want separate variables for the underlying storage (float vs int) versus the dimension storage (vec3 vs ivec3) ?
+	local glslPrimType
+	if self.glslType then
+		glslPrimType = self.getGLTypeAndDimForGLSLType[self.glslType][1]
+	end
+	if glslPrimType == gl.GL_DOUBLE then
+		gl.glVertexAttribLPointer(
+			loc,
+			self.dim,
+			self.type,
+			self.stride,
+			self.offset
+		)
+	elseif glslPrimType == gl.GL_INT or glslPrimType == gl.GL_UNSIGNED_INT then
+		gl.glVertexAttribIPointer(
+			loc,
+			self.dim,
+			self.type,
+			self.stride,
+			self.offset
+		)
+	else
+		gl.glVertexAttribPointer(
+			loc,
+			self.dim,
+			self.type,
+			self.normalize and gl.GL_TRUE or gl.GL_FALSE,
+			self.stride,
+			self.offset
+		)
+	end
 	return self
 end
 
