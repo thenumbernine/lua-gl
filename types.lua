@@ -35,6 +35,7 @@ GLTypes.gltypeForCType = table{
 end):setmetatable(nil)
 
 -- inverse of 'gltypeForCType' (which I should rename)
+-- TODO use GLTex.formatInfos
 GLTypes.ctypeForGLType = table{
 	-- these types are per-channel
 	GL_UNSIGNED_BYTE = 'uint8_t',
