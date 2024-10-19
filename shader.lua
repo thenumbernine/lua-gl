@@ -4,7 +4,7 @@ local ffi = require 'ffi'
 local gl = require 'gl'
 local glreport = require 'gl.report'
 local table = require 'ext.table'
-local assertindex = require 'ext.assert'.index
+local assert = require 'ext.assert'
 local showcode = require 'template.showcode'
 local GLGet = require 'gl.get'
 
@@ -51,7 +51,7 @@ glreport'GLShader:init'
 	if type(args) == 'string' then
 		code = args
 	else
-		code = assertindex(args, 'code')
+		code = assert.index(args, 'code')
 		if args.header then
 			code = args.header..'\n'..code
 		end

@@ -2,8 +2,7 @@ require 'ext.gc'	-- make sure luajit can __gc lua-tables
 local ffi = require 'ffi'
 local vector = require 'ffi.cpp.vector-lua'
 local op = require 'ext.op'
-local assertindex = require 'ext.assert'.index
-local asserteq = require 'ext.assert'.eq
+local assert = require 'ext.assert'
 local table = require 'ext.table'
 local class = require 'ext.class'
 local vec2f = require 'vec-ffi.vec2f'
@@ -47,8 +46,8 @@ function Buffer:init(args)
 	self.usage = args.usage or gl.GL_STATIC_DRAW
 
 	if args.useVec then
-		local dim = assertindex(args, 'dim')
-		local vec = vector(assertindex({
+		local dim = assert.index(args, 'dim')
+		local vec = vector(assert.index({
 			'float',
 			'vec2f_t',
 			'vec3f_t',
@@ -188,14 +187,14 @@ end
 function Buffer:beginUpdate(checkCapacity)
 	local vec = assert(self.vec, "use beginVtx with GLBuffers initialized with useVec=true")
 	self.oldcap = vec.capacity
-	if checkCapacity then asserteq(self.oldcap, checkCapacity) end
+	if checkCapacity then assert.eq(self.oldcap, checkCapacity) end
 	vec:resize(0)
 	return vec
 end
 
 function Buffer:endUpdate(checkCapacity)
 	local vec = assert(self.vec, "use beginVtx with GLBuffers initialized with useVec=true")
-	if checkCapacity then asserteq(vec.capacity, checkCapacity) end
+	if checkCapacity then assert.eq(vec.capacity, checkCapacity) end
 	if vec.capacity ~= self.oldcap then
 		self:bind()
 			:setData{
@@ -206,7 +205,7 @@ function Buffer:endUpdate(checkCapacity)
 			}
 	else
 		-- data cap hasn't resized / data ptr hasn't moved / just copy
-		asserteq(vec.v, self.data)
+		assert.eq(vec.v, self.data)
 		self:bind()
 			-- only need to upload as much as we're using
 			:updateData(0, ffi.sizeof(vec.type) * vec.size)

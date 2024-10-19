@@ -2,8 +2,7 @@ local ffi = require 'ffi'
 local table = require 'ext.table'
 local range = require 'ext.range'
 local op = require 'ext.op'
-local asserttype = require 'ext.assert'.type
-local assertindex = require 'ext.assert'.index
+local assert = require 'ext.assert'
 local gl = require 'gl'
 local GLGet = require 'gl.get'
 
@@ -106,7 +105,7 @@ local function makeInts(name, numName)
 			local num = table.pack(self:get(numName))
 			if not num[1] then return num:unpack() end
 			num = num[1]
-			asserttype(num, 'number')
+			assert.type(num, 'number')
 
 			-- if it's a getter that gets the whole array ...
 			local result = ffi.new('GLint[?]', num)
@@ -125,10 +124,10 @@ end
 --  so I will call the i_v or the regular depending on if an argument is used
 local glSafeCall = require 'gl.error'.glSafeCall
 local function makeVec(args)
-	local name = assertindex(args, 'name')
-	local ctype = assertindex(args, 'type')
-	local getterName = assertindex(args, 'getterName')
-	local indexedGetterName = assertindex(args, 'indexedGetterName')
+	local name = assert.index(args, 'name')
+	local ctype = assert.index(args, 'type')
+	local getterName = assert.index(args, 'getterName')
+	local indexedGetterName = assert.index(args, 'indexedGetterName')
 	local count = args.count or 1
 
 	local getter = op.safeindex(gl, getterName)

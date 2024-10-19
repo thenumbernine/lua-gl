@@ -15,8 +15,7 @@ local ffi = require 'ffi'
 local class = require 'ext.class'
 local table = require 'ext.table'
 local op = require 'ext.op'
-local asserttype = require 'ext.assert'.type
-local assertindex = require 'ext.assert'.index
+local assert = require 'ext.assert'
 local gl = require 'gl'
 local glreport = require 'gl.report'
 local glSafeCall = require 'gl.error'.glSafeCall
@@ -102,8 +101,8 @@ local function behavior(parent)
 		local getter = assert(args.getter)
 		local vars = assert(args.vars)
 		for _,var in ipairs(vars) do
-			local name = assertindex(var, 'name')
-			asserttype(name, 'string')
+			local name = assert.index(var, 'name')
+			assert.type(name, 'string')
 			var.nameValue = op.safeindex(gl, name)
 			if var.nameValue then
 				-- keep any per-variable assigned getter if it was specified
