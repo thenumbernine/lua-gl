@@ -56,6 +56,9 @@ function Buffer:init(args)
 		self.vec = vec
 		assert(not self.data)
 		args.data = self.vec.v
+		-- hmmmmmm why .capacity and not .size?
+		-- probably so the gl buffer doesn't need to reallocate until the cpu vector does ...
+		-- but for all the times we're not using dynamic sized buffers, this is a waste of space ...
 		args.size = ffi.sizeof(vec.type) * vec.capacity
 	end
 
