@@ -207,14 +207,24 @@ end
 function GLSceneObject:beginUpdate()
 	local vtxbuf = self.attrs.vertex.buffer
 	for _,attr in pairs(self.attrs) do
-		attr.buffer:beginUpdate(vtxbuf.vec.capacity)
+		if not attr.divisor then
+			attr.buffer:beginUpdate(vtxbuf.vec.capacity)
+		else
+			-- TODO ...
+			attr.buffer:beginUpdate()
+		end
 	end
 end
 
 function GLSceneObject:endUpdate()
 	local vtxbuf = self.attrs.vertex.buffer
 	for name,attr in pairs(self.attrs) do
-		attr.buffer:endUpdate(vtxbuf.vec.capacity)
+		if not attr.divisor then
+			attr.buffer:endUpdate(vtxbuf.vec.capacity)
+		else
+			-- TODO ...
+			attr.buffer:endUpdate()
+		end
 	end
 	self.geometry.count = #vtxbuf.vec
 	self:draw()
