@@ -89,12 +89,6 @@ function GLVertexArray:setAttrs(attrs)
 	for _,attr in ipairs(attrs or self.attrs) do
 		-- set the attr w/buffer <-> bind buffer, set pointer (to buffer), unbind buffer
 		attr:enableAndSet()
-		-- not sure if I should merge this into 'attr:enableAndSet()'
-		-- or if I should keep it here
-		-- or if I should move all attribute behavior into here?
-		if attr.divisor then
-			gl.glVertexAttribDivisor(attr.loc, attr.divisor)
-		end
 	end
 	-- unbind the vao
 	self:unbind()
