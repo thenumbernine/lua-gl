@@ -274,10 +274,23 @@ function GLAttribute:set(loc)
 	return self
 end
 
+function GLAttribute:setDivisor(loc, divisor)
+	-- not sure if I should keep this here
+	-- or if I should put it back in GLVertexArray:enable
+	-- or if I should move all attribute behavior into here?
+	divisor = divisor or self.divisor
+	if divisor then
+		loc = loc or self.loc
+		gl.glVertexAttribDivisor(loc, divisor)
+	end
+	return self
+end
+
 function GLAttribute:enableAndSet(loc)
 	return self
 		:enable(loc)
 		:set(loc)
+		:setDivisor(loc)
 end
 
 return GLAttribute

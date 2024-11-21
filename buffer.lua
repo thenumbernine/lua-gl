@@ -26,8 +26,14 @@ args:
 		- ElementalArrayBuffer, where it expects a GL primitive type const (GL_UNSIGNED_INT, etc)
 			- notice that Attribute also expects GL primitive type const
 		- Buffer:setData, when used with Lua data, where it expects a string / ffi typename, for casting data
-			- TODO instead in this function I shoul derive ctype from GL type
+			- TODO instead in this function I should derive ctype from GL type
 			- and then probably be putting the mapping between ffi types, gl primitive types, gl shader types (including vectors/matrices) all in one place
+			- or better yet, derive GL type from C type
+			- or better yet (texture case), specify both explicitly
+
+	useVec = (optional) set to initialze .vec as a stl-like vector to use as the CPU side of the buffer.  works with :beginUpdate() and :endUpdate()
+	ctype = (optional) used with useVec.  otherwise it uses .dim x float.
+		TODO should ctype use dim as well, and be a vector-of-vec-of-ctype-x-dim ?
 
 	count (optional) ...
 	dim (optional)
@@ -47,12 +53,15 @@ function Buffer:init(args)
 
 	if args.useVec then
 		local dim = assert.index(args, 'dim')
-		local vec = vector(assert.index({
-			'float',
-			'vec2f_t',
-			'vec3f_t',
-			'vec4f_t'
-		}, dim), self.count or 0)
+		local vec = vector(
+			args.ctype or assert.index({
+				'float',
+				'vec2f_t',
+				'vec3f_t',
+				'vec4f_t'
+			}, dim),
+			self.count or 0
+		)
 		self.vec = vec
 		assert(not self.data)
 		args.data = self.vec.v
@@ -211,7 +220,7 @@ function Buffer:endUpdate(checkCapacity)
 		assert.eq(vec.v, self.data)
 		self:bind()
 			-- only need to upload as much as we're using
-			:updateData(0, ffi.sizeof(vec.type) * vec.size)
+			:updateData(0, vec:getNumBytes())
 	end
 end
 
