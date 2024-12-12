@@ -81,6 +81,21 @@ local function makeIntN(name, count)
 	}
 end
 
+local function makeFloatN(name, count)
+	local glRetFloatN = GLGet.makeRetLastArg{
+		name = 'glGetFloatv',
+		lookup = {1},
+		ctype = 'GLfloat',
+		count = count,
+	}
+	return {
+		name = name,
+		getter = function(self, nameValue)
+			return glRetFloatN(nameValue)
+		end,
+	}
+end
+
 local function makeDoubleN(name, count)
 	local glRetDoubleN = GLGet.makeRetLastArg{
 		name = 'glGetDoublev',
@@ -94,6 +109,12 @@ local function makeDoubleN(name, count)
 			return glRetDoubleN(nameValue)
 		end,
 	}
+end
+
+-- TODO for GLES I don't think there's a GLdouble
+-- so for those we'd want ths to fall back on makeFloatN
+if not pcall(ffi.new, 'GLdouble') then
+	makeDoubleN = makeFloatN
 end
 
 -- TODO getters-with-num-getters are very exceptional to the gl.get system and are going to make me rewrite everything ...
