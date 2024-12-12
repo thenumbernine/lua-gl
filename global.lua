@@ -1,5 +1,6 @@
 local ffi = require 'ffi'
 local table = require 'ext.table'
+local string = require 'ext.string'
 local range = require 'ext.range'
 local op = require 'ext.op'
 local assert = require 'ext.assert'
@@ -186,7 +187,7 @@ local tmp = xpcall(function()
 end, function(err)
 	print('first attempt to get gl version failed: '..tostring(err))
 end) or xpcall(function()
-	version = (GLGet.string'GL_VERSION' or ''):split'%s+'[1]
+	version = string.split(GLGet.string'GL_VERSION' or '', '%s+')[1]
 	version = assert(tonumber(version), 'failed to parse '..tostring(version))
 end, function(err)
 	print('second attempt to get gl version failed: '..tostring(err))
