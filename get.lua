@@ -82,9 +82,10 @@ local function string(param, ...)
 		return nil, name.." arg 1 must be type string or number, found "..t
 	end
 
-	local success, value = glSafeCall('glGetString', param, ...)
-	if not success then return nil, value end
-	return ffi.string(value)
+	local success, result = glSafeCall('glGetString', param, ...)
+	if not success then return nil, result end
+	if result == nil then return '(null)' end
+	return ffi.string(result)
 end
 
 local function behavior(parent)
