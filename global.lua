@@ -114,6 +114,7 @@ end
 -- TODO for GLES I don't think there's a GLdouble
 -- so for those we'd want ths to fall back on makeFloatN
 if not pcall(ffi.new, 'GLdouble') then
+	makeDouble = makeFloat
 	makeDoubleN = makeFloatN
 end
 
