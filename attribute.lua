@@ -203,6 +203,7 @@ function GLAttribute:init(args)
 end
 
 -- assumes the buffer is bound
+local GL_DOUBLE = op.safeindex(gl, 'GL_DOUBLE')
 function GLAttribute:setPointer(loc)
 	loc = loc or self.loc
 --[[
@@ -221,7 +222,7 @@ https://registry.khronos.org/OpenGL-Refpages/gl4/html/glVertexAttribPointer.xhtm
 	if self.glslType then
 		glslPrimType = self.getGLTypeAndDimForGLSLType[self.glslType][1]
 	end
-	if glslPrimType == gl.GL_DOUBLE then
+	if GL_DOUBLE and glslPrimType == GL_DOUBLE then
 		gl.glVertexAttribLPointer(
 			loc,
 			self.dim,
