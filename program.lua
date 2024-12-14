@@ -640,6 +640,8 @@ function GLProgram.getVersionPragma(es)
 	local glGlobal = require 'gl.global'
 	local version = assert(glGlobal:get'GL_SHADING_LANGUAGE_VERSION')
 	version = version:gsub('%.', '')
+	-- somtimes (windows) there's a space and extra crap after the version number ...
+	version = version:match'%S+'
 	-- even when using gles, the GL_VERSION I get back corresponds to my GL (non-ES) version (is there a different constant I should be using other than GL_VERSION for the ES version?)
 	-- so instead I'll use a mapping from GLSL versions to GLSL-ES versions...
 	if es then
