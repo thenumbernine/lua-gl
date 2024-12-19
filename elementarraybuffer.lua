@@ -11,6 +11,8 @@ local ElementArrayBuffer = Buffer:subclass()
 --	ElementArrayBuffer.type = gl.GL_UNSIGNED_SHORT
 --else
 ElementArrayBuffer.type = gl.GL_UNSIGNED_INT
+ElementArrayBuffer.ctype = 'uint32_t'
+ElementArrayBuffer.dim = 1
 --end
 
 ElementArrayBuffer.target = gl.GL_ELEMENT_ARRAY_BUFFER
