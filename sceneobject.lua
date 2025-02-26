@@ -109,7 +109,14 @@ function GLSceneObject:init(args)
 			self.attrs[k] = v
 		end
 	end
+
 	self.texs = table(args.texs)
+	for i,tex in ipairs(self.texs) do
+		if type(tex) == 'string' then
+			self.texs[i] = require 'gl.tex2d'(tex)
+		--elseif Image:isa(tex) then	-- TODO maybe later
+		end
+	end
 
 	if hasVAO
 	and args.createVAO ~= false
