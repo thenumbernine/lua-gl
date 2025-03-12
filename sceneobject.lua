@@ -209,10 +209,28 @@ function GLSceneObject:draw(args)
 	end
 end
 
+-- I want to return all the mapped attr.buffer.vec's, but don't want to build a table, so ...
+function GLSceneObject:beginUpdateKth(k, checkCapacity)
+	local nextk, attr = next(self.attrs, k)
+	if not attr then return end
+
+	local vec
+	if not attr.divisor then
+		vec = attr.buffer:beginUpdate(checkCapacity)
+	else
+		-- TODO ...
+		vec = attr.buffer:beginUpdate()
+	end
+
+	return vec, self:beginUpdateKth(nextk, checkCapacity)
+end
+
 -- Use this function with attributes' buffers that are initialized with .useVec=true ...
 -- It will remember their old capacity, and resize the GPU buffer if it changes.
 function GLSceneObject:beginUpdate()
+	-- TODO if there's no 'vertex' ...
 	local vtxbuf = self.attrs.vertex.buffer
+	--[[
 	for _,attr in pairs(self.attrs) do
 		if not attr.divisor then
 			attr.buffer:beginUpdate(vtxbuf.vec.capacity)
@@ -221,6 +239,10 @@ function GLSceneObject:beginUpdate()
 			attr.buffer:beginUpdate()
 		end
 	end
+	--]]
+	-- [[ call each buffer's 'beginUpdate' and return all vecs as an arg pack (in no particular order mind you ...)
+	return self:beginUpdateKth(nil, vtxbuf.vec.capacity)
+	--]]
 end
 
 function GLSceneObject:endUpdate()
