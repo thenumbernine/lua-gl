@@ -205,7 +205,7 @@ function GLSceneObject:draw(args)
 	end
 
 	for i=#texs,1,-1 do
-		texs[i]:bind(i-1)
+		texs[i]:unbind(i-1)
 	end
 end
 
