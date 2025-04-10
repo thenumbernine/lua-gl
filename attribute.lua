@@ -213,10 +213,17 @@ if self.type specifies the CPU-side data, should self.glslType store the GPU-sid
 and would we want separate variables for the underlying storage (float vs int) versus the dimension storage (vec3 vs ivec3) ?
 
 https://registry.khronos.org/OpenGL-Refpages/gl4/html/glVertexAttribPointer.xhtml
-- if .glslType is present and is an int-type then glVertexAttribIPointer should be used? right? that's what the docs say glVertexAttribIPointer is to be used with.
-	but it reads like glVertexAttribIPointer can only accept int-CPU-side-data ... but forums https://stackoverflow.com/a/18926905 say that it's to be used with int-GPU-side-data ...
-	SMH
-- but glVertexAttribLPointer is only used with GL_DOUBLE ... so the L doesn't stand for 'long', it stands for 'double' ... ?
+https://registry.khronos.org/OpenGL-Refpages/es3.0/html/glVertexAttribPointer.xhtml
+"type - Specifies the data type of each component in the array. The symbolic constants GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT, GL_INT, and GL_UNSIGNED_INT are accepted by glVertexAttribPointer and glVertexAttribIPointer."
+"For glVertexAttribIPointer, only the integer types GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT, GL_INT, GL_UNSIGNED_INT are accepted."
+The docs make it sound like integer types work in the original function call as well, so why have a separate one for integer types?
+- glVertexAttribLPointer is only used with GL_DOUBLE ... so the L doesn't stand for 'long', it stands for 'double' ... ?
+- "Additionally GL_HALF_FLOAT, GL_FLOAT, GL_DOUBLE, GL_FIXED, GL_INT_2_10_10_10_REV, GL_UNSIGNED_INT_2_10_10_10_REV and GL_UNSIGNED_INT_10F_11F_11F_REV are accepted by glVertexAttribPointer. "
+... so GL_DOUBLE works with glVertexAttribPointer ...
+... so why even have other functions?
+
+Forum commentary all says that glVertexAttribPointer is for glsl float types, glVertexAttribIPointer is for glsl int types, glVertexAttribLPointer is for glsl double types.
+The docs do not say this.  The docs don't seem to mention what glsl type is necessary.
 --]]
 	local glslPrimType
 	if self.glslType then
