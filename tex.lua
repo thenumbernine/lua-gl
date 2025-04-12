@@ -8,6 +8,7 @@ require 'ext.gc'	-- make sure luajit can __gc lua-tables
 local ffi = require 'ffi'
 local gl = require 'gl'
 local GLGet = require 'gl.get'
+local assert = require 'ext.assert'
 local class = require 'ext.class'
 local table = require 'ext.table'
 local op = require 'ext.op'
@@ -187,8 +188,8 @@ local formatInfos = table{
 }
 for i=#formatInfos,1,-1 do
 	local info = formatInfos[i]
-	local internalFormat = op.safeindex(gl, info.internalFormat) 
-	local baseInternalFormat = op.safeindex(gl, info.baseInternalFormat) 
+	local internalFormat = op.safeindex(gl, info.internalFormat)
+	local baseInternalFormat = op.safeindex(gl, info.baseInternalFormat)
 	local format = op.safeindex(gl, info.format)
 	local types = info.types and table.mapi(info.types, function(key,i,t)
 		return op.safeindex(gl, key), #t+1
@@ -214,6 +215,10 @@ for i=#formatInfos,1,-1 do
 	end
 end
 
+local formatInfoForInternalFormat = formatInfos:mapi(function(info)
+	return info, info.internalFormat
+end):setmetatable(nil)
+
 local glslPrefixForInternalType = {
 	ui = 'u',
 	i = 'i',
@@ -225,9 +230,7 @@ local glslPrefixForInternalType = {
 local GLTex = GLGet.behavior()
 
 GLTex.formatInfos = formatInfos
-GLTex.formatInfoForInternalFormat = formatInfos:mapi(function(info) 
-	return info, info.internalFormat
-end):setmetatable(nil)
+GLTex.formatInfoForInternalFormat = formatInfoForInternalFormat
 GLTex.glslPrefixForInternalType = glslPrefixForInternalType
 
 -- TODO just use GLTex.formatInfos
@@ -456,6 +459,43 @@ function GLTex:toCPU(ptr, level)
 	self:bind()
 	gl.glGetTexImage(self.target, level or 0, self.format, self.type, ffi.cast('char*', ptr))
 	return ptr
+end
+
+function GLTex:getFormatInfo()
+	return assert.index(formatInfoForInternalFormat, self.internalFormat, "failed to find formatInfo for internalFormat")
+end
+
+function GLTex:getGLSLPrefix()
+	return glslPrefixForInternalType[self:getFormatInfo().internalType] or ''
+end
+
+-- https://www.khronos.org/opengl/wiki/Sampler_(GLSL)#Sampler_types
+local samplerSuffixForTarget = table.map({
+	GL_TEXTURE_1D = '1D',
+	GL_TEXTURE_2D = '2D',
+	GL_TEXTURE_3D = '3D',
+	GL_TEXTURE_CUBE_MAP = 'Cube',
+	GL_TEXTURE_RECTANGLE = 'Rect',
+	GL_TEXTURE_1D_ARRAY = '1DArray',
+	GL_TEXTURE_2D_ARRAY = '2DArray',
+	GL_TEXTURE_CUBE_ARRAY = 'CubeArray',
+	GL_TEXTURE_BUFFER = 'Buffer',
+	GL_TEXTURE_2D_MULTISAMPLE = '2DMS',
+	GL_TEXTURE_2D_MULTISAMPLE_ARRAY = '2DMSArray',
+}, function(v,k)
+	k = op.safeindex(gl, k)
+	if k then return v, k end
+end)
+
+function GLTex:getGLSLSamplerType()
+	return self:getGLSLPrefix()..'sampler'
+	-- if it's not listed there's going to be a GLSL error, so add on a warning
+		..(samplerSuffixForTarget[self.target] or '_unknownTarget')
+	-- TODO ..(self.isShadow and 'Shadow' or '')
+end
+
+function GLTex:getGLSLFragType()
+	return self:getGLSLPrefix()..'vec4'
 end
 
 return GLTex
