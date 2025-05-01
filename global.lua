@@ -209,8 +209,27 @@ local tmp = xpcall(function()
 end, function(err)
 	print('first attempt to get gl version failed: '..tostring(err))
 end) or xpcall(function()
-	version = string.split(GLGet.string'GL_VERSION' or '', '%s+')[1]
-	version = assert(tonumber(version), 'failed to parse '..tostring(version))
+	local versionStr = GLGet.string'GL_VERSION' or ''
+	version = tonumber(string.split(versionStr, '%s+')[1])
+	if not version then
+		-- What about GLES versions?
+		-- This is from Emscripten's GLES<->WebGL, so who knows what they put in the results.
+		-- TODO test this pathway against desktop GLES's
+		local glesVersion = tonumber((versionStr:match'^OpenGL ES ([0-9%.]*)'))
+		-- now do the same GL<->GLES that's also in GLProgram.getVersionPragma
+		-- TODO oops, that table is GLSL-ES to GLSL
+		-- Oh well, GL and GLES are dif things right?  Maybe their versions shouldn't correlate?
+		if glesVersion >= 3.1 then
+			version = 4.5
+		elseif glesVersion >= 3 then
+			version = 4.3
+		elseif glesVersion >= 1 then
+			version = 4.1
+		end
+	end
+	if not version then
+		errror('failed to parse '..versionStr)
+	end
 end, function(err)
 	print('second attempt to get gl version failed: '..tostring(err))
 end) or xpcall(function()
