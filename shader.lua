@@ -57,7 +57,16 @@ glreport'GLShader:init'
 		end
 
 		local precision = args.precision
-		if precision then
+		if precision
+
+		-- Geometry shader doesn't like querying the precision? It is giving me GL_INVALID_ENUM
+		-- TODO I wonder what shaders I can query precision vs what I can't?
+		and (
+			self.type == gl.GL_VERTEX_SHADER
+			or self.type == gl.GL_FRAGMENT_SHADER
+		)
+
+		then
 			if precision ~= 'best' then
 				-- TODO this for each type or whatever options glsl has for precision ...
 				code = 'precision '..precision..' float;\n'..code
