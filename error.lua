@@ -19,9 +19,9 @@ returns a glError string entry for errorCode
 --]]
 local function glGetErrorName(errorCode)
 	local name
-	for _,v in ipairs(glErrors) do
-		if errorCode == gl[v] then
-			return v
+	for _,name in ipairs(glErrors) do
+		if errorCode == op.safeindex(gl, name) then
+			return name
 		end
 	end
 	return nil
