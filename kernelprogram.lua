@@ -4,16 +4,34 @@ local GLProgram = require 'gl.program'
 local GLKernelProgram = GLProgram:subclass()
 
 function GLKernelProgram:init(args)
-	local varyingCode = [[
+	local vertexCode, fragmentCodePrefix
+	if args.gl3 then
+		args.version = args.version or 'latest'
+		args.precision = args.precision or 'best'
+		vertexCode = [[
+in vec2 vertex;
+out vec2 pos;
+void main() {
+	pos = vertex;
+	gl_Position = vec4(vertex * 2. - 1., 0., 1.);
+}
+]]
+		fragmentCodePrefix = [[
+in vec2 pos;
+out vec4 fragColor;
+]]
+	else
+		local varyingCode = [[
 varying vec2 pos;
 ]]
-	local vertexCode = varyingCode..[[
+		vertexCode = varyingCode..[[
 void main() {
 	pos = gl_Vertex.xy;
 	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 }
 ]]
-	local fragmentCodePrefix = varyingCode;
+		fragmentCodePrefix = varyingCode;
+	end
 	local uniforms = table()
 	if args.uniforms then
 		for uniformName,uniformType in pairs(args.uniforms) do
@@ -45,6 +63,8 @@ void main() {
 	end
 
 	GLKernelProgram.super.init(self, {
+		version = args.version,
+		precision = args.precision,
 		vertexCode = args.vertexCode or vertexCode,
 		fragmentCode = fragmentCodePrefix..assert(args.code),
 		uniforms = uniforms,

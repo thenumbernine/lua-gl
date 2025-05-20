@@ -634,6 +634,28 @@ this says ...
 	GLSL-ES pragma '300 es' <=> GL 4.3 <=> GLSL 4.3
 	GLSL-ES pragma '310 es' <=> GL 4.5 <=> GLSL 4.5
 	... and idk about 320 es
+
+this page says ( https://en.wikipedia.org/wiki/OpenGL_Shading_Language#Versions ):
+pragma:			GLSL		OpenGL
+#version 110	1.10.59		2.0
+#version 120	1.20.8		2.1
+#version 130	1.30.10		3.0
+#version 140	1.40.08		3.1
+#version 150	1.50.11		3.2
+#version 330	3.30.6		3.3
+#version 400	4.00.9		4.0
+#version 410	4.10.6		4.1
+#version 420	4.20.1		4.2
+#version 430	4.30.8		4.3
+#version 440	4.40.9		4.4
+#version 450	4.50.7		4.5
+#version 460	4.60.5		4.6
+
+pragma:			GLSL-ES GLES	WebGL	GLSL-equivalent
+#version 100	1.00.17	2.0		1.0		1.20
+#version 300 es	3.00.6	3.0		2.0		3.30
+#version 310 es	3.10.5	3.1				GLSL ES 3.00	<- why does this chart say GLSL-equiv of GLSL-ES 3.10 is GLSL-ES 3.00 ?  weird ...
+#version 320 es	3.20.6	3.2				GLSL ES 3.10
 --]]
 function GLProgram.getVersionPragma(es)
 	-- should I auto-detect es?
