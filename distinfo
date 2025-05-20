@@ -25,6 +25,7 @@ files = {
 	["pixelpackbuffer.lua"] = "gl/pixelpackbuffer.lua",
 	["pixelunpackbuffer.lua"] = "gl/pixelunpackbuffer.lua",
 	["program.lua"] = "gl/program.lua",
+	["query.lua"] = "gl/query.lua",
 	["report.lua"] = "gl/report.lua",
 	["sceneobject.lua"] = "gl/sceneobject.lua",
 	["setup.lua"] = "gl/setup.lua",
