@@ -99,7 +99,7 @@ local function behavior(parent)
 	function template:makeGetter(args)
 		self.getInfo = self.getInfo or {}
 		self.getInfoArray = self.getInfoArray or table()
-		local getter = assert(args.getter)
+		local getter = args.getter
 		local vars = assert(args.vars)
 		for _,var in ipairs(vars) do
 			local name = assert.index(var, 'name')
@@ -107,7 +107,7 @@ local function behavior(parent)
 			var.nameValue = op.safeindex(gl, name)
 			if var.nameValue then
 				-- keep any per-variable assigned getter if it was specified
-				var.getter = var.getter or getter
+				var.getter = var.getter or assert(getter, "you must provide a getter on your vars, or a default getter")
 				table.insert(self.getInfo, var)
 				if self.getInfo[name] then
 					error(name.." added twice")

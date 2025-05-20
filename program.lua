@@ -203,37 +203,81 @@ local glRetProgrami = GLGet.makeRetLastArg{
 	ctype = 'GLint',
 	lookup = {2},
 }
+local function getGLGetProgrami(self, nameValue)
+	return glRetProgrami(self.id, nameValue)
+end
+
+local glRetProgramInterfacei = GLGet.makeRetLastArg{
+	name = 'glGetProgramInterfaceiv',
+	ctype = 'GLint',
+	lookup = {2, 3},
+}
+local function getGLGetProgramInterfacei(self, programInterface, pname)
+	return glRetProgramInterfacei(self.id, programInterface, pname)
+end
+
 GLProgram:makeGetter{
 	-- wrap it so wgl can replace glGetShaderiv
-	getter = function(self, nameValue)
-		return glRetProgrami(self.id, nameValue)
-	end,
-	vars = table{
-		{name='GL_DELETE_STATUS'},
-		{name='GL_LINK_STATUS'},
-		{name='GL_VALIDATE_STATUS'},
-		{name='GL_INFO_LOG_LENGTH'},
-		{name='GL_ATTACHED_SHADERS'},
-		{name='GL_ACTIVE_ATTRIBUTES'},
-		{name='GL_ACTIVE_ATTRIBUTE_MAX_LENGTH'},
-		{name='GL_ACTIVE_UNIFORMS'},
-		{name='GL_ACTIVE_UNIFORM_MAX_LENGTH'},
-		{name='GL_ACTIVE_ATOMIC_COUNTER_BUFFERS'},
-		{name='GL_PROGRAM_BINARY_LENGTH'},
-		{name='GL_TRANSFORM_FEEDBACK_BUFFER_MODE'},
-		{name='GL_TRANSFORM_FEEDBACK_VARYINGS'},
-		{name='GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH'},
-	}:append(
-		GLGeometryShader
-		and {
-			{name='GL_GEOMETRY_VERTICES_OUT'},
-			{name='GL_GEOMETRY_INPUT_TYPE'},
-			{name='GL_GEOMETRY_OUTPUT_TYPE'},
-			{name='GL_MAX_GEOMETRY_OUTPUT_VERTICES'},
-			{name='GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS'},
-		} or nil
+	vars = table.append(
+		table{
+			{name='GL_DELETE_STATUS'},
+			{name='GL_LINK_STATUS'},
+			{name='GL_VALIDATE_STATUS'},
+			{name='GL_INFO_LOG_LENGTH'},
+			{name='GL_ATTACHED_SHADERS'},
+			{name='GL_ACTIVE_ATTRIBUTES'},
+			{name='GL_ACTIVE_ATTRIBUTE_MAX_LENGTH'},
+			{name='GL_ACTIVE_UNIFORMS'},
+			{name='GL_ACTIVE_UNIFORM_MAX_LENGTH'},
+			{name='GL_ACTIVE_ATOMIC_COUNTER_BUFFERS'},
+			{name='GL_PROGRAM_BINARY_LENGTH'},
+			{name='GL_TRANSFORM_FEEDBACK_BUFFER_MODE'},
+			{name='GL_TRANSFORM_FEEDBACK_VARYINGS'},
+			{name='GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH'},
+		}:append(
+			GLGeometryShader
+			and {
+				{name='GL_GEOMETRY_VERTICES_OUT'},
+				{name='GL_GEOMETRY_INPUT_TYPE'},
+				{name='GL_GEOMETRY_OUTPUT_TYPE'},
+				{name='GL_MAX_GEOMETRY_OUTPUT_VERTICES'},
+				{name='GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS'},
+			} or nil
+		):mapi(function(args)
+			args.getter = getGLGetProgrami
+			return args
+		end),
+
+		table{
+			{name='GL_UNIFORM'},
+			{name='GL_UNIFORM_BLOCK'},
+			{name='GL_ATOMIC_COUNTER_BUFFER'},
+			{name='GL_PROGRAM_INPUT'},
+			{name='GL_PROGRAM_OUTPUT'},
+			{name='GL_VERTEX_SUBROUTINE'},
+			{name='GL_TESS_CONTROL_SUBROUTINE'},
+			{name='GL_TESS_EVALUATION_SUBROUTINE'},
+			{name='GL_GEOMETRY_SUBROUTINE'},
+			{name='GL_FRAGMENT_SUBROUTINE'},
+			{name='GL_COMPUTE_SUBROUTINE'},
+			{name='GL_VERTEX_SUBROUTINE_UNIFORM'},
+			{name='GL_TESS_CONTROL_SUBROUTINE_UNIFORM'},
+			{name='GL_TESS_EVALUATION_SUBROUTINE_UNIFORM'},
+			{name='GL_GEOMETRY_SUBROUTINE_UNIFORM'},
+			{name='GL_FRAGMENT_SUBROUTINE_UNIFORM'},
+			{name='GL_COMPUTE_SUBROUTINE_UNIFORM'},
+			{name='GL_TRANSFORM_FEEDBACK_VARYING'},
+			{name='GL_BUFFER_VARIABLE'},
+			{name='GL_SHADER_STORAGE_BLOCK'},
+			{name='GL_TRANSFORM_FEEDBACK_BUFFER'},
+		}:mapi(function(args)
+			args.getter = getGLGetProgramInterfacei
+			return args
+		end)
 	),
 }
+
+-- TODO glGetProgramResource
 
 --[[
 args:
