@@ -165,7 +165,9 @@ args:
 	texs = override textures
 	program = override program
 	uniforms = additional uniforms
-	... maybe TODO should 'geometry' be override geometry, additional geometry, or geometry args ... ? meh?
+	geometry = override geometry
+	geometries = override geometries
+	... notice if you have .geometry and you :draw{geometries=} that means it draws both.
 --]]
 function GLSceneObject:draw(args)
 	local texs = args and args.texs or self.texs
@@ -189,11 +191,13 @@ function GLSceneObject:draw(args)
 		self:enableAndSetAttrs()
 	end
 
-	if self.geometry then
-		self.geometry:draw()
+	local geometry = args.geometry or self.geometry
+	if geometry then
+		geometry:draw()
 	end
-	if self.geometries then
-		for _,geometry in ipairs(self.geometries) do
+	local geometries = args.geometries or self.geometries
+	if geometries then
+		for _,geometry in ipairs(geometries) do
 			geometry:draw()
 		end
 	end
@@ -245,7 +249,7 @@ function GLSceneObject:beginUpdate()
 	--]]
 end
 
-function GLSceneObject:endUpdate(args)
+function GLSceneObject:endUpdate(...)
 	local vtxbuf = self.attrs.vertex.buffer
 	for name,attr in pairs(self.attrs) do
 		if not attr.divisor then
@@ -256,7 +260,7 @@ function GLSceneObject:endUpdate(args)
 		end
 	end
 	self.geometry.count = #vtxbuf.vec
-	self:draw(args)
+	self:draw(...)
 end
 
 return GLSceneObject
