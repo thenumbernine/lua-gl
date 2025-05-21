@@ -191,11 +191,11 @@ function GLSceneObject:draw(args)
 		self:enableAndSetAttrs()
 	end
 
-	local geometry = args.geometry or self.geometry
+	local geometry = args and args.geometry or self.geometry
 	if geometry then
 		geometry:draw()
 	end
-	local geometries = args.geometries or self.geometries
+	local geometries = args and args.geometries or self.geometries
 	if geometries then
 		for _,geometry in ipairs(geometries) do
 			geometry:draw()
