@@ -750,4 +750,71 @@ function GLProgram.getVersionPragma(es)
 	return '#version '..version
 end
 
+
+
+-- TODO so many projects require cl just to use clnumber with gl code ... this should be in its own file here or something
+local function glslnumber(x)
+	local s = tostring(tonumber(x))
+	if s:find'e' then return s end
+	if not s:find'%.' then s = s .. '.' end
+	return s
+end
+
+--[[ getting tired of copy pasting so here's a program builder helper function...
+args:
+	version
+	precision
+	vertex = type of vertex, default vec3
+	mvAndProjSeparate = true for mvMat and ProjMat separate uniforms, false for just mvProjMat ...
+		... alternatively I could just use mvMat and projMat here, and require the caller to pass both in ...
+	color =
+		fixed = 4 component table of the fixed color
+		uniform = type of the uniform color
+
+--]]
+function GLProgram.make(args)
+	local function toVec4(ctype, name, w)
+		w = w or '1.'
+		if ctype == 'float' then
+			return 'vec4('..name..', 0., 0., '..w..')'
+		elseif ctype == 'vec2' then
+			return 'vec4('..name..', 0., '..w..')'
+		elseif ctype == 'vec3' then
+			return 'vec4('..name..', '..w..')'
+		else
+			return name
+		end
+	end
+	return GLProgram{
+		version = args.version or 'latest',
+		precision = args.precision or 'best',
+		vertexCode = table{
+			'in '..args.vertex..' vertex;',
+			'uniform mat4 '..(args.mvAndProjSeparate and 'mvMat, projMat;' or 'mvProjMat;'),
+			'void main() {',
+			'	gl_Position = mvProjMat * '..toVec4(args.vertex, 'vertex')..';',
+			'}',
+		}:concat'\n',
+		fragmentCode = table():append({
+				'out vec4 fragColor;',
+			},
+			args.color.uniform and {
+				'uniform '..args.color.uniform..' color;',
+			} or nil,
+			{
+				'void main() {',
+				'	fragColor = '..(
+					args.color.fixed
+						and 'vec4('..range(4):mapi(function(i)
+							return glslnumber(args.color.fixed[i] or 1)
+						end):concat','..')'
+						or args.color.uniform and toVec4(args.color.uniform, 'color')
+						or error("idk how to handle args.color")
+				)..';',
+				'}',
+			}
+		):concat'\n',
+	}:useNone()
+end
+
 return GLProgram
