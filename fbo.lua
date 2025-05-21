@@ -83,7 +83,7 @@ function FrameBuffer:unbind()
 end
 
 -- static function
-function FrameBuffer.check()
+function FrameBuffer:check()
 	local status = gl.glCheckFramebufferStatus(gl.GL_FRAMEBUFFER)
 	if status ~= gl.GL_FRAMEBUFFER_COMPLETE then
 		local errstr = 'glCheckFramebufferStatus status='..status
@@ -91,7 +91,7 @@ function FrameBuffer.check()
 		if name then errstr = errstr..' error='..name end
 		return false, errstr
 	end
-	return true
+	return self or true	-- allow fallthrough of self as our 'true' value
 end
 
 -- and return-self assert-version
@@ -157,10 +157,16 @@ end
 
 -- assumes the FBO is bound
 function FrameBuffer:setDrawBuffers(...)
-	local n = select('#', ...)
-	local p = ffi.new('GLenum[?]', n)
-	for i=1,n do
-		p[i-1] = select(i, ...)
+	local n, p = ...
+	if type(p) == 'cdata' then
+		gl.glDrawBuffers(n, p)
+	else
+		-- or use a table? idk?
+		n = select('#', ...)
+		p = ffi.new('GLenum[?]', n)
+		for i=1,n do
+			p[i-1] = select(i, ...)
+		end
 	end
 	gl.glDrawBuffers(n, p)
 	return self
