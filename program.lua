@@ -9,7 +9,7 @@ local GLGet = require 'gl.get'
 local GLShader = require 'gl.shader'
 local GLAttribute = require 'gl.attribute'
 local GLArrayBuffer = require 'gl.arraybuffer'
-local glnumber = requrie 'gl.number'
+local glnumber = require 'gl.number'
 
 -- this doesn't work as easy as it does in webgl
 -- https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetActiveUniform.xhtml
