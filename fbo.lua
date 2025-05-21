@@ -155,6 +155,17 @@ function FrameBuffer:setColorAttachment(tex, index, ...)
 	return self
 end
 
+-- assumes the FBO is bound
+function FrameBuffer:setDrawBuffers(...)
+	local n = select('#', ...)
+	local p = ffi.new('GLenum[?]', n)
+	for i=1,n do
+		p[i-1] = select(i, ...)
+	end
+	gl.glDrawBuffers(n, p)
+	return self
+end
+
 local glint = ffi.new('GLint[1]')
 --[[
 if index is a number then it binds the associated color attachment at 'GL_COLOR_ATTACHMENT0+index' and runs the callback
@@ -194,8 +205,7 @@ function FrameBuffer:drawToCallback(index, callback, ...)
 --]]
 	end
 
-	self:unbind()
-	return self
+	return self:unbind()
 end
 
 function FrameBuffer.drawScreenQuad()
