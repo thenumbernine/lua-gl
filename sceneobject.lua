@@ -245,7 +245,7 @@ function GLSceneObject:beginUpdate()
 	--]]
 end
 
-function GLSceneObject:endUpdate()
+function GLSceneObject:endUpdate(args)
 	local vtxbuf = self.attrs.vertex.buffer
 	for name,attr in pairs(self.attrs) do
 		if not attr.divisor then
@@ -256,7 +256,7 @@ function GLSceneObject:endUpdate()
 		end
 	end
 	self.geometry.count = #vtxbuf.vec
-	self:draw()
+	self:draw(args)
 end
 
 return GLSceneObject
