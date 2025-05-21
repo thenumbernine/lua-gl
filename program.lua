@@ -9,7 +9,7 @@ local GLGet = require 'gl.get'
 local GLShader = require 'gl.shader'
 local GLAttribute = require 'gl.attribute'
 local GLArrayBuffer = require 'gl.arraybuffer'
-
+local glnumber = requrie 'gl.number'
 
 -- this doesn't work as easy as it does in webgl
 -- https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetActiveUniform.xhtml
@@ -750,16 +750,6 @@ function GLProgram.getVersionPragma(es)
 	return '#version '..version
 end
 
-
-
--- TODO so many projects require cl just to use clnumber with gl code ... this should be in its own file here or something
-local function glslnumber(x)
-	local s = tostring(tonumber(x))
-	if s:find'e' then return s end
-	if not s:find'%.' then s = s .. '.' end
-	return s
-end
-
 --[[ getting tired of copy pasting so here's a program builder helper function...
 args:
 	version
@@ -775,6 +765,7 @@ args:
 function GLProgram.make(args)
 	local function toVec4(ctype, name, w)
 		w = w or '1.'
+		if type(w) == 'number' then w = glnumber(w) end
 		if ctype == 'float' then
 			return 'vec4('..name..', 0., 0., '..w..')'
 		elseif ctype == 'vec2' then
@@ -806,7 +797,7 @@ function GLProgram.make(args)
 				'	fragColor = '..(
 					args.color.fixed
 						and 'vec4('..range(4):mapi(function(i)
-							return glslnumber(args.color.fixed[i] or 1)
+							return glnumber(args.color.fixed[i] or 1)
 						end):concat','..')'
 						or args.color.uniform and toVec4(args.color.uniform, 'color')
 						or error("idk how to handle args.color")

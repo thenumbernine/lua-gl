@@ -20,6 +20,7 @@ files = {
 	["hsvtex2d.lua"] = "gl/hsvtex2d.lua",
 	["intersect.lua"] = "gl/intersect.lua",
 	["kernelprogram.lua"] = "gl/kernelprogram.lua",
+	["number.lua"] = "gl/number.lua",
 	["pingpong.lua"] = "gl/pingpong.lua",
 	["pingpong3d.lua"] = "gl/pingpong3d.lua",
 	["pixelpackbuffer.lua"] = "gl/pixelpackbuffer.lua",
