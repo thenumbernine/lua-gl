@@ -3,6 +3,7 @@ local ffi = require 'ffi'
 local gl = require 'gl'
 local glreport = require 'gl.report'
 local table = require 'ext.table'
+local range = require 'ext.range'
 local string = require 'ext.string'
 local op = require 'ext.op'
 local GLGet = require 'gl.get'
@@ -757,10 +758,19 @@ args:
 	vertex = type of vertex, default vec3
 	mvAndProjSeparate = true for mvMat and ProjMat separate uniforms, false for just mvProjMat ...
 		... alternatively I could just use mvMat and projMat here, and require the caller to pass both in ...
+	gl_Program = expression for gl_Program
 	color =
-		fixed = 4 component table of the fixed color
-		uniform = type of the uniform color
-
+		{r,g,b,a}
+		| {fixed = {r,g,b,a}}
+			= output is 4 component table of the fixed color
+		{uniform =
+			true
+			| ctype of the uniform color (default name 'color')}
+			-- TODO in the future maybe let specify uniform name
+		{texture = true
+			| texcoord attribute name (default type vec2)
+			| expression (for reading vertex)
+			-- TODO in the future maybe specify ctype as well
 --]]
 function GLProgram.make(args)
 	local function toVec4(ctype, name, w)
@@ -776,30 +786,78 @@ function GLProgram.make(args)
 			return name
 		end
 	end
+	local tex = args.tex
+	local texCoordAttr = args.texCoordAttr
+	local texCoordVarying = args.texture	-- TODO deduce
+	if texCoordVarying then
+		texCoordVarying.type = texCoordVarying.type or 'vec2'
+		texCoordVarying.name = texCoordVarying.name or 'texcoordv'
+		if not texCoordVarying.expr then
+			texCoordAttr = {type=texCoordVarying.type, name='texcoord'}
+			texCoordVarying.expr = texCoordAttr.name
+		end
+		tex.type = tex.type or 'sampler2D'
+		tex.name = tex.name or 'tex'
+	end
+	local fixedColor
+	if args.color then
+		if args.color.fixed then
+			fixedColor = args.color.fixed
+		elseif type(args.color) == 'table'
+		and #args.color == 4
+		then
+			fixedColor = args.color
+		end
+	end
+
+	-- default
+	local gl_Program_expr = args.gl_Program
+		or args.mvAndProjSeparate and 'projMat * mvMat * '..toVec4(args.vertex, 'vertex')
+		or 'mvProjMat * '..toVec4(args.vertex, 'vertex')
+	-- hmm
 	return GLProgram{
 		version = args.version or 'latest',
 		precision = args.precision or 'best',
-		vertexCode = table{
-			'in '..args.vertex..' vertex;',
-			'uniform mat4 '..(args.mvAndProjSeparate and 'mvMat, projMat;' or 'mvProjMat;'),
-			'void main() {',
-			'	gl_Position = mvProjMat * '..toVec4(args.vertex, 'vertex')..';',
-			'}',
-		}:concat'\n',
+		vertexCode = table():append(
+			{
+				'layout(location=0) in '..args.vertex..' vertex;',
+			},
+			texCoordAttr and {
+				'layout(location=1) in '..texCoordAttr.type..' '..texCoordAttr.name..';',
+			} or nil,
+			texCoordVarying and {
+				'out '..texCoordVarying.type..' '..texCoordVarying.name..';',
+			} or nil,
+			{
+				'uniform mat4 '..(args.mvAndProjSeparate and 'mvMat, projMat;' or 'mvProjMat;'),
+				'void main() {',
+			},
+			texCoordVarying and {
+				'	'..texCoordVarying.name..' = '..castVec(texCoordVarying.type, texCoordVarying.expr)..';',
+			} or nil,
+			{
+				'	gl_Position = '..gl_Program_expr..';',
+				'}',
+			}
+		):concat'\n',
 		fragmentCode = table():append({
 				'out vec4 fragColor;',
 			},
 			args.color.uniform and {
 				'uniform '..args.color.uniform..' color;',
 			} or nil,
+			tex and {
+				'uniform '..tex.type..' '..tex.name..';',
+			} or nil,
 			{
 				'void main() {',
 				'	fragColor = '..(
-					args.color.fixed
+					fixedColor
 						and 'vec4('..range(4):mapi(function(i)
-							return glnumber(args.color.fixed[i] or 1)
+							return glnumber(fixedColor[i] or 1)
 						end):concat','..')'
 						or args.color.uniform and toVec4(args.color.uniform, 'color')
+						or args.color.texture and 'texture('..tex.name..', '..texCoordVarying.name..')'
 						or error("idk how to handle args.color")
 				)..';',
 				'}',

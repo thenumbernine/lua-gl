@@ -763,7 +763,8 @@ GLGlobal:makeGetter{
 		makeInt'GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT',
 		makeInt'GL_VERTEX_ARRAY_BINDING',
 	}:append(
-		version < 4.1 and {} or {
+		-- version < 4.1 and {} or 
+		{
 			--print'GL version >= 4.1:'
 			makeInt'GL_MAX_VIEWPORTS',
 			makeInt'GL_VIEWPORT_SUBPIXEL_BITS',
@@ -774,7 +775,8 @@ GLGlobal:makeGetter{
 			makeInts('GL_SHADER_BINARY_FORMATS', 'GL_NUM_SHADER_BINARY_FORMATS'),	-- gles 300 but not gl 4
 		}
 	):append(
-		version < 4.2 and {} or {
+		-- version < 4.2 and {} or 
+		{
 			--print'GL version >= 4.2:'
 			makeInt'GL_MAX_VERTEX_ATOMIC_COUNTERS',
 			makeInt'GL_MAX_TESS_CONTROL_ATOMIC_COUNTERS',
@@ -784,7 +786,8 @@ GLGlobal:makeGetter{
 			makeInt'GL_MIN_MAP_BUFFER_ALIGNMENT',
 		}
 	):append(
-		version < 4.3 and {} or {
+		-- version < 4.3 and {} or 
+		{
 			--print'GL version >= 4.3:'
 			makeInt'GL_MAX_ELEMENT_INDEX',
 			makeInt'GL_MAX_COMPUTE_UNIFORM_BLOCKS',
