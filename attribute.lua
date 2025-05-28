@@ -127,6 +127,8 @@ end):setmetatable(nil)
 --[[
 GLAttribute fields:
 
+	name
+
 	buffer = (optional) buffer bound to this array
 
 	dim = number of elements. 1,2,3,4
@@ -160,6 +162,7 @@ TODO make a subclass of this specific to GLProgram queried attributes.
 --]]
 function GLAttribute:init(args)
 --DEBUG(glreport):glreport'here'
+	self.name = args.name
 
 	self.dim = args.dim
 	self.type = args.type
