@@ -27,6 +27,7 @@ local ffi = require 'ffi'
 local class = require 'ext.class'
 local table = require 'ext.table'
 local op = require 'ext.op'
+--DEBUG(glreport):local glreport = require 'gl.report'
 
 --[[
 GLAttribute has the following args:
@@ -158,6 +159,7 @@ TODO make a subclass of this specific to GLProgram queried attributes.
 	it will hold .loc, .arraySize, .glslType
 --]]
 function GLAttribute:init(args)
+--DEBUG(glreport):glreport'here'
 
 	self.dim = args.dim
 	self.type = args.type
@@ -205,6 +207,7 @@ end
 -- assumes the buffer is bound
 local GL_DOUBLE = op.safeindex(gl, 'GL_DOUBLE')
 function GLAttribute:setPointer(loc)
+--DEBUG(glreport):glreport'here'
 	loc = loc or self.loc
 --[[
 TODO add an option for glVertexAttribIPointer
@@ -237,6 +240,7 @@ The docs do not say this.  The docs don't seem to mention what glsl type is nece
 			self.stride,
 			self.offset
 		)
+--DEBUG(glreport):glreport'here'
 	elseif glslPrimType == gl.GL_INT or glslPrimType == gl.GL_UNSIGNED_INT then
 		gl.glVertexAttribIPointer(
 			loc,
@@ -245,6 +249,7 @@ The docs do not say this.  The docs don't seem to mention what glsl type is nece
 			self.stride,
 			self.offset
 		)
+--DEBUG(glreport):glreport('glVertexAttribIPointer failed for '..require 'ext.tolua'(self))
 	else
 		gl.glVertexAttribPointer(
 			loc,
@@ -254,6 +259,7 @@ The docs do not say this.  The docs don't seem to mention what glsl type is nece
 			self.stride,
 			self.offset
 		)
+--DEBUG(glreport):glreport'here'
 	end
 	return self
 end
@@ -261,11 +267,13 @@ end
 -- assumes the buffer is bound
 function GLAttribute:enable(loc)
 	gl.glEnableVertexAttribArray(loc or self.loc)
+--DEBUG(glreport):glreport'here'
 	return self
 end
 
 function GLAttribute:disable(loc)
 	gl.glDisableVertexAttribArray(loc or self.loc)
+--DEBUG(glreport):glreport'here'
 	return self
 end
 
@@ -274,10 +282,13 @@ end
 function GLAttribute:set(loc)
 	if self.buffer then
 		self.buffer:bind()
+--DEBUG(glreport):glreport'here'
 	end
 	self:setPointer(loc)
+--DEBUG(glreport):glreport'here'
 	if self.buffer then
 		self.buffer:unbind()
+--DEBUG(glreport):glreport'here'
 	end
 	return self
 end
@@ -290,15 +301,19 @@ function GLAttribute:setDivisor(loc, divisor)
 	if divisor then
 		loc = loc or self.loc
 		gl.glVertexAttribDivisor(loc, divisor)
+--DEBUG(glreport):glreport'here'
 	end
 	return self
 end
 
 function GLAttribute:enableAndSet(loc)
+	self:enable(loc)
+--DEBUG(glreport):glreport'here'
+	self:set(loc)
+--DEBUG(glreport):glreport'here'
+	self:setDivisor(loc)
+--DEBUG(glreport):glreport'here'
 	return self
-		:enable(loc)
-		:set(loc)
-		:setDivisor(loc)
 end
 
 return GLAttribute

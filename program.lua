@@ -1,7 +1,6 @@
 require 'ext.gc'	-- make sure luajit can __gc lua-tables
 local ffi = require 'ffi'
 local gl = require 'gl'
-local glreport = require 'gl.report'
 local table = require 'ext.table'
 local range = require 'ext.range'
 local string = require 'ext.string'

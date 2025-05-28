@@ -9,6 +9,7 @@ local op = require 'ext.op'
 local GLAttribute = require 'gl.attribute'
 local GLArrayBuffer = require 'gl.arraybuffer'
 local GLGeometry = require 'gl.geometry'
+--DEBUG(glreport):local glreport = require 'gl.report'
 
 local gl = require 'gl'
 -- for GLES1&2 which doesn't have VAO functionality
@@ -37,12 +38,13 @@ args
 also creates a .vao for saving bindings of attributes
 --]]
 function GLSceneObject:init(args)
+--DEBUG(glreport):glreport'here'
 	args = args or {}
-
 	self.vertexes = args.vertexes or (args.geometry and args.geometry.vertexes)
 	if self.vertexes then
 		if not getmetatable(self.vertexes) then
 			self.vertexes = GLArrayBuffer(self.vertexes):unbind()
+--DEBUG(glreport):glreport'here'
 		end
 	end
 
@@ -52,6 +54,7 @@ function GLSceneObject:init(args)
 		--if not GLGeometry:isa(self.geometry) then
 		if not getmetatable(self.geometry) then
 			self.geometry = GLGeometry(self.geometry)
+--DEBUG(glreport):glreport'here'
 		end
 		-- GLGeometry ctor doesn't use so we can assign it after ctor
 		if not self.geometry.vertexes then
@@ -64,6 +67,7 @@ function GLSceneObject:init(args)
 		for _,geometry in ipairs(args.geometries) do
 			if not getmetatable(geometry) then
 				geometry = GLGeometry(geometry)
+--DEBUG(glreport):glreport'here'
 			end
 			if not geometry.vertexes then
 				geometry.vertexes = self.vertexes
@@ -75,9 +79,11 @@ function GLSceneObject:init(args)
 	self.program = args.program
 	-- construct if necessary;
 	local GLProgram = require 'gl.program'
+--DEBUG(glreport):glreport'here'
 	--if not GLProgram:isa(self.program) then
 	if not getmetatable(self.program) then
 		self.program = GLProgram(self.program):useNone()
+--DEBUG(glreport):glreport'here'
 	end
 
 	self.uniforms = args.uniforms or {}
@@ -98,6 +104,7 @@ function GLSceneObject:init(args)
 				-- how to do coercion for attrs[] is tough ...
 				if v.buffer and not getmetatable(v.buffer) then
 					v.buffer = GLArrayBuffer(v.buffer):unbind()
+--DEBUG(glreport):glreport'here'
 				end
 
 				-- auto populate program as well
@@ -105,6 +112,7 @@ function GLSceneObject:init(args)
 					v = table(self.program.attrs[k], v)
 				end
 				v = GLAttribute(v)
+--DEBUG(glreport):glreport'here'
 			end
 			self.attrs[k] = v
 		end
@@ -113,7 +121,10 @@ function GLSceneObject:init(args)
 	self.texs = table(args.texs)
 	for i,tex in ipairs(self.texs) do
 		if type(tex) == 'string' then
-			self.texs[i] = require 'gl.tex2d'(tex)
+			local GLTex2D = require 'gl.tex2d'
+--DEBUG(glreport):glreport'here'
+			self.texs[i] = GLTex2D(tex)
+--DEBUG(glreport):glreport'here'
 		--elseif Image:isa(tex) then	-- TODO maybe later
 		end
 	end
@@ -122,11 +133,14 @@ function GLSceneObject:init(args)
 	and args.createVAO ~= false
 	then
 		local GLVertexArray = require 'gl.vertexarray'
+--DEBUG(glreport):glreport'here'
 		self.vao = GLVertexArray{
 			program = self,	-- self.program?
 			attrs = self.attrs,
 		}
+--DEBUG(glreport):glreport'here'
 	end
+--DEBUG(glreport):glreport'here'
 end
 
 -- enable & set self.attrs either by binding the VAO or by manually enabling and binding them
