@@ -111,7 +111,11 @@ function Geometry:draw(mode, count, offset, instanceCount)
 		end
 
 		if self.instanceCount then
-			gl.glDrawArraysInstanced(mode, offset, count, self.instanceCount)
+			if self.instanceOffset then
+				gl.glDrawArraysInstancedBaseInstance(mode, offset, count, self.instanceCount, self.instanceOffset)
+			else
+				gl.glDrawArraysInstanced(mode, offset, count, self.instanceCount)
+			end
 		else
 			gl.glDrawArrays(mode, offset, count)
 		end
