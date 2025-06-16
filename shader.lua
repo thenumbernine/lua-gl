@@ -175,7 +175,7 @@ function GLShader.createCheckStatus(statusEnum, logGetter)
 			end
 
 			s:insert(statusEnum..' failed!')
-			error(s:concat'\n')
+			error('\n'..s:concat'\n')
 		end
 		return self
 	end
