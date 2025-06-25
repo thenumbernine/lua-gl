@@ -158,7 +158,7 @@ local function makeVec(args)
 	return {
 		name = name,
 		getter = function(self, nameValue, ...)
-			if select('#', ...) == 0 then
+			if not args.useVec then
 				if not getter then
 					return nil, getterName..' not found'
 				end
@@ -171,24 +171,27 @@ local function makeVec(args)
 				if not indexedGetter then
 					return nil, indexedGetterName..' not found'
 				end
-				local result = ffi.new(ctype..'[?]', count)
-				local index = select('#', ...)
-				local success, msg = glSafeCall(indexedGetterName, nameValue, index, result)
-				if not success then return nil, msg end
-				return range(0,count-1):mapi(function(i) return result[i] end):unpack(1, count)
+				local result = ffi.new(ctype..'[1]')
+				local results = table()
+				for index=0,count-1 do
+					local success, msg = glSafeCall(indexedGetterName, nameValue, index, result)
+					if not success then return nil, msg end
+					results[index+1] = result[0]
+				end
+				return results:unpack()
 			end
 		end,
 	}
 end
 
-local function makeIntVec(name, count)
-	return makeVec{
-		name = name,
-		type = 'GLint',
-		getterName = 'glGetIntegerv',
-		indexedGetterName = 'glGetIntegeri_v',
-		count = count,
-	}
+local function makeIntVec(args)
+	if type(args) == 'string' then
+		args= {name=args}
+	end
+	args.type = 'GLint'
+	args.getterName = 'glGetIntegerv'
+	args.indexedGetterName = 'glGetIntegeri_v'
+	return makeVec(args)
 end
 local function makeInt64Vec(name, count)
 	return makeVec{
@@ -515,7 +518,7 @@ GLGlobal:makeGetter{
 		makeInt'GL_UNPACK_SKIP_PIXELS',
 		makeInt'GL_UNPACK_SKIP_ROWS',
 		makeBoolean'GL_UNPACK_SWAP_BYTES',		-- gl 4 but not gles 300
-		makeIntVec('GL_VIEWPORT', 4),	-- vec sized GL_MAX_VIEWPORTS
+		makeIntVec{name='GL_VIEWPORT', count=4},	-- vec sized GL_MAX_VIEWPORTS
 		makeInt'GL_ZOOM_X',
 		makeInt'GL_ZOOM_Y',
 
@@ -797,8 +800,8 @@ GLGlobal:makeGetter{
 			makeInt'GL_MAX_COMPUTE_ATOMIC_COUNTER_BUFFERS',
 			makeInt'GL_MAX_COMBINED_COMPUTE_UNIFORM_COMPONENTS',
 			makeInt'GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS',
-			makeIntVec'GL_MAX_COMPUTE_WORK_GROUP_COUNT',
-			makeIntVec'GL_MAX_COMPUTE_WORK_GROUP_SIZE',
+			makeIntVec{name='GL_MAX_COMPUTE_WORK_GROUP_COUNT', useVec=true, count=3},
+			makeIntVec{name='GL_MAX_COMPUTE_WORK_GROUP_SIZE', useVec=true, count=3},
 			makeInt'GL_DISPATCH_INDIRECT_BUFFER_BINDING',
 			makeInt'GL_MAX_DEBUG_GROUP_STACK_DEPTH',
 			makeInt'GL_DEBUG_GROUP_STACK_DEPTH',
