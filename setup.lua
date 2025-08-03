@@ -7,7 +7,7 @@ from then on `require 'gl'` or `require 'gl.gl'` will give you the requested GL 
 --]]
 return function(glname)
 	glname = glname or 'OpenGL'
-	local gl = require 'ffi.req' (glname)
+	local gl = require('gl.ffi.'..glname)
 	package.loaded.gl = gl
 	package.loaded['gl.gl'] = gl
 	return gl

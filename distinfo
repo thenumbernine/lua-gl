@@ -41,7 +41,20 @@ files = {
 	["transformfeedbackbuffer.lua"] = "gl/transformfeedbackbuffer.lua",
 	["types.lua"] = "gl/types.lua",
 	["vertexarray.lua"] = "gl/vertexarray.lua",
+	
+	["ffi/KHR/khrplatform.lua"] = "gl/ffi/KHR/khrplatform.lua",
+	["ffi/Linux/OpenGL.lua"] = "gl/ffi/Linux/OpenGL.lua",
+	["ffi/OSX/OpenGL.lua"] = "gl/ffi/OSX/OpenGL.lua",
+	["ffi/OSX/OpenGL2.lua"] = "gl/ffi/OSX/OpenGL2.lua",
+	["ffi/OSX/OpenGL3.lua"] = "gl/ffi/OSX/OpenGL3.lua",
+	["ffi/OSX/OpenGLMesa.lua"] = "gl/ffi/OSX/OpenGLMesa.lua",
+	["ffi/Windows/OpenGL.lua"] = "gl/ffi/Windows/OpenGL.lua",
+	["ffi/OpenGLES1.lua"] = "gl/ffi/OpenGLES1.lua",
+	["ffi/OpenGLES2.lua"] = "gl/ffi/OpenGLES2.lua",
+	["ffi/OpenGLES3.lua"] = "gl/ffi/OpenGLES3.lua",
+	["ffi/EGL.lua"] = "gl/ffi/EGL.lua",
 }
+
 deps = {
 	"bit",
 	"ext",
@@ -49,4 +62,174 @@ deps = {
 	"image",
 	"template",
 	"vec-ffi",
+}
+
+-- inc is put last before flags
+-- but inc is what the make.lua uses
+-- so this has to be built make.lua GL/glext.h
+-- but that wont work either cuz that will make the include to GL/glext.h into a split out file (maybe it should be?)
+-- for Windows I've got my glext.h outside the system paths, so you have to add that to the system path location.
+-- notice that GL/glext.h depends on GLenum to be defined.  but gl.h include glext.h.  why.
+generateBindings = {
+	-- used by GL, GLES1, GLES2 ...
+	{
+		inc = ffi.os ~= 'OSX'
+			and '<KHR/khrplatform.h>'
+			-- OSX is installed as `brew install mesa`
+			-- which I forget why but that's user include path at the moemnt
+			-- TODO fix that
+			or '"KHR/khrplatform.h"',
+		out = ffi.os..'/KHR/khrplatform.lua',
+	},
+	
+	{
+		inc =
+		--[[ OSX ... but I'm putting it in local space cuz bleh framework namespace resolution means include pattern-matching, not appending like typical search paths use ... so until fixing the include resolution ...
+			ffi.os == 'OSX' and '"OpenGL/gl.h"' or
+		--]] -- osx brew mesa usees GL/gl.h instead of the crappy builtin OSX GL
+			'<GL/gl.h>',
+		moreincs =
+		--[[
+			ffi.os == 'OSX' and {'"OpenGL/glext.h"'} or
+		--]]
+			{'<GL/glext.h>'},
+		--[[
+		includedirs = ffi.os == 'OSX' and {'.'} or nil,
+		--]]
+		out = ffi.os..'/OpenGL.lua',
+		os = ffi.os,
+		--[[ TODO -framework equivalent ...
+		includeDirMapping = ffi.os == 'OSX' and {
+			{['^OpenGL/(.*)$'] = '/Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk/System/Library/Frameworks/OpenGL.framework/Versions/A/Headers/%1'},
+		} or nil,
+		--]]	-- or not now that I'm using osx brew mesa instead of builtin crappy GL
+		skipincs = ffi.os == 'Windows' and {
+		-- trying to find out why my gl.h is blowing up on windows
+			'<winapifamily.h>',	-- verify please
+			'<sdkddkver.h>',
+			'<excpt.h>',
+			--'<windef.h>',
+			--'<minwindef.h>',
+			--'<winbase.h>',
+			'<windows.h>',
+			--'<minwindef.h>',
+			'<winnt.h>',
+			'<winerror.h>',
+			'<stdarg.h>',
+			'<specstrings.h>',
+			'<apiset.h>',
+			'<debugapi.h>',
+		} or nil,
+		macros = table{
+			'GL_GLEXT_PROTOTYPES',
+		}:append(ffi.os == 'Windows' and {
+			'WINGDIAPI=',
+			'APIENTRY=',
+		} or nil),
+		final = function(code)
+			if ffi.os == 'Windows' then
+				-- TODO this won't work now that I'm separating out KHRplatform.h ...
+				local oldcode = code
+				code = "local code = ''\n"
+				code = code .. safegsub(oldcode,
+					string.patescape'ffi.cdef',
+					'code = code .. '
+				)
+				code = code .. [[
+ffi.cdef(code)
+local gl = require 'ffi.load' 'GL'
+return setmetatable({
+code = code,	-- Windows GLApp needs to be able to read the ffi.cdef string for parsing out wglGetProcAddress's
+}, {__index=gl})
+]]
+			else
+				code = code .. [[
+return require 'ffi.load' 'GL'
+]]
+			end
+			return code
+		end,
+	},
+
+	{
+		inc = '<GLES/gl.h>',
+		out = 'OpenGLES1.lua',
+		final = function(code)
+			return code .. [[
+return require 'ffi.load' 'GLESv1_CM'
+]]
+		end,
+	},
+
+	{
+		inc = '<GLES2/gl2.h>',
+		out = 'OpenGLES2.lua',
+		final = function(code)
+			return code .. [[
+return require 'ffi.load' 'GLESv2'
+]]
+		end,
+	},
+
+	{
+		inc = '<GLES3/gl3.h>',
+		out = 'OpenGLES3.lua',
+		final = function(code)
+			-- why don't I have a GLES3 library when I have GLES3 headers?
+			return code .. [[
+return require 'ffi.load' 'GLESv2'
+]]
+		end,
+	},
+
+	{
+		inc = '<EGL/egl.h>',
+		out = 'EGL.lua',
+		--[[ TODO I'm trying hard to get KHR/khrplatform.h to be substituted by the preprocessor as a lua-require ...
+		includedirs = ffi.os == 'OSX' and {
+			'/usr/local/include',
+		} or nil,
+		--]]
+		final = function(code, preproc)
+			code = removeEnum(code, 'EGL_FOREVER = 0xffffffffffffffff')
+			code = makeLibWrapper{
+				code = code,
+				preproc = preproc,
+				lib = 'EGL',
+				requires = {
+[===[
+
+-- I'm guessing this is a difference of OS's and not a difference of EGL versions because the header version says it is the same, but the Linux build did void* while the OSX build did int ...
+if ffi.os == 'OSX' then
+	ffi.cdef[[
+typedef int EGLNativeDisplayType;
+typedef void *EGLNativePixmapType;
+typedef void *EGLNativeWindowType;
+]]
+else
+	ffi.cdef[[
+typedef void *EGLNativeDisplayType;
+typedef khronos_uintptr_t EGLNativePixmapType;
+typedef khronos_uintptr_t EGLNativeWindowType;
+]]
+end]===]
+				},
+				footerCode = [[
+-- macros
+
+wrapper.EGL_DONT_CARE = ffi.cast('EGLint', -1)
+wrapper.EGL_NO_CONTEXT = ffi.cast('EGLDisplay', 0)
+wrapper.EGL_NO_DISPLAY = ffi.cast('EGLDisplay', 0)
+wrapper.EGL_NO_SURFACE = ffi.cast('EGLSurface', 0)
+wrapper.EGL_UNKNOWN = ffi.cast('EGLint', -1)
+wrapper.EGL_DEFAULT_DISPLAY = ffi.cast('EGLNativeDisplayType', 0)
+wrapper.EGL_NO_SYNC = ffi.cast('EGLSync', 0)
+wrapper.EGL_NO_IMAGE = ffi.cast('EGLImage', 0)
+wrapper.EGL_FOREVER = 0xFFFFFFFFFFFFFFFFULL
+]],
+			}
+			code = code:gsub(string.patescape'(void)', '()')
+			return code
+		end,
+	},
 }
