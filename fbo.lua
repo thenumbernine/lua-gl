@@ -39,7 +39,7 @@ local FrameBuffer = class()
 args:
 	width
 	height
-	useDepth = (optional) 'true' to allocate and bind a renderbuffer associated with the depth component
+	useDepth = (optional) 'true' to allocate and bind a renderbuffer associated with the depth component.  or value to specify the depth component type.
 	dest = (optional) a texture, to set color attachment upon init
 --]]
 function FrameBuffer:init(args)
@@ -58,10 +58,14 @@ function FrameBuffer:init(args)
 	-- make a depth buffer render target only if you need it
 	self.depthID = 0
 	if args.useDepth then
+		local depthComponent = args.useDepth
+		if type(depthComponent) ~= 'number' then
+			depthComponent = defaultDepthComponent
+		end
 		gl.glGenRenderbuffers(1, id)
 		self.depthID = id[0]
 		gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, self.depthID)
-		gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, defaultDepthComponent, self.width, self.height)
+		gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, depthComponent, self.width, self.height)
 		gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, self.depthID)
 		gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, 0)
 	end
