@@ -1,3 +1,7 @@
+--------------------------------------------
+-- generated with dist/build-distinfo.rua --
+--------------------------------------------
+
 name = "gl"
 files = {
 	["LICENSE"] = "gl/LICENSE",
@@ -6,9 +10,22 @@ files = {
 	["attribute.lua"] = "gl/attribute.lua",
 	["buffer.lua"] = "gl/buffer.lua",
 	["call.lua"] = "gl/call.lua",
+	["distinfo"] = "gl/distinfo",
 	["elementarraybuffer.lua"] = "gl/elementarraybuffer.lua",
 	["error.lua"] = "gl/error.lua",
 	["fbo.lua"] = "gl/fbo.lua",
+	["ffi/EGL.lua"] = "gl/ffi/EGL.lua",
+	["ffi/KHR/khrplatform.lua"] = "gl/ffi/KHR/khrplatform.lua",
+	["ffi/Linux/OpenGL.lua"] = "gl/ffi/Linux/OpenGL.lua",
+	["ffi/OSX/OpenGL.lua"] = "gl/ffi/OSX/OpenGL.lua",
+	["ffi/OSX/OpenGL2.lua"] = "gl/ffi/OSX/OpenGL2.lua",
+	["ffi/OSX/OpenGL3.lua"] = "gl/ffi/OSX/OpenGL3.lua",
+	["ffi/OSX/OpenGLMesa.lua"] = "gl/ffi/OSX/OpenGLMesa.lua",
+	["ffi/OpenGL.lua"] = "gl/ffi/OpenGL.lua",
+	["ffi/OpenGLES1.lua"] = "gl/ffi/OpenGLES1.lua",
+	["ffi/OpenGLES2.lua"] = "gl/ffi/OpenGLES2.lua",
+	["ffi/OpenGLES3.lua"] = "gl/ffi/OpenGLES3.lua",
+	["ffi/Windows/OpenGL.lua"] = "gl/ffi/Windows/OpenGL.lua",
 	["geometry.lua"] = "gl/geometry.lua",
 	["get.lua"] = "gl/get.lua",
 	["gl-dev-1.rockspec"] = "gl/gl-dev-1.rockspec",
@@ -41,20 +58,7 @@ files = {
 	["transformfeedbackbuffer.lua"] = "gl/transformfeedbackbuffer.lua",
 	["types.lua"] = "gl/types.lua",
 	["vertexarray.lua"] = "gl/vertexarray.lua",
-	
-	["ffi/KHR/khrplatform.lua"] = "gl/ffi/KHR/khrplatform.lua",
-	["ffi/Linux/OpenGL.lua"] = "gl/ffi/Linux/OpenGL.lua",
-	["ffi/OSX/OpenGL.lua"] = "gl/ffi/OSX/OpenGL.lua",
-	["ffi/OSX/OpenGL2.lua"] = "gl/ffi/OSX/OpenGL2.lua",
-	["ffi/OSX/OpenGL3.lua"] = "gl/ffi/OSX/OpenGL3.lua",
-	["ffi/OSX/OpenGLMesa.lua"] = "gl/ffi/OSX/OpenGLMesa.lua",
-	["ffi/Windows/OpenGL.lua"] = "gl/ffi/Windows/OpenGL.lua",
-	["ffi/OpenGLES1.lua"] = "gl/ffi/OpenGLES1.lua",
-	["ffi/OpenGLES2.lua"] = "gl/ffi/OpenGLES2.lua",
-	["ffi/OpenGLES3.lua"] = "gl/ffi/OpenGLES3.lua",
-	["ffi/EGL.lua"] = "gl/ffi/EGL.lua",
 }
-
 deps = {
 	"bit",
 	"ext",
