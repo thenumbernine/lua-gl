@@ -11,10 +11,24 @@ function GLTexCube:create(args)
 	-- now args.data should be a 6-indexed array of whatever data you were gonna pass the texture
 	local data = args.data or {}
 	if args.filenames then data = {} end	-- I'm breaking with tradition: no more GLTexCube.load, now just through the ctor
-	local baseWidth, baseHeight = args.width, args.height
-	local baseFormat, baseInternalFormat, baseType = args.format, args.internalFormat or args.format, args.type
+	local baseWidth = args.width
+	local baseHeight = args.height
+
+	-- TODO redo this like tex1d/2d/3d to use internalFormat first's info as defaults for format and type...
+	-- ... but it looks like, with the channels detect below, there's pieces of the image-loader mixed in here...
+	-- ... so I won't do it right now.
+	local baseInternalFormat = args.internalFormat or args.format
+	local baseFormat = args.format
+	local baseType = args.type
+
 	for i=1,6 do
-		local width, height, format, internalFormat, glType = baseWidth, baseHeight, baseFormat, baseInternalFormat, baseType
+		local width = baseWidth
+		local height = baseHeight
+
+		local internalFormat = baseInternalFormat
+		local format = baseFormat
+		local glType = baseType
+
 		if args.filenames then
 			local filename = args.filenames[i]
 			local Image = require 'image'

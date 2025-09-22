@@ -10,14 +10,19 @@ GLTex3D.target = gl.GL_TEXTURE_3D
 function GLTex3D:create(args)
 	self.target = args.target
 	self.level = args.level	-- TODO store? really?
-	self.internalFormat = args.internalFormat
 	self.width = args.width
 	self.height = args.height
 	self.depth = args.depth
 	self.border = args.border
-	self.format = args.format
-	self.type = args.type
 	self.data = args.data
+
+	-- TODO this is duplicated here and gl/tex1d.lua, gl/tex2d.lua
+	self.internalFormat = args.internalFormat
+	local formatInfo = GLTex.formatInfoForInternalFormat[self.internalFormat]
+	-- if these aren't provided then fall back on the self.internalFormat's formatInfo's .types[1] and .format
+	self.format = args.format or (formatInfo and formatInfo.format)
+	self.type = args.type or (formatInfo and formatInfo.types[1])
+
 	gl.glTexImage3D(
 		self.target,
 		self.level or 0,

@@ -29,6 +29,8 @@ internalComponents = list from "Internal Components" of table 1
 baseInternalFormat = base internalFormat for the internalFormat.  only for GL 4 table 2 and 3, or GLES 3 glCompressedTexImage2D.
 genericVsSpecific = generic vs specific type of the compressed format.  only for GL 4 table 3.
 
+In the Tex1D/2D/3D loaders, .format and .type are optional and will be picked from this table based on .internalFormat .  .type will pick the first from .types[].
+
 the bits fields
 	redBits, greenBits, blueBits, alphaBits, sharedBits, depthBits, stencilBits
 ... will always share the same prefix in the GL tables, and I'm moving that prefix into its own field
