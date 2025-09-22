@@ -21,7 +21,7 @@ function GLTex3D:create(args)
 	local formatInfo = GLTex.formatInfoForInternalFormat[self.internalFormat]
 	-- if these aren't provided then fall back on the self.internalFormat's formatInfo's .types[1] and .format
 	self.format = args.format or (formatInfo and formatInfo.format)
-	self.type = args.type or (formatInfo and formatInfo.types[1])
+	self.type = args.type or (formatInfo and formatInfo.types[1] or error("args.type not provided, and couldn't find GLTex.formatInfoForInternalFormat["..tostring(self.internalFormat).."]"))
 
 	gl.glTexImage3D(
 		self.target,
