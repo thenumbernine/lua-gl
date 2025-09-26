@@ -11,8 +11,6 @@ function GLSampler:init(args)
 	gl.glGenSamplers(1, ptr)
 	self.id = ptr[0]
 
-	self.target = args.target
-
 	-- this much in common with GLTex:
 	if args.minFilter then self:setParameter(gl.GL_TEXTURE_MIN_FILTER, args.minFilter) end
 	if args.magFilter then self:setParameter(gl.GL_TEXTURE_MAG_FILTER, args.magFilter) end
@@ -48,6 +46,16 @@ function GLSampler:setParameter(k, v)
 	if type(k) == 'string' then k = gl[k] or error("couldn't find parameter "..k) end
 	-- TODO pick by type? and expose each type call separately?
 	gl.glSamplerParameterf(self.id, k, v)
+	return self
+end
+
+function GLSampler:bind(unit)
+	gl.glBindSampler(unit, self.id)
+	return self
+end
+
+function GLSampler:unbind(unit)
+	gl.glBindSampler(unit, 0)
 	return self
 end
 
