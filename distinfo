@@ -45,6 +45,7 @@ files = {
 	["program.lua"] = "gl/program.lua",
 	["query.lua"] = "gl/query.lua",
 	["report.lua"] = "gl/report.lua",
+	["sampler.lua"] = "gl/sampler.lua",
 	["sceneobject.lua"] = "gl/sceneobject.lua",
 	["setup.lua"] = "gl/setup.lua",
 	["shader.lua"] = "gl/shader.lua",

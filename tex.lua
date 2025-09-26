@@ -11,7 +11,6 @@ local GLGet = require 'gl.get'
 local assert = require 'ext.assert'
 local table = require 'ext.table'
 local op = require 'ext.op'
-local bit = bit or bit32 or require 'bit'
 
 --[[
 maybe this should be moved to GLTypes? idk what the scope of that file is, for textures, uniforms, both? neither?
@@ -382,6 +381,7 @@ local lookupWrap = {
 	-- gles 1 & 2 doesn't have GL_TEXTURE_WRAP_R
 	r = op.safeindex(gl, 'GL_TEXTURE_WRAP_R'),
 }
+GLTex.lookupWrap = lookupWrap
 
 function GLTex:setWrap(wrap)
 	for k,v in pairs(wrap) do
