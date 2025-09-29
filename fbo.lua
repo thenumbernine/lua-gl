@@ -1,4 +1,5 @@
 -- rename file to 'framebuffer' maybe ?
+require 'ext.gc'	-- make sure luajit can __gc lua-tables
 local ffi = require 'ffi'
 local class = require 'ext.class'
 local op = require 'ext.op'
@@ -75,6 +76,22 @@ function FrameBuffer:init(args)
 		self:setColorAttachment(args.dest)
 	end
 end
+
+function FrameBuffer:delete()
+	if self.depthID then
+		local ptr = ffi.new('GLuint[1]', self.depthID)
+		gl.glDeleteRenderbuffers(1, ptr)
+		self.depthID = nil
+	end
+
+	if self.id then
+		local ptr = ffi.new('GLuint[1]', self.id)
+		gl.glDeleteFramebuffers(1, ptr)
+		self.id = nil
+	end
+end
+
+FrameBuffer.__gc = FrameBuffer.delete
 
 function FrameBuffer:bind()
 	gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.id)

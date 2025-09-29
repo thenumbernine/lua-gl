@@ -60,8 +60,7 @@ end
 
 function GLQuery:delete()
 	if self.id == nil then return end
-	local ptr = ffi.new'GLuint[1]'
-	ptr[0] = self.id
+	local ptr = ffi.new('GLuint[1]', self.id)
 	gl.glDeleteQueries(1, ptr)
 	self.id = nil
 end
