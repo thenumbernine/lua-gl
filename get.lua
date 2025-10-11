@@ -26,7 +26,7 @@ local GLboolean = ffi.typeof'GLboolean'
 local GLint = ffi.typeof'GLint'
 local GLint64 = ffi.typeof'GLint64'
 local GLfloat = ffi.typeof'GLfloat'
-local GLdouble = ffi.typeof'GLdouble'
+local GLdouble = op.land(pcall(ffi.typeof, 'GLdouble')) or nil
 
 
 local function unpackptr(p, n)
@@ -74,13 +74,13 @@ local boolean = makeRetLastArg{name='glGetBooleanv', ctype=GLboolean, lookup={1}
 local int = makeRetLastArg{name='glGetIntegerv', ctype=GLint, lookup={1}}
 local int64 = makeRetLastArg{name='glGetInteger64v', ctype=GLint64, lookup={1}}
 local float = makeRetLastArg{name='glGetFloatv', ctype=GLfloat, lookup={1}}
-local double = makeRetLastArg{name='glGetDoublev', ctype=GLdouble, lookup={1}}
+local double = GLdouble and makeRetLastArg{name='glGetDoublev', ctype=GLdouble, lookup={1}}
 
 local booleanIndex = makeRetLastArg{name='glGetBooleani_v', ctype=GLboolean, lookup={1}}
 local intIndex = makeRetLastArg{name='glGetIntegeri_v', ctype=GLint, lookup={1}}
 local int64Index = makeRetLastArg{name='glGetInteger64i_v', ctype=GLint64, lookup={1}}
 local floatIndex = makeRetLastArg{name='glGetFloati_v', ctype=GLfloat, lookup={1}}
-local doubleIndex = makeRetLastArg{name='glGetDoublei_v', ctype=GLdouble, lookup={1}}
+local doubleIndex = GLdouble and makeRetLastArg{name='glGetDoublei_v', ctype=GLdouble, lookup={1}}
 
 local function string(param, ...)
 	local t = type(param)
