@@ -7,6 +7,11 @@ local gl = require 'gl'
 local Tex2D = require 'gl.tex2d'
 local glreport = require 'gl.report'
 
+local GLint_1 = ffi.typeof'GLint[1]'
+local GLuint_1 = ffi.typeof'GLuint[1]'
+local GLuint_4 = ffi.typeof'GLuint[4]'
+local GLenum_arr = ffi.typeof'GLenum[?]'
+
 local defaultDepthComponent = gl.GL_DEPTH_COMPONENT
 if op.safeindex(gl, 'GL_ES_VERSION_2_0') then
 	-- seems DEPTH_COMPONENT doesn't work in webgl ...
@@ -51,7 +56,7 @@ function FrameBuffer:init(args)
 	self.width = args.width
 	self.height = args.height
 
-	local id = ffi.new('GLuint[1]')
+	local id = GLuint_1()
 	gl.glGenFramebuffers(1, id)
 	self.id = id[0]
 	self:bind()
@@ -79,13 +84,13 @@ end
 
 function FrameBuffer:delete()
 	if self.depthID then
-		local ptr = ffi.new('GLuint[1]', self.depthID)
+		local ptr = GLuint_1(self.depthID)
 		gl.glDeleteRenderbuffers(1, ptr)
 		self.depthID = nil
 	end
 
 	if self.id then
-		local ptr = ffi.new('GLuint[1]', self.id)
+		local ptr = GLuint_1(self.id)
 		gl.glDeleteFramebuffers(1, ptr)
 		self.id = nil
 	end
@@ -184,7 +189,7 @@ function FrameBuffer:setDrawBuffers(...)
 	else
 		-- or use a table? idk?
 		n = select('#', ...)
-		p = ffi.new('GLenum[?]', n)
+		p = GLenum_arr(n)
 		for i=1,n do
 			p[i-1] = select(i, ...)
 		end
@@ -193,7 +198,7 @@ function FrameBuffer:setDrawBuffers(...)
 	return self
 end
 
-local glint = ffi.new('GLint[1]')
+local glint = GLint_1()
 --[[
 if index is a number then it binds the associated color attachment at 'GL_COLOR_ATTACHMENT0+index' and runs the callback
 if index is a table then it runs through the ipairs,
@@ -244,7 +249,7 @@ function FrameBuffer.drawScreenQuad()
 	gl.glEnd()
 end
 
-local oldvp = ffi.new('GLuint[4]')
+local oldvp = GLuint_4()
 function FrameBuffer:draw(args)
 --DEBUG:glreport('begin drawScreenFBO')
 	if args.viewport then

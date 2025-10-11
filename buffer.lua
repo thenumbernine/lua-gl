@@ -11,6 +11,9 @@ local vec4f = require 'vec-ffi.vec4f'
 local gl = require 'gl'
 local GLTypes = require 'gl.types'
 
+local uint8_t_arr = ffi.typeof'uint8_t[?]'
+local float = ffi.typeof'float'
+local GLuint_1 = ffi.typeof'GLuint[1]'
 
 local Buffer = class()
 
@@ -42,7 +45,7 @@ args:
 		instead of only GLProgram:setAttr(attr)
 --]]
 function Buffer:init(args)
-	local ptr = ffi.new'GLuint[1]'
+	local ptr = GLuint_1()
 	gl.glGenBuffers(1, ptr)
 	self.id = ptr[0]
 
@@ -78,7 +81,7 @@ function Buffer:init(args)
 			-- TODO there's enough field setters in here that maybe I should just move the 'elseif args.size' into there ...
 			self:setData(args)
 		elseif args.size then
-			local empty = ffi.new('uint8_t[?]', args.size)
+			local empty = uint8_t_arr(args.size)
 			self:setData(table(args, {data=empty}))
 		end
 	end
@@ -86,7 +89,7 @@ end
 
 function Buffer:delete()
 	if self.id == nil then return end
-	local ptr = ffi.new('GLuint[1]', self.id)
+	local ptr = GLuint_1(self.id)
 	gl.glDeleteBuffers(1, ptr)
 	self.id = nil
 end
@@ -124,7 +127,7 @@ function Buffer:setData(args)
 		-- TODO move the default into Buffer.type = gl.GL_FLOAT ?
 		-- but then i'd have buffers set with .type == GL_FLOAT even if they dont have .data in ctor and therefore might not really have float data ... hmm ...
 		local gltype = args.type or self.type
-		local ctype = ffi.typeof(gltype and GLTypes.ctypeForGLType[gltype] or 'float')
+		local ctype = ffi.typeof(gltype and GLTypes.ctypeForGLType[gltype] or float)
 		size = size or n * ffi.sizeof(ctype)
 		local numElems = math.floor(size / ffi.sizeof(ctype))
 		local ctype_arr = ffi.typeof('$[?]', ctype)

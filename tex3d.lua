@@ -3,6 +3,10 @@ local gl = require 'gl'
 local GLTex = require 'gl.tex'
 local GLTypes = require 'gl.types'
 
+
+local uint8_t_arr = ffi.typeof'uint8_t[?]'
+
+
 local GLTex3D = GLTex:subclass()
 
 GLTex3D.target = gl.GL_TEXTURE_3D
@@ -46,7 +50,7 @@ function GLTex3D:load(args)
 	local data = image:data()
 	local nw,nh,nd = self.rupowoftwo(w), self.rupowoftwo(h), self.rupowoftwo(d)
 	if w ~= nw or h ~= nh then
-		local ndata = ffi.new('unsigned char[?]', nw*nh*nd*4)
+		local ndata = uint8_t_arr(nw*nh*nd*4)
 		for nz=0,nd-1 do
 			for ny=0,nh-1 do
 				for nx=0,nw-1 do

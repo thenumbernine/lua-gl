@@ -6,6 +6,7 @@ local assert = require 'ext.assert'
 
 
 local GLint = ffi.typeof'GLint'
+local GLuint_1 = ffi.typeof'GLuint[1]'
 
 
 local GLQuery = GLGet.behavior()
@@ -54,7 +55,7 @@ GLQuery:makeGetter{
 }
 
 function GLQuery:init(target)
-	local ptr = ffi.new'GLuint[1]'
+	local ptr = GLuint_1()
 	gl.glGenQueries(1, ptr)
 	self.id = ptr[0]
 
@@ -64,7 +65,7 @@ end
 
 function GLQuery:delete()
 	if self.id == nil then return end
-	local ptr = ffi.new('GLuint[1]', self.id)
+	local ptr = GLuint_1(self.id)
 	gl.glDeleteQueries(1, ptr)
 	self.id = nil
 end

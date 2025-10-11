@@ -12,7 +12,10 @@ local assert = require 'ext.assert'
 local table = require 'ext.table'
 local op = require 'ext.op'
 
+local char_p = ffi.typeof'char*'
+local uint8_t_arr = ffi.typeof'uint8_t[?]'
 local GLint = ffi.typeof'GLint'
+local GLuint_1 = ffi.typeof'GLuint[1]'
 local GLfloat = ffi.typeof'GLfloat'
 
 --[[
@@ -343,7 +346,7 @@ function GLTex:init(args)
 		args = table(args)
 	end
 
-	local ptr = ffi.new'GLuint[1]'
+	local ptr = GLuint_1()
 	gl.glGenTextures(1, ptr)
 	self.id = ptr[0]
 
@@ -362,7 +365,7 @@ end
 
 function GLTex:delete()
 	if self.id == nil then return end
-	local ptr = ffi.new('GLuint[1]', self.id)
+	local ptr = GLuint_1(self.id)
 	gl.glDeleteTextures(1, ptr)
 	self.id = nil
 end
@@ -453,14 +456,14 @@ function GLTex:toCPU(ptr, level)
 	if not ptr then
 		-- TODO need to map from format to channels
 		-- TOOD need to map from GL type to C type
-		--ptr = ffi.new('uint8_t[?]', size)
+		--ptr = uint8_t_arr(size)
 		-- or TODO default to self.data, that was used for initial texture creation?
 		error("expected ptr")
 	end
 	-- TODO .keep to keep the ptr upon init, and default to it here?
 	-- TODO require bind() beforehand like all the other setters? or manually bind() here?
 	self:bind()
-	gl.glGetTexImage(self.target, level or 0, self.format, self.type, ffi.cast('char*', ptr))
+	gl.glGetTexImage(self.target, level or 0, self.format, self.type, ffi.cast(char_p, ptr))
 	return ptr
 end
 

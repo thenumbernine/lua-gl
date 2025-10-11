@@ -16,11 +16,13 @@ local table = require 'ext.table'
 local class = require 'ext.class'
 --DEBUG(glreport):local glreport = require 'gl.report'
 
+local GLuint_1 = ffi.typeof'GLuint[1]'
+
 local GLVertexArray = class()
 
 function GLVertexArray:delete()
 	if self.id == nil then return end
-	local ptr = ffi.new('GLuint[1]', self.id)
+	local ptr = GLuint_1(self.id)
 	gl.glDeleteVertexArrays(1, ptr)
 	self.id = nil
 end
@@ -36,7 +38,7 @@ args:
 --]]
 function GLVertexArray:init(args)
 --DEBUG(glreport):glreport'here'
-	local ptr = ffi.new'GLuint[1]'
+	local ptr = GLuint_1()
 	gl.glGenVertexArrays(1, ptr)
 --DEBUG(glreport):glreport'here'
 	self.id = ptr[0]

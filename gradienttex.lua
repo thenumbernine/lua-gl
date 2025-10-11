@@ -1,6 +1,8 @@
 local ffi = require 'ffi'
 local gl = require 'gl'
 
+local uint8_t_arr = ffi.typeof'uint8_t[?]'
+
 -- TODO hmmmm
 -- TEXTURE_1D is allowed in latest GL
 -- but not in GLES
@@ -15,7 +17,7 @@ function GradientTex:init(w, colors, repeated)
 	self.colors = colors
 
 	local channels = 4
-	local data = ffi.new('unsigned char[?]', w*channels)
+	local data = uint8_t_arr(w*channels)
 	for i=0,w-1 do
 		local f = (i+.5)/w	-- texel normalized coordinate
 		f = f * (repeated and #self.colors or (#self.colors-1))	-- find the associated color in the gradient

@@ -4,10 +4,12 @@ local class = require 'ext.class'
 local gl = require 'gl'
 local GLTex = require 'gl.tex'
 
+local GLuint_1 = ffi.typeof'GLuint[1]'
+
 local GLSampler = class()
 
 function GLSampler:init(args)
-	local ptr = ffi.new'GLuint[1]'
+	local ptr = GLuint_1()
 	gl.glGenSamplers(1, ptr)
 	self.id = ptr[0]
 
@@ -16,12 +18,11 @@ function GLSampler:init(args)
 	if args.magFilter then self:setParameter(gl.GL_TEXTURE_MAG_FILTER, args.magFilter) end
 	if args.wrap then self:setWrap(args.wrap) end
 	if args.generateMipmap then self:generateMipmap() end
-
 end
 
 function GLSampler:delete()
 	if self.id == nil then return end
-	local ptr = ffi.new('GLuint[1]', self.id)
+	local ptr = GLuint_1(self.id)
 	gl.glDeleteSamplers(1, ptr)
 	self.id = nil
 end

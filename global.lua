@@ -10,8 +10,15 @@ local GLGet = require 'gl.get'
 
 local GLboolean = ffi.typeof'GLboolean'
 local GLint = ffi.typeof'GLint'
+local GLint_1 = ffi.typeof'GLint[1]'
+local GLint_2 = ffi.typeof'GLint[2]'
+local GLint_arr = ffi.typeof'GLint[?]'
+local GLint64 = ffi.typeof'GLint64'
 local GLfloat = ffi.typeof'GLfloat'
-local GLdouble = ffi.typeof'GLdouble'
+
+-- TODO for GLES I don't think there's a GLdouble
+-- so for those we'd want ths to fall back on makeFloatN
+local GLdouble = op.land(pcall(ffi.typeof, 'GLdouble')) or nil
 
 
 local GLGlobal = GLGet.behavior()
@@ -120,7 +127,7 @@ end
 
 -- TODO for GLES I don't think there's a GLdouble
 -- so for those we'd want ths to fall back on makeFloatN
-if not pcall(ffi.new, 'GLdouble') then
+if not GLdouble then
 	makeDouble = makeFloat
 	makeDoubleN = makeFloatN
 end
@@ -138,7 +145,7 @@ local function makeInts(name, numName)
 			assert.type(num, 'number')
 
 			-- if it's a getter that gets the whole array ...
-			local result = ffi.new('GLint[?]', num)
+			local result = GLint_arr(num)
 			gl.glGetIntegerv(nameValue, result)
 			return range(0,num-1):mapi(function(i)
 				return result[i]
@@ -199,7 +206,7 @@ local function makeIntVec(args)
 	if type(args) == 'string' then
 		args= {name=args}
 	end
-	args.type = 'GLint'
+	args.type = GLint
 	args.getterName = 'glGetIntegerv'
 	args.indexedGetterName = 'glGetIntegeri_v'
 	return makeVec(args)
@@ -207,7 +214,7 @@ end
 local function makeInt64Vec(name, count)
 	return makeVec{
 		name = name,
-		type = 'GLint64',
+		type = GLint64,
 		getterName = 'glGetInteger64v',
 		indexedGetterName = 'glGetInteger64i_v',
 		count = count,
@@ -861,8 +868,8 @@ GLGlobal:makeGetter{
 					-- or I could just double-wrap makeRetLastArg ...
 					-- ... but nah I can't cuz inside it does a safecall ...
 					-- ... I'd need a separate wrapper for determining-of-available and returning-fail otherwise ...
-					local rangePtr = ffi.new'GLint[2]'
-					local precisionPtr = ffi.new'GLint[1]'
+					local rangePtr = GLint_2()
+					local precisionPtr = GLint_1()
 					local success, msg = glSafeCall('glGetShaderPrecisionFormat', nameValue, precParamValue, rangePtr, precisionPtr)
 					if not success then return nil, msg end
 					return rangePtr[0], rangePtr[1], precisionPtr[0]

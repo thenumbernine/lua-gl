@@ -11,9 +11,16 @@ local GLAttribute = require 'gl.attribute'
 local GLArrayBuffer = require 'gl.arraybuffer'
 local glnumber = require 'gl.number'
 
-
+local char_const_p_arr = ffi.typeof'char const*[?]'
+local int = ffi.typeof'int'
+local unsigned_int = ffi.typeof'unsigned int'
+local float = ffi.typeof'float'
+local double = ffi.typeof'double'
+local GLchar_arr = ffi.typeof'GLchar[?]'
 local GLint = ffi.typeof'GLint'
-
+local GLint_1 = ffi.typeof'GLint[1]'
+local GLsizei_1 = ffi.typeof'GLsizei[1]'
+local GLenum_1 = ffi.typeof'GLenum[1]'
 
 -- this doesn't work as easy as it does in webgl
 -- https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetActiveUniform.xhtml
@@ -25,26 +32,27 @@ local function getUniformSettersForGLType(utype)
 	if not uniformSettersForGLTypes then
 		uniformSettersForGLTypes = {}
 		for name,info in pairs{
+			-- TODO too many ".type"s out there, how about call it ".ctype" instead?
 			GL_FLOAT = {arg='glUniform1f', glsltype='float'},
-			GL_FLOAT_VEC2 = {arg='glUniform2f', type='float', count=2, vec=gl.glUniform2fv, glsltype='vec2'},
-			GL_FLOAT_VEC3 = {arg='glUniform3f', type='float', count=3, vec=gl.glUniform3fv, glsltype='vec3'},
-			GL_FLOAT_VEC4 = {arg='glUniform4f', type='float', count=4, vec=gl.glUniform4fv, glsltype='vec4'},
+			GL_FLOAT_VEC2 = {arg='glUniform2f', type=float, count=2, vec=gl.glUniform2fv, glsltype='vec2'},
+			GL_FLOAT_VEC3 = {arg='glUniform3f', type=float, count=3, vec=gl.glUniform3fv, glsltype='vec3'},
+			GL_FLOAT_VEC4 = {arg='glUniform4f', type=float, count=4, vec=gl.glUniform4fv, glsltype='vec4'},
 			GL_DOUBLE = {arg='glUniform1d', glsltype='double'},
-			GL_DOUBLE_VEC2 = {arg='glUniform2d', type='double', count=2, vec=gl.glUniform2fv, glsltype='dvec2'},
-			GL_DOUBLE_VEC3 = {arg='glUniform3d', type='double', count=3, vec=gl.glUniform3fv, glsltype='dvec3'},
-			GL_DOUBLE_VEC4 = {arg='glUniform4d', type='double', count=4, vec=gl.glUniform4fv, glsltype='dvec4'},
+			GL_DOUBLE_VEC2 = {arg='glUniform2d', type=double, count=2, vec=gl.glUniform2fv, glsltype='dvec2'},
+			GL_DOUBLE_VEC3 = {arg='glUniform3d', type=double, count=3, vec=gl.glUniform3fv, glsltype='dvec3'},
+			GL_DOUBLE_VEC4 = {arg='glUniform4d', type=double, count=4, vec=gl.glUniform4fv, glsltype='dvec4'},
 			GL_INT = {arg='glUniform1i', glsltype='int'},
-			GL_INT_VEC2 = {arg='glUniform2i', type='int', count=2, vec=gl.glUniform2iv, glsltype='ivec2'},
-			GL_INT_VEC3 = {arg='glUniform3i', type='int', count=3, vec=gl.glUniform3iv, glsltype='ivec3'},
-			GL_INT_VEC4 = {arg='glUniform4i', type='int', count=4, vec=gl.glUniform4iv, glsltype='ivec4'},
+			GL_INT_VEC2 = {arg='glUniform2i', type=int, count=2, vec=gl.glUniform2iv, glsltype='ivec2'},
+			GL_INT_VEC3 = {arg='glUniform3i', type=int, count=3, vec=gl.glUniform3iv, glsltype='ivec3'},
+			GL_INT_VEC4 = {arg='glUniform4i', type=int, count=4, vec=gl.glUniform4iv, glsltype='ivec4'},
 			GL_UNSIGNED_INT = {arg='glUniform1ui', glsltype='unsigned int'},
-			GL_UNSIGNED_INT_VEC2 = {arg='glUniform2ui', type='unsigned int', count=2, vec=gl.glUniform2uiv, glsltype='uvec2'},
-			GL_UNSIGNED_INT_VEC3 = {arg='glUniform3ui', type='unsigned int', count=3, vec=gl.glUniform3uiv, glsltype='uvec3'},
-			GL_UNSIGNED_INT_VEC4 = {arg='glUniform4ui', type='unsigned int', count=4, vec=gl.glUniform4uiv, glsltype='uvec4'},
+			GL_UNSIGNED_INT_VEC2 = {arg='glUniform2ui', type=unsigned_int, count=2, vec=gl.glUniform2uiv, glsltype='uvec2'},
+			GL_UNSIGNED_INT_VEC3 = {arg='glUniform3ui', type=unsigned_int, count=3, vec=gl.glUniform3uiv, glsltype='uvec3'},
+			GL_UNSIGNED_INT_VEC4 = {arg='glUniform4ui', type=unsigned_int, count=4, vec=gl.glUniform4uiv, glsltype='uvec4'},
 			GL_BOOL = {arg='glUniform1i', glsltype='bool'},
-			GL_BOOL_VEC2 = {arg='glUniform2i', type='int', count=2, vec=gl.glUniform2iv, glsltype='bvec2'},
-			GL_BOOL_VEC3 = {arg='glUniform3i', type='int', count=3, vec=gl.glUniform3iv, glsltype='bvec3'},
-			GL_BOOL_VEC4 = {arg='glUniform4i', type='int', count=4, vec=gl.glUniform4iv, glsltype='bvec4'},
+			GL_BOOL_VEC2 = {arg='glUniform2i', type=int, count=2, vec=gl.glUniform2iv, glsltype='bvec2'},
+			GL_BOOL_VEC3 = {arg='glUniform3i', type=int, count=3, vec=gl.glUniform3iv, glsltype='bvec3'},
+			GL_BOOL_VEC4 = {arg='glUniform4i', type=int, count=4, vec=gl.glUniform4iv, glsltype='bvec4'},
 			GL_FLOAT_MAT2 = {mat='glUniformMatrix2fv', glsltype='mat2'},
 			GL_FLOAT_MAT3 = {mat='glUniformMatrix3fv', glsltype='mat3'},
 			GL_FLOAT_MAT4 = {mat='glUniformMatrix4fv', glsltype='mat4'},
@@ -141,6 +149,11 @@ local function getUniformSettersForGLType(utype)
 				if not info.mat then info = nil end
 			end
 			if v and info then
+				-- while we're here, if we have a type then get an array-type ctor
+				if info.type then
+					info.typeArr = ffi.typeof('$[?]', info.type)
+				end
+
 				uniformSettersForGLTypes[v] = info
 			end
 		end
@@ -374,7 +387,7 @@ function GLProgram:init(args)
 	local transformFeedback = args.transformFeedback
 	if transformFeedback then
 		local n = #transformFeedback
-		local varyings = ffi.new('char const *[?]', n)
+		local varyings = char_const_p_arr(n)
 		for i=1,n do
 			varyings[i-1] = transformFeedback[i]
 		end
@@ -404,11 +417,11 @@ function GLProgram:init(args)
 	local maxLen = self:get'GL_ACTIVE_UNIFORM_MAX_LENGTH'
 	for i=1,maxUniforms do
 		local bufSize = maxLen+1
-		local name = ffi.new('GLchar[?]', bufSize)
-		local length = ffi.new('GLsizei[1]', 0)
+		local name = GLchar_arr(bufSize)
+		local length = GLsizei_1(0)
 		ffi.fill(name, bufSize)
-		local arraySize = ffi.new('GLint[1]', 0)
-		local utype = ffi.new('GLenum[1]', 0)
+		local arraySize = GLint_1(0)
+		local utype = GLenum_1(0)
 		gl.glGetActiveUniform(self.id, i-1, bufSize, length, arraySize, utype, name)
 		local info = {
 			name = ffi.string(name, length[0]),
@@ -451,10 +464,10 @@ function GLProgram:init(args)
 	do
 		local nameMaxLen = self:get'GL_ACTIVE_ATTRIBUTE_MAX_LENGTH'
 		local bufSize = nameMaxLen+1
-		local nameBuf = ffi.new('GLchar[?]', bufSize)
-		local length = ffi.new('GLsizei[1]', 0)
-		local arraySize = ffi.new('GLint[1]', 0)
-		local glslType = ffi.new('GLenum[1]', 0)
+		local nameBuf = GLchar_arr(bufSize)
+		local length = GLsizei_1(0)
+		local arraySize = GLint_1(0)
+		local glslType = GLenum_1(0)
 		for index=0,self:get'GL_ACTIVE_ATTRIBUTES'-1 do
 			ffi.fill(nameBuf, bufSize)
 			gl.glGetActiveAttrib(self.id, index, bufSize, length, arraySize, glslType, nameBuf)
@@ -503,10 +516,10 @@ function GLProgram:init(args)
 	do
 		local nameMaxLen = self:get'GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH'
 		local bufSize = nameMaxLen+1
-		local nameBuf = ffi.new('GLchar[?]', bufSize)
-		local length = ffi.new('GLsizei[1]', 0)
-		local arraySize = ffi.new('GLint[1]', 0)
-		local glslType = ffi.new('GLenum[1]', 0)
+		local nameBuf = GLchar_arr(bufSize)
+		local length = GLsizei_1(0)
+		local arraySize = GLint_1(0)
+		local glslType = GLenum_1(0)
 		for index=0,self:get'GL_TRANSFORM_FEEDBACK_VARYINGS'-1 do
 			ffi.fill(nameBuf, bufSize)
 			gl.glGetTransformFeedbackVarying(self.id, index, bufSize, length, arraySize, glslType, nameBuf)
@@ -583,19 +596,19 @@ function GLProgram:setUniform(name, value, ...)
 		elseif setters.mat then
 			setters.mat(loc, 1, false, value)
 		else
-			error("failed to find array setter for uniform "..name..' type '..info.type)
+			error("failed to find array setter for uniform "..name..' type '..tostring(info.type))
 		end
 	elseif valueType ~= 'table' then
 		local setter = setters.arg
 		if not setter then
-			error("failed to find non-array setter for uniform "..name..' type '..info.type)
+			error("failed to find non-array setter for uniform "..name..' type '..tostring(info.type))
 		end
 		setter(loc, value, ...)
 	else	-- table
 		if setters.arg then
 			setters.arg(loc, table.unpack(value, 1, setters.count))
 		elseif setters.vec then
-			local cdata = ffi.new(setters.type..'['..setters.count..']')
+			local cdata = setters.typeArr(setters.count)
 			for i=1,setters.count do
 				cdata[i-1] = value[i]
 			end
@@ -604,7 +617,7 @@ function GLProgram:setUniform(name, value, ...)
 			-- TODO c data conversion
 			setters.mat(loc, 1, false, value)
 		else
-			error("failed to find array setter for uniform "..name..' type '..info.type)
+			error("failed to find array setter for uniform "..name..' type '..tostring(info.type))
 		end
 	end
 	return self

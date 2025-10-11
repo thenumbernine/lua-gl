@@ -9,7 +9,12 @@ local GLGet = require 'gl.get'
 --DEBUG(glreport):local glreport = require 'gl.report'
 
 
+local GLchar_arr = ffi.typeof'GLchar[?]'
+local char_const_p_1 = ffi.typeof'char const*[1]'
 local GLint = ffi.typeof'GLint'
+local GLint_1 = ffi.typeof'GLint[1]'
+local GLint_2 = ffi.typeof'GLint[2]'
+local GLsizei_1 = ffi.typeof'GLsizei[1]'
 
 
 local GLShader = GLGet.behavior()
@@ -75,8 +80,8 @@ function GLShader:init(args)
 				-- TODO this for each type or whatever options glsl has for precision ...
 				code = 'precision '..precision..' float;\n'..code
 			else
-				local range = ffi.new'GLint[2]'
-				local precv = ffi.new'GLint[1]'
+				local range = GLint_2()
+				local precv = GLint_1()
 				for _,primTypeInfo in ipairs{
 					{ctype='float', low='GL_LOW_FLOAT', medium='GL_MEDIUM_FLOAT', high='GL_HIGH_FLOAT'},
 					{ctype='int', low='GL_LOW_INT', medium='GL_MEDIUM_INT', high='GL_HIGH_INT'},
@@ -141,10 +146,9 @@ function GLShader:init(args)
 --DEBUG:print(require'template.showcode'(code))
 --DEBUG:print()
 
-	local len = ffi.new'int[1]'
-	len[0] = #code
-	local strs = ffi.new'const char*[1]'
-	strs[0] = code
+	local len = GLint_1(#code)
+	local strs = char_const_p_1()
+	strs[0] = code	-- doesn't work in ffi.new('char const*[1]')s ctor?
 	gl.glShaderSource(self.id, 1, strs, len)
 
 	self:compile()
@@ -164,8 +168,8 @@ function GLShader.createCheckStatus(statusEnum, logGetter)
 		local status = self:get(statusEnum)
 		if status == gl.GL_FALSE then
 			local length = self:get'GL_INFO_LOG_LENGTH'
-			local log = ffi.new('char[?]',length+1)
-			local result = ffi.new'GLsizei[1]'
+			local log = GLchar_arr(length+1)
+			local result = GLsizei_1()
 			logGetter(self.id, length, result, log);
 			local s = table()
 			if code then
