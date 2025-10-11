@@ -11,6 +11,10 @@ local GLAttribute = require 'gl.attribute'
 local GLArrayBuffer = require 'gl.arraybuffer'
 local glnumber = require 'gl.number'
 
+
+local GLint = ffi.typeof'GLint'
+
+
 -- this doesn't work as easy as it does in webgl
 -- https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetActiveUniform.xhtml
 local uniformSettersForGLTypes
@@ -200,7 +204,7 @@ GLProgram.checkLinkStatus = GLShader.createCheckStatus('GL_LINK_STATUS', functio
 
 local glRetProgrami = GLGet.makeRetLastArg{
 	name = 'glGetProgramiv',
-	ctype = 'GLint',
+	ctype = GLint,
 	lookup = {2},
 }
 local function getGLGetProgrami(self, nameValue)
@@ -209,7 +213,7 @@ end
 
 local glRetProgramInterfacei = GLGet.makeRetLastArg{
 	name = 'glGetProgramInterfaceiv',
-	ctype = 'GLint',
+	ctype = GLint,
 	lookup = {2, 3},
 }
 local function getGLGetProgramInterfacei(self, programInterface, pname)

@@ -38,7 +38,7 @@ local GLAttribute = GLGet.behavior():subclass()
 
 local glRetVertexAttribi = GLGet.makeRetLastArg{
 	name = 'glGetVertexAttribiv',
-	ctype = 'GLint',
+	ctype = ffi.typeof'GLint',
 	lookup = {2},
 }
 GLAttribute:makeGetter{

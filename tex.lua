@@ -12,6 +12,9 @@ local assert = require 'ext.assert'
 local table = require 'ext.table'
 local op = require 'ext.op'
 
+local GLint = ffi.typeof'GLint'
+local GLfloat = ffi.typeof'GLfloat'
+
 --[[
 maybe this should be moved to GLTypes? idk what the scope of that file is, for textures, uniforms, both? neither?
 
@@ -257,7 +260,7 @@ end):setmetatable(nil)
 
 local glRetTexParami = GLGet.makeRetLastArg{
 	name = 'glGetTextureParameteriv',
-	ctype = 'GLint',
+	ctype = GLint,
 	lookup = {1, 2},
 }
 local function getteri(self, nameValue)
@@ -274,7 +277,7 @@ end
 -- another TODO is this should be getterf for GLES2 ... and for GLES1 *all* texture getters are getterf ...
 local glRetTexParamf = GLGet.makeRetLastArg{
 	name = 'glGetTextureParameterfv',
-	ctype = 'GLfloat',
+	ctype = GLfloat,
 	lookup = {1, 2},
 }
 local function glRetTexParamfForObj(self, nameValue)
@@ -284,7 +287,7 @@ end
 local glRetTexParamf4 = GLGet.makeRetLastArg{
 	name = 'glGetTextureParameterfv',
 	lookup = {1, 2},
-	ctype = 'GLfloat',
+	ctype = GLfloat,
 	count = 4,
 }
 local function glRetTexParamf4ForObj(self, nameValue)

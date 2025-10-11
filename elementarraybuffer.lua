@@ -1,3 +1,4 @@
+local ffi = require 'ffi'
 local gl = require 'gl'
 local Buffer = require 'gl.buffer'
 
@@ -11,7 +12,7 @@ local ElementArrayBuffer = Buffer:subclass()
 --	ElementArrayBuffer.type = gl.GL_UNSIGNED_SHORT
 --else
 ElementArrayBuffer.type = gl.GL_UNSIGNED_INT
-ElementArrayBuffer.ctype = 'uint32_t'
+ElementArrayBuffer.ctype = ffi.typeof'uint32_t'
 ElementArrayBuffer.dim = 1
 --end
 

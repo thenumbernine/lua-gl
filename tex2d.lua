@@ -59,7 +59,7 @@ function GLTex2D:load(args)
 	args.internalFormat = args.internalFormat or self.formatForChannels[image.channels]
 	-- TODO by default, derive these from internalFormat:
 	args.format = args.format or self.formatForChannels[image.channels] or gl.GL_RGBA
-	args.type = args.type or GLTypes.gltypeForCType[image.format] or gl.GL_UNSIGNED_BYTE
+	args.type = args.type or GLTypes.gltypeForCType[tostring(image.format)] or gl.GL_UNSIGNED_BYTE
 end
 
 function GLTex2D:subimage(args)

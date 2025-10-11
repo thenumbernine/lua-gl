@@ -4,11 +4,15 @@ local gl = require 'gl'
 local GLGet = require 'gl.get'
 local assert = require 'ext.assert'
 
+
+local GLint = ffi.typeof'GLint'
+
+
 local GLQuery = GLGet.behavior()
 
 local glRetQueryObject = GLGet.makeRetLastArg{
 	name = 'glGetQueryObjectiv',
-	ctype = 'GLint',
+	ctype = GLint,
 	lookup = {2},
 }
 local function getGLQueryObject(self, pname)
@@ -22,7 +26,7 @@ end
 -- ... I could reverse them so pname comes first since target is optionally bound ... tempting to do that ...
 local glRetQuery = GLGet.makeRetLastArg{
 	name = 'glGetQueryiv',
-	ctype = 'GLint',
+	ctype = GLint,
 	lookup = {1,2},
 }
 local function getGLQuery(self, target, pname)

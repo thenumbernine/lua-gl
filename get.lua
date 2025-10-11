@@ -12,6 +12,7 @@ but for glGetVertexAttrib, we want the location as the first,
 and for textures we want the 1st parameter to be the texture-target, not the .id ... more mess.
 --]]
 local ffi = require 'ffi'
+local assert = require 'ext.assert'
 local class = require 'ext.class'
 local table = require 'ext.table'
 local op = require 'ext.op'
@@ -20,19 +21,30 @@ local gl = require 'gl'
 local glreport = require 'gl.report'
 local glSafeCall = require 'gl.error'.glSafeCall
 
+
+local GLboolean = ffi.typeof'GLboolean'
+local GLint = ffi.typeof'GLint'
+local GLint64 = ffi.typeof'GLint64'
+local GLfloat = ffi.typeof'GLfloat'
+local GLdouble = ffi.typeof'GLdouble'
+
+
 local function unpackptr(p, n)
 	if n <= 0 then return end
 	return p[0], unpackptr(p+1, n-1)
 end
 
 local function makeRetLastArg(args)
-	local name = assert(args.name)		-- function name to lookup
+	local name = assert.index(args, 'name')		-- function name to lookup
 	local lookup = args.lookup			-- any arguments to try to convert from string to number via lookup in gl namespace
-	local ctype = assert(args.ctype)	-- result ctype
+	local ctype = assert.index(args, 'ctype')	-- result ctype
 	local count = args.count or 1		-- result array size
 
+	ctype = ffi.typeof(ctype)
+	local ctype_arr = ffi.typeof('$[?]', ctype)
+
 	return function(...)
-		local resultPtr = ffi.new(ctype..'[?]', count)
+		local resultPtr = ctype_arr(count)
 		local args = table.pack(...)
 		if lookup then
 			for _,i in ipairs(lookup) do
@@ -58,17 +70,17 @@ local function makeRetLastArg(args)
 	end
 end
 
-local boolean = makeRetLastArg{name='glGetBooleanv', ctype='GLboolean', lookup={1}}
-local int = makeRetLastArg{name='glGetIntegerv', ctype='GLint', lookup={1}}
-local int64 = makeRetLastArg{name='glGetInteger64v', ctype='GLint64', lookup={1}}
-local float = makeRetLastArg{name='glGetFloatv', ctype='GLfloat', lookup={1}}
-local double = makeRetLastArg{name='glGetDoublev', ctype='GLdouble', lookup={1}}
+local boolean = makeRetLastArg{name='glGetBooleanv', ctype=GLboolean, lookup={1}}
+local int = makeRetLastArg{name='glGetIntegerv', ctype=GLint, lookup={1}}
+local int64 = makeRetLastArg{name='glGetInteger64v', ctype=GLint64, lookup={1}}
+local float = makeRetLastArg{name='glGetFloatv', ctype=GLfloat, lookup={1}}
+local double = makeRetLastArg{name='glGetDoublev', ctype=GLdouble, lookup={1}}
 
-local booleanIndex = makeRetLastArg{name='glGetBooleani_v', ctype='GLboolean', lookup={1}}
-local intIndex = makeRetLastArg{name='glGetIntegeri_v', ctype='GLint', lookup={1}}
-local int64Index = makeRetLastArg{name='glGetInteger64i_v', ctype='GLint64', lookup={1}}
-local floatIndex = makeRetLastArg{name='glGetFloati_v', ctype='GLfloat', lookup={1}}
-local doubleIndex = makeRetLastArg{name='glGetDoublei_v', ctype='GLdouble', lookup={1}}
+local booleanIndex = makeRetLastArg{name='glGetBooleani_v', ctype=GLboolean, lookup={1}}
+local intIndex = makeRetLastArg{name='glGetIntegeri_v', ctype=GLint, lookup={1}}
+local int64Index = makeRetLastArg{name='glGetInteger64i_v', ctype=GLint64, lookup={1}}
+local floatIndex = makeRetLastArg{name='glGetFloati_v', ctype=GLfloat, lookup={1}}
+local doubleIndex = makeRetLastArg{name='glGetDoublei_v', ctype=GLdouble, lookup={1}}
 
 local function string(param, ...)
 	local t = type(param)

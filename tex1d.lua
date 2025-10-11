@@ -55,7 +55,7 @@ function GLTex1D:load(args)
 	args.data = image.buffer
 	args.internalFormat = args.internalFormat or self.formatForChannels[image.channels]
 	args.format = args.format or self.formatForChannels[image.channels] or gl.GL_RGBA
-	args.type = args.type or GLTypes.gltypeForCType[image.format] or gl.GL_UNSIGNED_BYTE
+	args.type = args.type or GLTypes.gltypeForCType[tostring(image.format)] or gl.GL_UNSIGNED_BYTE
 end
 
 return GLTex1D

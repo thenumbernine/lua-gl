@@ -7,6 +7,13 @@ local assert = require 'ext.assert'
 local gl = require 'gl'
 local GLGet = require 'gl.get'
 
+
+local GLboolean = ffi.typeof'GLboolean'
+local GLint = ffi.typeof'GLint'
+local GLfloat = ffi.typeof'GLfloat'
+local GLdouble = ffi.typeof'GLdouble'
+
+
 local GLGlobal = GLGet.behavior()
 
 local function makeString(name)
@@ -55,7 +62,7 @@ local function makeBooleanN(name, count)
 	local glRetBooleanN = GLGet.makeRetLastArg{
 		name = 'glGetBooleanv',
 		lookup = {1},
-		ctype = 'GLboolean',
+		ctype = GLboolean,
 		count = count,
 	}
 	return {
@@ -70,7 +77,7 @@ local function makeIntN(name, count)
 	local glRetIntN = GLGet.makeRetLastArg{
 		name = 'glGetIntegerv',
 		lookup = {1},
-		ctype = 'GLint',
+		ctype = GLint,
 		count = count,
 	}
 	return {
@@ -85,7 +92,7 @@ local function makeFloatN(name, count)
 	local glRetFloatN = GLGet.makeRetLastArg{
 		name = 'glGetFloatv',
 		lookup = {1},
-		ctype = 'GLfloat',
+		ctype = GLfloat,
 		count = count,
 	}
 	return {
@@ -100,7 +107,7 @@ local function makeDoubleN(name, count)
 	local glRetDoubleN = GLGet.makeRetLastArg{
 		name = 'glGetDoublev',
 		lookup = {1},
-		ctype = 'GLdouble',
+		ctype = GLdouble,
 		count = count,
 	}
 	return {
@@ -153,6 +160,10 @@ local function makeVec(args)
 	local indexedGetterName = assert.index(args, 'indexedGetterName')
 	local count = args.count or 1
 
+	ctype = ffi.typeof(ctype)
+	local ctype_1 = ffi.typeof('$[1]', ctype)
+	local ctype_arr = ffi.typeof('$[?]', ctype)
+
 	local getter = op.safeindex(gl, getterName)
 	local indexedGetter = op.safeindex(gl, indexedGetterName)
 	return {
@@ -162,7 +173,7 @@ local function makeVec(args)
 				if not getter then
 					return nil, getterName..' not found'
 				end
-				local result = ffi.new(ctype..'[?]', count)
+				local result = ctype_arr(count)
 				local success, msg = glSafeCall(getterName, nameValue, result)
 				-- TODO gl.get template:get getter() has no way to report errors ...
 				if not success then return nil, msg end
@@ -171,7 +182,7 @@ local function makeVec(args)
 				if not indexedGetter then
 					return nil, indexedGetterName..' not found'
 				end
-				local result = ffi.new(ctype..'[1]')
+				local result = ctype_1()
 				local results = table()
 				for index=0,count-1 do
 					local success, msg = glSafeCall(indexedGetterName, nameValue, index, result)

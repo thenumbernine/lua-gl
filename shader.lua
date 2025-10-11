@@ -8,6 +8,10 @@ local showcode = require 'template.showcode'
 local GLGet = require 'gl.get'
 --DEBUG(glreport):local glreport = require 'gl.report'
 
+
+local GLint = ffi.typeof'GLint'
+
+
 local GLShader = GLGet.behavior()
 
 function GLShader:delete()
@@ -20,7 +24,7 @@ GLShader.__gc = GLShader.delete
 
 local glRetShaderi = GLGet.makeRetLastArg{
 	name = 'glGetShaderiv',
-	ctype = 'GLint',
+	ctype = GLint,
 	lookup = {2},
 }
 GLShader:makeGetter{

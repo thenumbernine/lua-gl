@@ -54,12 +54,12 @@ function Buffer:init(args)
 	if args.useVec then
 		local dim = assert.index(args, 'dim')
 		local vec = vector(
-			args.ctype or assert.index({
+			args.ctype or ffi.typeof((assert.index({
 				'float',
 				'vec2f_t',
 				'vec3f_t',
 				'vec4f_t'
-			}, dim),
+			}, dim))),
 			self.count or 0
 		)
 		self.vec = vec
@@ -124,10 +124,11 @@ function Buffer:setData(args)
 		-- TODO move the default into Buffer.type = gl.GL_FLOAT ?
 		-- but then i'd have buffers set with .type == GL_FLOAT even if they dont have .data in ctor and therefore might not really have float data ... hmm ...
 		local gltype = args.type or self.type
-		local ctype = gltype and GLTypes.ctypeForGLType[gltype] or 'float'
+		local ctype = ffi.typeof(gltype and GLTypes.ctypeForGLType[gltype] or 'float')
 		size = size or n * ffi.sizeof(ctype)
 		local numElems = math.floor(size / ffi.sizeof(ctype))
-		local cdata = ffi.new(ctype..'[?]', numElems)
+		local ctype_arr = ffi.typeof('$[?]', ctype)
+		local cdata = ctype_arr(numElems)
 		for i=1,math.min(numElems, n) do
 			cdata[i-1] = data[i]
 		end
@@ -145,6 +146,7 @@ function Buffer:setData(args)
 
 	-- mind you, this is saving the cdata, even if you :setData() with Lua data ...
 	self.data = data
+	self.ctype = ctype
 	self.size = size
 	self.usage = args.usage or self.usage
 	self.count = count or self.count
