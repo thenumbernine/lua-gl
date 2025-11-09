@@ -4,18 +4,44 @@ local vector = require 'ffi.cpp.vector-lua'
 local op = require 'ext.op'
 local assert = require 'ext.assert'
 local table = require 'ext.table'
-local class = require 'ext.class'
 local vec2f = require 'vec-ffi.vec2f'
 local vec3f = require 'vec-ffi.vec3f'
 local vec4f = require 'vec-ffi.vec4f'
 local gl = require 'gl'
 local GLTypes = require 'gl.types'
+local GLGet = require 'gl.get'
+
 
 local uint8_t_arr = ffi.typeof'uint8_t[?]'
 local float = ffi.typeof'float'
+local GLint = ffi.typeof'GLint'
 local GLuint_1 = ffi.typeof'GLuint[1]'
 
-local Buffer = class()
+
+local Buffer = GLGet.behavior()
+
+local glRetBufferParameteri = GLGet.makeRetLastArg{
+	name = 'glGetBufferParameteriv',
+	ctype = GLint,
+	lookup = {1, 2},
+}
+
+Buffer:makeGetter{
+	getter = function(self, nameValue)
+		return glRetBufferParameteri(self.target, nameValue)
+	end,
+	vars = table{
+		{name='GL_BUFFER_ACCESS'},
+		{name='GL_BUFFER_ACCESS_FLAGS'},
+		{name='GL_BUFFER_IMMUTABLE_STORAGE'},
+		{name='GL_BUFFER_MAPPED'},
+		{name='GL_BUFFER_MAP_LENGTH'},
+		{name='GL_BUFFER_MAP_OFFSET'},
+		{name='GL_BUFFER_SIZE'},
+		{name='GL_BUFFER_STORAGE_FLAGS'},
+		{name='GL_BUFFER_USAGE'},
+	},
+}
 
 --[[
 args:

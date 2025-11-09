@@ -261,7 +261,7 @@ GLTex.channelsForFormat = table{
 end):setmetatable(nil)
 
 
-local glRetTexParami = GLGet.makeRetLastArg{
+local glRetTexParameteri = GLGet.makeRetLastArg{
 	name = 'glGetTextureParameteriv',
 	ctype = GLint,
 	lookup = {1, 2},
@@ -272,29 +272,29 @@ local function getteri(self, nameValue)
 	-- GL has glGetTextureParameterfv & -iv
 	-- GLES1 has only glGetTexParameterf
 	-- GLES2 and 3 have glGetTexParameterf and -i
-	return glRetTexParami(self.target, nameValue)
+	return glRetTexParameteri(self.target, nameValue)
 end
 
 -- hmm 'getter' means call the getter above, which is a wrapper for glGet*
 -- so mayb i have to put th branch in the getter above fr now ....
 -- another TODO is this should be getterf for GLES2 ... and for GLES1 *all* texture getters are getterf ...
-local glRetTexParamf = GLGet.makeRetLastArg{
+local glRetTexParameterf = GLGet.makeRetLastArg{
 	name = 'glGetTextureParameterfv',
 	ctype = GLfloat,
 	lookup = {1, 2},
 }
-local function glRetTexParamfForObj(self, nameValue)
-	return glRetTexParamf(self.target, nameValue)
+local function glRetTexParameterfForObj(self, nameValue)
+	return glRetTexParameterf(self.target, nameValue)
 end
 
-local glRetTexParamf4 = GLGet.makeRetLastArg{
+local glRetTexParameterf4 = GLGet.makeRetLastArg{
 	name = 'glGetTextureParameterfv',
 	lookup = {1, 2},
 	ctype = GLfloat,
 	count = 4,
 }
-local function glRetTexParamf4ForObj(self, nameValue)
-	return glRetTexParamf4(self.target, nameValue)
+local function glRetTexParameterf4ForObj(self, nameValue)
+	return glRetTexParameterf4(self.target, nameValue)
 end
 
 GLTex:makeGetter{
@@ -306,19 +306,19 @@ GLTex:makeGetter{
 	vars = {
 		{name='GL_TEXTURE_MAG_FILTER'},
 		{name='GL_TEXTURE_MIN_FILTER'},
-		{name='GL_TEXTURE_MIN_LOD', getter=glRetTexParamfForObj},
-		{name='GL_TEXTURE_MAX_LOD', getter=glRetTexParamfForObj},
+		{name='GL_TEXTURE_MIN_LOD', getter=glRetTexParameterfForObj},
+		{name='GL_TEXTURE_MAX_LOD', getter=glRetTexParameterfForObj},
 		{name='GL_TEXTURE_BASE_LEVEL'},
 		{name='GL_TEXTURE_MAX_LEVEL'},
 		{name='GL_TEXTURE_SWIZZLE_R'},
 		{name='GL_TEXTURE_SWIZZLE_G'},
 		{name='GL_TEXTURE_SWIZZLE_B'},
 		{name='GL_TEXTURE_SWIZZLE_A'},
-		{name='GL_TEXTURE_SWIZZLE_RGBA', getter=glRetTexParamf4ForObj},
+		{name='GL_TEXTURE_SWIZZLE_RGBA', getter=glRetTexParameterf4ForObj},
 		{name='GL_TEXTURE_WRAP_S'},
 		{name='GL_TEXTURE_WRAP_T'},
 		{name='GL_TEXTURE_WRAP_R'},
-		{name='GL_TEXTURE_BORDER_COLOR', getter=glRetTexParamf4ForObj},
+		{name='GL_TEXTURE_BORDER_COLOR', getter=glRetTexParameterf4ForObj},
 		{name='GL_TEXTURE_COMPARE_MODE'},
 		{name='GL_TEXTURE_COMPARE_FUNC'},
 		{name='GL_TEXTURE_IMMUTABLE_FORMAT'},
