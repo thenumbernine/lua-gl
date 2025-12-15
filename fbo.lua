@@ -41,6 +41,8 @@ end
 
 local FrameBuffer = class()
 
+FrameBuffer.target = gl.GL_FRAMEBUFFER
+
 --[[
 args:
 	width
@@ -72,7 +74,7 @@ function FrameBuffer:init(args)
 		self.depthID = id[0]
 		gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, self.depthID)
 		gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, depthComponent, self.width, self.height)
-		gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, self.depthID)
+		gl.glFramebufferRenderbuffer(self.target, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, self.depthID)
 		gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, 0)
 	end
 
@@ -99,18 +101,18 @@ end
 FrameBuffer.__gc = FrameBuffer.delete
 
 function FrameBuffer:bind()
-	gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.id)
+	gl.glBindFramebuffer(self.target, self.id)
 	return self
 end
 
 function FrameBuffer:unbind()
-	gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)
+	gl.glBindFramebuffer(self.target, 0)
 	return self
 end
 
 -- static function
 function FrameBuffer:check()
-	local status = gl.glCheckFramebufferStatus(gl.GL_FRAMEBUFFER)
+	local status = gl.glCheckFramebufferStatus(self and self.target or gl.GL_FRAMEBUFFER)
 	if status ~= gl.GL_FRAMEBUFFER_COMPLETE then
 		local errstr = 'glCheckFramebufferStatus status='..status
 		local name = fboErrorNames[status]
@@ -122,7 +124,20 @@ end
 
 -- and return-self assert-version
 function FrameBuffer:assertcheck()
-	assert(self.check())
+	assert(self:check())
+	return self
+end
+
+-- general glFramebufferTexture2D, to-replace setColorAttachmentTex2D
+-- but in order of frequency of overriding
+-- I'd use glFramebufferTexture, but it's not in GLES 3.0 aka WebGL 2 (but it is in GLES 3.2...)
+-- so I should make an 'attach' function that maps to this...
+function FrameBuffer:attachTex2D(attachment, tex, textarget, level, target)
+	if getmetatable(tex) == Tex2D then
+		textarget = tex.target
+		tex = tex.id
+	end
+	gl.glFramebufferTexture2D(target or self.target, attachment, textarget or gl.GL_TEXTURE_2D, tex, level or 0)
 	return self
 end
 
@@ -132,18 +147,18 @@ end
 --			on the other hand, a fbo setColorAttachmet() without bind() wouldn't fulfill its operation
 -- or should we leave the app to do this (and reduce the possible binds/unbinds?)
 function FrameBuffer:setColorAttachmentTex2D(tex, index, target, level)
-	gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + (index or 0), target or gl.GL_TEXTURE_2D, tex, level or 0)
+	gl.glFramebufferTexture2D(self.target, gl.GL_COLOR_ATTACHMENT0 + (index or 0), target or gl.GL_TEXTURE_2D, tex, level or 0)
 	return self
 end
 
 function FrameBuffer:setColorAttachmentTexCubeMapSide(tex, index, side, level)
-	gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + (index or 0), gl.GL_TEXTURE_CUBE_MAP_POSITIVE_X + (side or index), tex, level or 0)
+	gl.glFramebufferTexture2D(self.target, gl.GL_COLOR_ATTACHMENT0 + (index or 0), gl.GL_TEXTURE_CUBE_MAP_POSITIVE_X + (side or index), tex, level or 0)
 	return self
 end
 
 function FrameBuffer:setColorAttachmentTexCubeMap(tex, level)
 	for i=0,5 do
-		gl.glFramebufferTexture2D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + i, gl.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, tex, level or 0)
+		gl.glFramebufferTexture2D(self.target, gl.GL_COLOR_ATTACHMENT0 + i, gl.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, tex, level or 0)
 	end
 	return self
 end
@@ -152,11 +167,11 @@ function FrameBuffer:setColorAttachmentTex3D(tex, index, slice, target, level)
 	if not tonumber(slice) then error("unable to convert slice to number: " ..tostring(slice)) end
 	slice = tonumber(slice)
 	-- legacy:
-	--gl.glFramebufferTexture3D(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + (index or 0), target or gl.GL_TEXTURE_3D, tex, level or 0, slice)
+	--gl.glFramebufferTexture3D(self.target, gl.GL_COLOR_ATTACHMENT0 + (index or 0), target or gl.GL_TEXTURE_3D, tex, level or 0, slice)
 	-- new:
 	-- ... how does glFramebufferTextureLayer know what tex target to use?
 	-- or is the new standard that all texs have unique ids regardless of targets?
-	gl.glFramebufferTextureLayer(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0 + (index or 0), tex, level or 0, slice)
+	gl.glFramebufferTextureLayer(self.target, gl.GL_COLOR_ATTACHMENT0 + (index or 0), tex, level or 0, slice)
 	return self
 end
 
@@ -208,7 +223,7 @@ if index is a table then it runs through the ipairs,
 function FrameBuffer:drawToCallback(index, callback, ...)
 	self:bind()
 
-	local res,err = self.check()
+	local res,err = self:check()
 	if not res then
 		print(err)
 		print(debug.traceback())

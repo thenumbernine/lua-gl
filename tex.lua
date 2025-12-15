@@ -57,7 +57,7 @@ local formatInfos = table{
 	{internalFormat='GL_RGB', format='GL_RGB', types={'GL_UNSIGNED_BYTE', 'GL_UNSIGNED_SHORT_5_6_5'}, values={'Red', 'Green', 'Blue'}, internalComponents={'R', 'G', 'B'}},
 	{internalFormat='GL_RGBA', format='GL_RGBA', types={'GL_UNSIGNED_BYTE', 'GL_UNSIGNED_SHORT_4_4_4_4', 'GL_UNSIGNED_SHORT_5_5_5_1'}, values={'Red', 'Green', 'Blue', 'Alpha'}, internalComponents={'R', 'G', 'B', 'A'}},
 	-- GL4 table 1:
-	{internalFormat='GL_DEPTH_COMPONENT', values={'Depth'}, internalComponents={'D'}},
+	{internalFormat='GL_DEPTH_COMPONENT', format='GL_DEPTH_COMPONENT', types={'GL_FLOAT'}, values={'Depth'}, internalComponents={'D'}},
 	{internalFormat='GL_DEPTH_STENCIL', values={'Depth', 'Stencil'}, internalComponents={'D', 'S'}},
 	{internalFormat='GL_RED', values={'Red'}, internalComponents={'R'}},
 	{internalFormat='GL_RG', values={'Red', 'Green'}, internalComponents={'R', 'G'}},
