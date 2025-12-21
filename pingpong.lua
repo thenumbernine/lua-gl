@@ -1,6 +1,6 @@
 local table = require 'ext.table'
 local class = require 'ext.class'
-local GLFrameBuffer = require 'gl.fbo'
+local GLFramebuffer = require 'gl.framebuffer'
 local GLTex2D = require 'gl.tex2d'
 
 
@@ -14,7 +14,7 @@ args:
 --]]
 function PingPong:init(args)
 	self.hist = table()
-	self.fbo = args.fbo or GLFrameBuffer{width=args.width, height=args.height}:unbind()
+	self.fbo = args.fbo or GLFramebuffer{width=args.width, height=args.height}:unbind()
 	self.width = args.width
 	self.height = args.height
 	self.index = 1	--one-based for history index.  don't forget the associated color attachment is zero-based

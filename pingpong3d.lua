@@ -1,7 +1,7 @@
 local table = require 'ext.table'
 local PingPong = require 'gl.pingpong'
-local FBO = require 'gl.fbo'
-local Tex3D = require 'gl.tex3d'
+local GLFramebuffer = require 'gl.framebuffer'
+local GLTex3D = require 'gl.tex3d'
 
 
 -- almost identical to PingPong
@@ -11,14 +11,14 @@ local PingPong3D = PingPong:subclass()
 
 function PingPong3D:init(args)
 	self.hist = table()
-	self.fbo = FBO{width=args.width, height=args.height}
+	self.fbo = GLFramebuffer{width=args.width, height=args.height}
 	self.width = args.width
 	self.height = args.height
 	self.depth = args.depth
 	self.index = 1	--one-based for history index.  don't forget the associated color attachment is zero-based
 	local numBuffers = args.numBuffers or 2
 	for i=1,numBuffers do
-		local tex = Tex3D(args)
+		local tex = GLTex3D(args)
 		self.hist:insert(tex)
 	end
 end
