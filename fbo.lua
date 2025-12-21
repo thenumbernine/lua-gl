@@ -132,6 +132,7 @@ end
 -- but in order of frequency of overriding
 -- I'd use glFramebufferTexture, but it's not in GLES 3.0 aka WebGL 2 (but it is in GLES 3.2...)
 -- so I should make an 'attach' function that maps to this...
+-- TODO why not ':tex2D' to match GL API?
 function FrameBuffer:attachTex2D(attachment, tex, textarget, level, target)
 	if getmetatable(tex) == Tex2D then
 		textarget = tex.target
@@ -197,6 +198,7 @@ function FrameBuffer:setColorAttachment(tex, index, ...)
 end
 
 -- assumes the FBO is bound
+-- TODO why not ':drawBuffers' to match the GL API?
 function FrameBuffer:setDrawBuffers(...)
 	local n, p = ...
 	if type(p) == 'cdata' then
