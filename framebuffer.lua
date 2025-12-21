@@ -4,7 +4,7 @@ local ffi = require 'ffi'
 local class = require 'ext.class'
 local op = require 'ext.op'
 local gl = require 'gl'
-local Tex2D = require 'gl.tex2d'
+local GLTex2D = require 'gl.tex2d'
 local glreport = require 'gl.report'
 
 local GLint_1 = ffi.typeof'GLint[1]'
@@ -134,7 +134,7 @@ end
 -- so I should make an 'attach' function that maps to this...
 -- TODO why not ':tex2D' to match GL API?
 function FrameBuffer:attachTex2D(attachment, tex, textarget, level, target)
-	if getmetatable(tex) == Tex2D then
+	if getmetatable(tex) == GLTex2D then
 		textarget = tex.target
 		tex = tex.id
 	end
@@ -181,7 +181,7 @@ end
 function FrameBuffer:setColorAttachment(tex, index, ...)
 	if type(tex) == 'table' then
 		local mt = getmetatable(tex)
-		if mt == Tex2D then
+		if mt == GLTex2D then
 			self:setColorAttachmentTex2D(tex.id, index, ...)
 		-- cube map? side or all at once?
 		elseif Tex3D and mt == Tex3D then
