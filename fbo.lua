@@ -198,8 +198,7 @@ function FrameBuffer:setColorAttachment(tex, index, ...)
 end
 
 -- assumes the FBO is bound
--- TODO why not ':drawBuffers' to match the GL API?
-function FrameBuffer:setDrawBuffers(...)
+function FrameBuffer:drawBuffers(...)
 	local n, p = ...
 	if type(p) == 'cdata' then
 		gl.glDrawBuffers(n, p)
