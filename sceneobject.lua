@@ -12,8 +12,19 @@ local GLGeometry = require 'gl.geometry'
 --DEBUG(glreport):local glreport = require 'gl.report'
 
 local gl = require 'gl'
+
 -- for GLES1&2 which doesn't have VAO functionality
-local hasVAO = not not op.safeindex(gl, 'glGenVertexArrays')
+-- do this upon request so it can be done after GL loads
+local checkHasVAO
+do
+	local hasVAO
+	checkHasVAO = function()
+		if hasVAO == nil then
+			hasVAO = not not op.safeindex(gl, 'glGenVertexArrays')
+		end
+		return hasVAO
+	end
+end
 
 local GLSceneObject = class()
 
@@ -129,7 +140,7 @@ function GLSceneObject:init(args)
 		end
 	end
 
-	if hasVAO
+	if checkHasVAO()
 	and args.createVAO ~= false
 	then
 		local GLVertexArray = require 'gl.vertexarray'
