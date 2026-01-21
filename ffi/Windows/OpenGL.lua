@@ -11311,7 +11311,7 @@ setmetatable(wrapper, {
 	__index = function(wrapper, k)
 		if k == nil then return nil end	-- who is doing this?
 
-print('gl libwrapper requesting', k)
+--DEBUG:print('gl libwrapper requesting', k)
 		-- here we are asking for a function that's not in our wrapper
 
 		-- if there's a function in the lib then use it
@@ -11320,7 +11320,7 @@ print('gl libwrapper requesting', k)
 		do
 			local inlib = op.safeindex(lib, k)
 			if inlib ~= nil then
-print('found in lib, returning')
+--DEBUG:print('found in lib, returning')
 				-- store so it doesn't call this a second time
 				wrapper[k] = inlib
 				return inlib
@@ -11338,7 +11338,7 @@ print('found in lib, returning')
 			ffi.cdef(funcDef)
 			local inLibAfterDef = op.safeindex(lib, k)
 			if inLibAfterDef ~= nil then
-print('found in lib after cdefing function, returning')
+--DEBUG:print('found in lib after cdefing function, returning')
 				wrapper[k] = inLibAfterDef
 				return inLibAfterDef
 			end
@@ -11351,7 +11351,7 @@ print('found in lib after cdefing function, returning')
 			-- "missing declaration for symbol '...'"
 			error("failed to find function "..tostring(k))
 		end
-print('found in wglGetProcAddress, returning')
+--DEBUG:print('found in wglGetProcAddress, returning')
 		local castproc = ffi.cast('PFN'..k:upper()..'PROC', proc)
 		if castproc then
 			cbs[k] = {proc = proc, castproc = castproc}
