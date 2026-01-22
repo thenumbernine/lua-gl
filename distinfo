@@ -25,6 +25,7 @@ files = {
 	["ffi/OpenGLES1.lua"] = "gl/ffi/OpenGLES1.lua",
 	["ffi/OpenGLES2.lua"] = "gl/ffi/OpenGLES2.lua",
 	["ffi/OpenGLES3.lua"] = "gl/ffi/OpenGLES3.lua",
+	["ffi/glu.lua"] = "gl/ffi/glu.lua",
 	["ffi/Windows/OpenGL.lua"] = "gl/ffi/Windows/OpenGL.lua",
 	["geometry.lua"] = "gl/geometry.lua",
 	["get.lua"] = "gl/get.lua",
