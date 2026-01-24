@@ -552,7 +552,6 @@ function GLProgram:init(args)
 
 	self.uniformBlocks = {}
 	local numBlocks = self:get'GL_ACTIVE_UNIFORM_BLOCKS'
-	print('numBlocks', numBlocks)
 	for uniformBlockIndex=0,numBlocks-1 do
 		local nameLen = ffi.new'GLsizei[1]'
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_NAME_LENGTH, nameLen);
