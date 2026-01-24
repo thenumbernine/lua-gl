@@ -246,6 +246,7 @@ GLProgram:makeGetter{
 			{name='GL_ACTIVE_ATTRIBUTE_MAX_LENGTH'},
 			{name='GL_ACTIVE_UNIFORMS'},
 			{name='GL_ACTIVE_UNIFORM_MAX_LENGTH'},
+			{name='GL_ACTIVE_UNIFORM_BLOCKS'},
 			{name='GL_ACTIVE_ATOMIC_COUNTER_BUFFERS'},
 			{name='GL_PROGRAM_BINARY_LENGTH'},
 			{name='GL_TRANSFORM_FEEDBACK_BUFFER_MODE'},
@@ -548,6 +549,89 @@ function GLProgram:init(args)
 		end
 	end
 	--]]
+
+	self.uniformBlocks = {}
+	local numBlocks = self:get'GL_ACTIVE_UNIFORM_BLOCKS'
+	print('numBlocks', numBlocks)
+	for uniformBlockIndex=0,numBlocks-1 do
+		local nameLen = ffi.new'GLsizei[1]'
+		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_NAME_LENGTH, nameLen);
+
+		local name = ffi.new('char[?]', nameLen[0]+1)
+		-- "The actual number of characters written into uniformBlockName, excluding the nul terminator, is returned in length. " from https://registry.khronos.org/OpenGL-Refpages/es3.0/html/glGetActiveUniformBlockName.xhtml
+		-- but for a 5-char name I'm getting back "6" result from GL_UNIFORM_BLOCK_NAME_LENGTH ... meaning including-nul-terminator ...
+		-- is GL_UNIFORM_BLOCK_NAME_LENGTH different from glGetActiveUniformBlockName?
+		-- does glGetActiveUniformBlockName even give a length result if you don't pass in a buffer?
+		local nameLen2 = ffi.new'GLsizei[1]'
+		gl.glGetActiveUniformBlockName(self.id, uniformBlockIndex, nameLen[0], nameLen2, name);
+		nameLen2 = nameLen2[0]
+		name = ffi.string(name, nameLen2)
+		-- sure enough, the 2nd-to-last arg returning the buffer length without nul-term is one less than glGetActiveUniformBlockiv GL_UNIFORM_BLOCK_NAME_LENGTH
+
+		--[[
+		local binding = ffi.new'GLint[1]'
+		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_BINDING, binding)
+		--]]
+
+		local dataSize = ffi.new'GLint[1]'
+		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_DATA_SIZE, dataSize)
+
+		local numActiveUniforms = ffi.new'GLint[1]'
+		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, numActiveUniforms)
+
+		local numActiveUniformIndices = ffi.new('GLint[?]', numActiveUniforms[0])
+		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, numActiveUniformIndices)
+
+		local refByVtxShader = ffi.new'GLint[1]'
+		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER, refByVtxShader)
+
+		local refByFragShader = ffi.new'GLint[1]'
+		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER, refByFragShader)
+
+		local refByGeomShader
+		if GLGeometryShader then
+			refByGeomShader = ffi.new'GLint[1]'
+			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_GEOMETRY_SHADER, refByGeomShader)
+		end
+
+		local refByTessEvalShader
+		if GLTessEvalShader then
+			refByTessEvalShader = ffi.new'GLint[1]'
+			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_EVALUATION_SHADER, refByTessEvalShader)
+		end
+
+		local refByTessControlShader
+		if GLTessControlShader then
+			refByTessControlShader = ffi.new'GLint[1]'
+			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_CONTROL_SHADER, refByTessControlShader)
+		end
+
+		local refByComputeShader
+		if GLComputeShader then
+			refByComputeShader = ffi.new'GLint[1]'
+			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_COMPUTE_SHADER, refByComputeShader)
+		end
+
+		local uniformBlock = {
+			name = name,
+			index = uniformBlockIndex,
+			--binding = binding[0],
+			dataSize = dataSize[0],
+			numActiveUniformIndices = range(0,numActiveUniforms[0]-1):mapi(function(i)
+				return numActiveUniformIndices[i]
+			end),
+			refByVertex = refByVtxShader[0] ~= 0 or nil,
+			refByFragment = refByFragShader[0] ~= 0 or nil,
+			refByGeometry = GLGeometryShader and refByGeomShader[0] ~= 0 or nil,
+			refByTessControl = GLTessControlShader and refByTessControlShader[0] ~= 0 or nil,
+			refByTessEval = GLTessEvalShader and refByTessEvalShader[0] ~= 0 or nil,
+			refByCompute = GLComputeShader and refByComputeShader[0] ~= 0 or nil,
+		}
+
+		self.uniformBlocks[1+uniformBlockIndex] = uniformBlock
+		self.uniformBlocks[name] = uniformBlock
+	end
+
 
 	if args.uniforms then
 		self:setUniforms(args.uniforms)
