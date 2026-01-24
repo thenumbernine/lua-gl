@@ -225,7 +225,7 @@ function Buffer:map(access, offset, length, target)
 --		return gl.glMapBuffer(target or self.target, access)
 --	else
 -- TODO or if glMapBuffer isn't available ... then default offset to 0 and length to the buffer count minus the (offset / buffer.dim / sizeof(buffer.type))
-	return gl.glMapBufferRange(target or self.target, offset or 0, length or self.count, access)
+	return gl.glMapBufferRange(target or self.target, offset or 0, length or self.size, access)
 --	end
 end
 
