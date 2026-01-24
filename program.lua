@@ -613,10 +613,10 @@ function GLProgram:init(args)
 
 		local uniformBlock = {
 			name = name,
-			index = uniformBlockIndex,
+			blockIndex = uniformBlockIndex,
 			--binding = binding[0],
 			dataSize = dataSize[0],
-			numActiveUniformIndices = range(0,numActiveUniforms[0]-1):mapi(function(i)
+			uniformIndices = range(0,numActiveUniforms[0]-1):mapi(function(i)
 				return numActiveUniformIndices[i]
 			end),
 			refByVertex = refByVtxShader[0] ~= 0 or nil,
