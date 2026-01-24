@@ -59,6 +59,7 @@ files = {
 	["texcube.lua"] = "gl/texcube.lua",
 	["transformfeedbackbuffer.lua"] = "gl/transformfeedbackbuffer.lua",
 	["types.lua"] = "gl/types.lua",
+	["uniformbuffer.lua"] = "gl/uniformbuffer.lua",
 	["vertexarray.lua"] = "gl/vertexarray.lua",
 }
 deps = {

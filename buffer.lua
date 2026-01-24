@@ -201,6 +201,17 @@ function Buffer:bindBase(index)
 	return self
 end
 
+function Buffer:bindRange(index, offset, size)
+	gl.glBindBufferRange(
+		self.target,
+		index or 0,
+		self.id,
+		offset or 0,
+		size or self.size
+	)
+	return self
+end
+
 -- offset is in bytes
 -- length is in number of elements
 -- access is specified here: https://registry.khronos.org/OpenGL-Refpages/gl4/html/glMapBufferRange.xhtml
