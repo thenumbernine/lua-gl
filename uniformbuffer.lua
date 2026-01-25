@@ -4,6 +4,6 @@ local Buffer = require 'gl.buffer'
 
 local UniformBuffer = Buffer:subclass()
 
-UniformBuffer.target = gl.GL_ELEMENT_ARRAY_BUFFER
+UniformBuffer.target = gl.GL_UNIFORM_BUFFER
 
 return UniformBuffer

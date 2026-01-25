@@ -69,6 +69,8 @@ args:
 		my js version has dim and count instead of size, then just size = dim * count
 		this makes it more compatible with GLProgram:setAttr(buffer)
 		instead of only GLProgram:setAttr(attr)
+
+	binding (optional) call :bindBase aka glBindBufferBase upon init
 --]]
 function Buffer:init(args)
 	local ptr = GLuint_1()
@@ -103,6 +105,14 @@ function Buffer:init(args)
 	-- TODO bind even if we have no args?  or only if args are provided / setData is called?
 	self:bind()
 	if args then
+
+		-- see if we are supposed to initialize block binding point
+		-- TODO what to name this?  everything seems like it has the same name: "index", "location", "binding" ...
+		-- TODO also what args to name offset and size for when you want to call :bindRange instead?
+		if args.binding then
+			self:bindBase(args.binding)
+		end
+
 		if args.data then
 			-- TODO there's enough field setters in here that maybe I should just move the 'elseif args.size' into there ...
 			self:setData(args)

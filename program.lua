@@ -567,10 +567,8 @@ function GLProgram:init(args)
 		name = ffi.string(name, nameLen2)
 		-- sure enough, the 2nd-to-last arg returning the buffer length without nul-term is one less than glGetActiveUniformBlockiv GL_UNIFORM_BLOCK_NAME_LENGTH
 
-		--[[
 		local binding = ffi.new'GLint[1]'
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_BINDING, binding)
-		--]]
 
 		local dataSize = ffi.new'GLint[1]'
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_DATA_SIZE, dataSize)
@@ -614,7 +612,7 @@ function GLProgram:init(args)
 		local uniformBlock = {
 			name = name,
 			blockIndex = uniformBlockIndex,
-			--binding = binding[0],
+			binding = binding[0],
 			dataSize = dataSize[0],
 			uniformIndices = range(0,numActiveUniforms[0]-1):mapi(function(i)
 				return numActiveUniformIndices[i]
