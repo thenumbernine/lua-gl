@@ -77,7 +77,7 @@ deps = {
 -- but that wont work either cuz that will make the include to GL/glext.h into a split out file (maybe it should be?)
 -- for Windows I've got my glext.h outside the system paths, so you have to add that to the system path location.
 -- notice that GL/glext.h depends on GLenum to be defined.  but gl.h include glext.h.  why.
-generateBindings = {
+generateBindings = function()return{
 	-- used by GL, GLES1, GLES2 ...
 	{
 		inc = ffi.os ~= 'OSX'
@@ -239,4 +239,4 @@ wrapper.EGL_FOREVER = 0xFFFFFFFFFFFFFFFFULL
 			return code
 		end,
 	},
-}
+}end
