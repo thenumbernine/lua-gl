@@ -550,6 +550,10 @@ function GLProgram:init(args)
 	end
 	--]]
 
+	-- see if the caller is going to tell us to do anything with the program's uniform blocks
+	-- specifically, set up any bindings ...
+	local srcUniformBlocks = args.uniformBlocks
+
 	self.uniformBlocks = {}
 	local numBlocks = self:get'GL_ACTIVE_UNIFORM_BLOCKS'
 	for uniformBlockIndex=0,numBlocks-1 do
@@ -566,6 +570,19 @@ function GLProgram:init(args)
 		nameLen2 = nameLen2[0]
 		name = ffi.string(name, nameLen2)
 		-- sure enough, the 2nd-to-last arg returning the buffer length without nul-term is one less than glGetActiveUniformBlockiv GL_UNIFORM_BLOCK_NAME_LENGTH
+
+		-- see if we were asked to set the binding point
+		-- do this before querying the binding point for our program's .uniformBlocks table
+		local srcUniformBlock = srcUniformBlocks[name]
+		if srcUniformBlock then
+			if srcUniformBlock.binding then
+				gl.glUniformBlockBinding(
+					self.id,
+					uniformBlockIndex,
+					srcUniformBlock.binding
+				)
+			end
+		end
 
 		local binding = ffi.new'GLint[1]'
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_BINDING, binding)
