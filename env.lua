@@ -13,10 +13,7 @@ return function(env, ...)
 	env.GLGeometry = require 'gl.geometry'
 	env.glGlobal = require 'gl.global'
 	env.GLGradientTex2D = require 'gl.gradienttex2d'
-	env.GLGradientTex = require 'gl.gradienttex'
 	env.GLHSVTex2D = require 'gl.hsvtex2d'
-	env.GLHSVTex = require 'gl.hsvtex'
-	--env.glSceneIntersect = require 'gl.intersect'	-- depends on GLU
 	env.GLKernelProgram = require 'gl.kernelprogram'
 	env.glnumber = require 'gl.number'
 	env.GLPingPong3D = require 'gl.pingpong3d'
@@ -29,15 +26,28 @@ return function(env, ...)
 	env.GLSampler = require 'gl.sampler'
 	env.GLSceneObject = require 'gl.sceneobject'
 	env.GLShader = require 'gl.shader'
-	env.GLShaderStorageBuffer = require 'gl.shaderstoragebuffer'
-	env.GLTex1D = require 'gl.tex1d'
 	env.GLTex2D = require 'gl.tex2d'
 	env.GLTex3D = require 'gl.tex3d'
-	env.GLTexBuffer = require 'gl.texbuffer'
 	env.GLTexCube = require 'gl.texcube'
 	env.GLTransformFeedbackBuffer = require 'gl.transformfeedbackbuffer'
 	env.GLTypes = require 'gl.types'
 	env.GLUniformBuffer = require 'gl.uniformbuffer'
 	env.GLVertexArray = require 'gl.vertexarray'
+
+	local op = require 'ext.op'
+	if op.safeindex(gl, 'GL_TEXTURE_1D') then
+		env.GLTex1D = require 'gl.tex1d'
+		env.GLGradientTex = require 'gl.gradienttex'
+		env.GLHSVTex = require 'gl.hsvtex'
+	end
+	if op.safeindex(gl, 'GL_SHADER_STORAGE_BUFFER') then
+		env.GLShaderStorageBuffer = require 'gl.shaderstoragebuffer'
+	end
+	if op.safeindex(gl, 'GL_TEXTURE_BUFFER') then
+		env.GLTexBuffer = require 'gl.texbuffer'
+	end
+
+	--env.glSceneIntersect = require 'gl.intersect'	-- depends on GLU
+
 	return env
 end
