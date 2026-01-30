@@ -1,20 +1,23 @@
 local ffi = require 'ffi'
 
-if ffi.os == 'OSX' then
-	ffi.cdef[[
-typedef void *GLhandleARB;
-]]
-else
-	ffi.cdef[[
-typedef unsigned int GLhandleARB;
-]]
-end
-
-ffi.cdef[[
-/* + BEGIN /usr/include/GL/gl.h */
+--[[ comments
 /* #  define GLAPI __attribute__((visibility("default"))) ### string, not number "__attribute__((visibility(\"default\")))" */
 /* #define APIENTRYP APIENTRY * ### string, not number "APIENTRY *" */
 /* #define GLAPIENTRYP GLAPIENTRY * ### string, not number "GLAPIENTRY *" */
+/* #define GL_TIMEOUT_IGNORED                0xFFFFFFFFFFFFFFFFull ### string, not number "0xFFFFFFFFFFFFFFFFull" */
+--]]
+
+-- typedefs
+
+if ffi.os == 'OSX' then
+	ffi.cdef[[typedef void *GLhandleARB;]]
+else
+	ffi.cdef[[typedef unsigned int GLhandleARB;]]
+end
+
+require 'gl.ffi.KHR.khrplatform'
+
+ffi.cdef[[
 enum { GL_VERSION_1_1 = 1 };
 enum { GL_VERSION_1_2 = 1 };
 enum { GL_VERSION_1_3 = 1 };
@@ -1312,11 +1315,7 @@ typedef void ( * PFNGLMULTITEXCOORD4IARBPROC) (GLenum target, GLint s, GLint t, 
 typedef void ( * PFNGLMULTITEXCOORD4IVARBPROC) (GLenum target, const GLint *v);
 typedef void ( * PFNGLMULTITEXCOORD4SARBPROC) (GLenum target, GLshort s, GLshort t, GLshort r, GLshort q);
 typedef void ( * PFNGLMULTITEXCOORD4SVARBPROC) (GLenum target, const GLshort *v);
-/* ++ BEGIN /usr/include/GL/glext.h */
 enum { GL_GLEXT_VERSION = 20230309 };
-/* +++ BEGIN /usr/include/KHR/khrplatform.h */
-]] require 'gl.ffi.KHR.khrplatform' ffi.cdef[[
-/* +++ END   /usr/include/KHR/khrplatform.h */
 enum { GL_VERSION_1_4 = 1 };
 enum { GL_BLEND_DST_RGB = 32968 };
 enum { GL_BLEND_SRC_RGB = 32969 };
@@ -1357,17 +1356,6 @@ enum { GL_SECONDARY_COLOR_ARRAY = 33886 };
 enum { GL_TEXTURE_FILTER_CONTROL = 34048 };
 enum { GL_DEPTH_TEXTURE_MODE = 34891 };
 enum { GL_COMPARE_R_TO_TEXTURE = 34894 };
-/* redefining matching value: #define GL_BLEND_COLOR                    0x8005 */
-/* redefining matching value: #define GL_BLEND_EQUATION                 0x8009 */
-/* redefining matching value: #define GL_CONSTANT_COLOR                 0x8001 */
-/* redefining matching value: #define GL_ONE_MINUS_CONSTANT_COLOR       0x8002 */
-/* redefining matching value: #define GL_CONSTANT_ALPHA                 0x8003 */
-/* redefining matching value: #define GL_ONE_MINUS_CONSTANT_ALPHA       0x8004 */
-/* redefining matching value: #define GL_FUNC_ADD                       0x8006 */
-/* redefining matching value: #define GL_FUNC_REVERSE_SUBTRACT          0x800B */
-/* redefining matching value: #define GL_FUNC_SUBTRACT                  0x800A */
-/* redefining matching value: #define GL_MIN                            0x8007 */
-/* redefining matching value: #define GL_MAX                            0x8008 */
 typedef void ( * PFNGLBLENDFUNCSEPARATEPROC) (GLenum sfactorRGB, GLenum dfactorRGB, GLenum sfactorAlpha, GLenum dfactorAlpha);
 typedef void ( * PFNGLMULTIDRAWARRAYSPROC) (GLenum mode, const GLint *first, const GLsizei *count, GLsizei drawcount);
 typedef void ( * PFNGLMULTIDRAWELEMENTSPROC) (GLenum mode, const GLsizei *count, GLenum type, const void *const*indices, GLsizei drawcount);
@@ -2399,7 +2387,6 @@ enum { GL_ALREADY_SIGNALED = 37146 };
 enum { GL_TIMEOUT_EXPIRED = 37147 };
 enum { GL_CONDITION_SATISFIED = 37148 };
 enum { GL_WAIT_FAILED = 37149 };
-/* #define GL_TIMEOUT_IGNORED                0xFFFFFFFFFFFFFFFFull ### string, not number "0xFFFFFFFFFFFFFFFFull" */
 enum { GL_SYNC_FLUSH_COMMANDS_BIT = 1 };
 enum { GL_SAMPLE_POSITION = 36432 };
 enum { GL_SAMPLE_MASK = 36433 };
@@ -3518,18 +3505,6 @@ enum { GL_RESET_NOTIFICATION_STRATEGY = 33366 };
 enum { GL_LOSE_CONTEXT_ON_RESET = 33362 };
 enum { GL_NO_RESET_NOTIFICATION = 33377 };
 enum { GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT = 4 };
-/* redefining matching value: #define GL_COLOR_TABLE                    0x80D0 */
-/* redefining matching value: #define GL_POST_CONVOLUTION_COLOR_TABLE   0x80D1 */
-/* redefining matching value: #define GL_POST_COLOR_MATRIX_COLOR_TABLE  0x80D2 */
-/* redefining matching value: #define GL_PROXY_COLOR_TABLE              0x80D3 */
-/* redefining matching value: #define GL_PROXY_POST_CONVOLUTION_COLOR_TABLE 0x80D4 */
-/* redefining matching value: #define GL_PROXY_POST_COLOR_MATRIX_COLOR_TABLE 0x80D5 */
-/* redefining matching value: #define GL_CONVOLUTION_1D                 0x8010 */
-/* redefining matching value: #define GL_CONVOLUTION_2D                 0x8011 */
-/* redefining matching value: #define GL_SEPARABLE_2D                   0x8012 */
-/* redefining matching value: #define GL_HISTOGRAM                      0x8024 */
-/* redefining matching value: #define GL_PROXY_HISTOGRAM                0x8025 */
-/* redefining matching value: #define GL_MINMAX                         0x802E */
 enum { GL_CONTEXT_RELEASE_BEHAVIOR = 33531 };
 enum { GL_CONTEXT_RELEASE_BEHAVIOR_FLUSH = 33532 };
 typedef void ( * PFNGLCLIPCONTROLPROC) (GLenum origin, GLenum depth);
@@ -11264,7 +11239,6 @@ enum { GL_WIN_specular_fog = 1 };
 enum { GL_FOG_SPECULAR_TEXTURE_WIN = 33004 };
 enum { GL_MESA_texture_const_bandwidth = 1 };
 enum { GL_CONST_BW_TILING_MESA = 35774 };
-/* ++ END   /usr/include/GL/glext.h */
 enum { GL_MESA_packed_depth_stencil = 1 };
 enum { GL_DEPTH_STENCIL_MESA = 34640 };
 enum { GL_UNSIGNED_INT_24_8_MESA = 34641 };
@@ -11280,8 +11254,5 @@ void glEGLImageTargetTexture2DOES (GLenum target, GLeglImageOES image);
 void glEGLImageTargetRenderbufferStorageOES (GLenum target, GLeglImageOES image);
 typedef void ( * PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) (GLenum target, GLeglImageOES image);
 typedef void ( * PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC) (GLenum target, GLeglImageOES image);
-/* + END   /usr/include/GL/gl.h */
-/* + BEGIN /usr/include/GL/glext.h */
-/* + END   /usr/include/GL/glext.h */
 ]]
 return require 'ffi.load' 'GL'
