@@ -373,6 +373,13 @@ function GLProgram:init(args)
 				header = #headers > 0 and headers:concat'\n' or nil,
 			})
 		end
+		local binary = args[field..'Binary']
+		if binary then
+			shaders:insert(cl{
+				binary = binary,
+				binaryFormat = args[field..'BinaryFormat'] or args.binaryFormat,
+			})
+		end
 	end
 
 	for _,shader in ipairs(shaders) do

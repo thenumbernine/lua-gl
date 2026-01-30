@@ -15,6 +15,7 @@ local GLint = ffi.typeof'GLint'
 local GLint_1 = ffi.typeof'GLint[1]'
 local GLint_2 = ffi.typeof'GLint[2]'
 local GLsizei_1 = ffi.typeof'GLsizei[1]'
+local GLuint_1 = ffi.typeof'GLuint[1]'
 
 
 local GLShader = GLGet.behavior()
@@ -52,6 +53,8 @@ args:
 	version = string to use as version number, for inserting preproc #version into the header.
 	precision = string to use as float precision, for inserting into the header.
 	header = string to append to header.
+	binary = (optional) set to use glShaderBinary
+	binaryFormat = (optional) also used with glShaderBinary
 if 'args' is a string then it is treated as the code.
 --]]
 function GLShader:init(args)
@@ -60,8 +63,9 @@ function GLShader:init(args)
 	if type(args) == 'string' then
 		code = args
 	else
-		code = assert.index(args, 'code')
+		code = args.code
 		if args.header then
+			assert(code, "need args.code with args.header")
 			code = args.header..'\n'..code
 		end
 
@@ -76,6 +80,7 @@ function GLShader:init(args)
 		)
 
 		then
+			assert(code, "need args.code with args.precision")
 			if precision ~= 'best' then
 				-- TODO this for each type or whatever options glsl has for precision ...
 				code = 'precision '..precision..' float;\n'..code
@@ -126,6 +131,7 @@ function GLShader:init(args)
 
 		local version = args.version
 		if version then
+			assert(code, "need args.code with args.version")
 			if version == 'latest' then
 				code = require 'gl.program'.getVersionPragma()..'\n'..code
 			elseif version == 'latest es' then
@@ -146,13 +152,36 @@ function GLShader:init(args)
 --DEBUG:print(require'template.showcode'(code))
 --DEBUG:print()
 
-	local len = GLint_1(#code)
-	local strs = char_const_p_1()
-	strs[0] = code	-- doesn't work in ffi.new('char const*[1]')s ctor?
-	gl.glShaderSource(self.id, 1, strs, len)
+	if code then
+		local len = GLint_1(#code)
+		local strs = char_const_p_1()
+		strs[0] = code	-- doesn't work in ffi.new('char const*[1]')s ctor?
+		gl.glShaderSource(self.id, 1, strs, len)
+		self:compile()
+	elseif args.binary then
+		local binary = assert.type(args.binary, 'string', 'args.binary')
+		local ids = GLuint_1(self.id)
+		gl.glShaderBinary(
+			1,
+			ids,
+			args.binaryFormat,
+			binary,
+			#binary
+		)
+		-- TODO this too:
+		--void glSpecializeShader (GLuint shader, const GLchar *pEntryPoint, GLuint numSpecializationConstants, const GLuint *pConstantIndex, const GLuint *pConstantValue);
+		gl.glSpecializeShader(
+			self.id,
+			'main',	--const GLchar *pEntryPoint,
+			0,		--GLuint numSpecializationConstants,
+			nil,	--const GLuint *pConstantIndex,
+			nil		--const GLuint *pConstantValue
+		)
+	else
+		error("you need either args.code or args.binary")
+	end
 
-	self:compile()
-	self:checkCompileStatus(code)
+	self:checkCompileStatus(code or '')
 end
 
 function GLShader:compile()

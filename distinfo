@@ -55,6 +55,7 @@ files = {
 	"types.lua",
 	"uniformbuffer.lua",
 	"vertexarray.lua",
+	"ffi/OpenGLMesa.lua",
 	"ffi/KHR/khrplatform.lua",
 }
 if ffi.os == "Linux" then
