@@ -445,13 +445,17 @@ function GLProgram:init(args)
 					nil,	--const GLuint *pConstantIndex,
 					nil		--const GLuint *pConstantValue
 				)
-
-				local shader = setmetatable({
-					id = shaderIDs.v[i],
-				}, cl)
-				shaders:insert(shader)
-				shader:checkCompileStatus()
 			end
+		end
+
+		for i=0,#shaderIDs-1 do
+			local st = usedShaderTypes[i+1]
+			local field, cl = table.unpack(st)
+			local shader = setmetatable({
+				id = shaderIDs.v[i],
+			}, cl)
+			shaders:insert(shader)
+			shader:checkCompileStatus()
 		end
 	end
 --]]
