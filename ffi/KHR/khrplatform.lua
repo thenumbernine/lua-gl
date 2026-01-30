@@ -44,10 +44,7 @@ typedef enum {
 
 local wrapper
 wrapper = require 'ffi.libwrapper'{
-	defs = {
-
-		-- enums
-
+	init = {
 		KHRONOS_APIATTRIBUTES = 1,
 		KHRONOS_SUPPORT_INT64 = 1,
 		KHRONOS_SUPPORT_FLOAT = 1,
