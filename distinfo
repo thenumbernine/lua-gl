@@ -13,6 +13,7 @@ files = {
 	"distinfo",
 	"elementarraybuffer.lua",
 	"error.lua",
+	"env.lua",
 	"ffi/EGL.lua",
 	"ffi/OpenGL.lua",
 	"ffi/OpenGLES1.lua",
