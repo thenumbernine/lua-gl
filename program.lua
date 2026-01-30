@@ -378,6 +378,7 @@ function GLProgram:init(args)
 			shaders:insert(cl{
 				binary = binary,
 				binaryFormat = args[field..'BinaryFormat'] or args.binaryFormat,
+				binaryEntry = args[field..'BinaryEntry'] or args.binaryEntry,
 			})
 		end
 	end

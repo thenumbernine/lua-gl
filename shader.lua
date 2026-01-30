@@ -168,11 +168,9 @@ function GLShader:init(args)
 			binary,
 			#binary
 		)
-		-- TODO this too:
-		--void glSpecializeShader (GLuint shader, const GLchar *pEntryPoint, GLuint numSpecializationConstants, const GLuint *pConstantIndex, const GLuint *pConstantValue);
 		gl.glSpecializeShader(
 			self.id,
-			'main',	--const GLchar *pEntryPoint,
+			args.binaryEntry or 'main',	--const GLchar *pEntryPoint,
 			0,		--GLuint numSpecializationConstants,
 			nil,	--const GLuint *pConstantIndex,
 			nil		--const GLuint *pConstantValue
