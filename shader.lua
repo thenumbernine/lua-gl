@@ -168,18 +168,23 @@ function GLShader:init(args)
 			binary,
 			#binary
 		)
-		gl.glSpecializeShader(
-			self.id,
-			args.binaryEntry or 'main',	--const GLchar *pEntryPoint,
-			0,		--GLuint numSpecializationConstants,
-			nil,	--const GLuint *pConstantIndex,
-			nil		--const GLuint *pConstantValue
-		)
+
+		-- plain-gl has and requires glSpecializeShader to be called in 4.6 prior to linking
+		-- but gles>=2 has glShaderBinary but doesn't have glSpecializeShader
+		if op.safeindex(gl, 'glSpecializeShader') then
+			gl.glSpecializeShader(
+				self.id,
+				args.binaryEntry or 'main',	--const GLchar *pEntryPoint,
+				0,		--GLuint numSpecializationConstants,
+				nil,	--const GLuint *pConstantIndex,
+				nil		--const GLuint *pConstantValue
+			)
+		end
 	else
 		error("you need either args.code or args.binary")
 	end
 
-	self:checkCompileStatus(code or '')
+	self:checkCompileStatus(code)
 end
 
 function GLShader:compile()

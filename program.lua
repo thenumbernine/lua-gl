@@ -301,6 +301,8 @@ GLProgram:makeGetter{
 args:
 	shaders = gl.shader objects that are already compiled, to-be-attached and linked
 
+	-- or(/and?)
+
 	${shaderType}Code = the code to pass on to compile this shader type
 	shaderType is one of the following:
 		vertex
@@ -322,6 +324,25 @@ args:
 		use precision = 'best' for whatever the best float precision is.  TODO same with int?  or separate into precFloat/precInt?  or just nah because it's only required in GLES for floats?
 		use version = 'latest' for whatever the latest GLSL version is.
 		use version = 'latest es' for whatever the latest GLSL ES version is.
+
+	-- or
+
+	${shaderType}Binary
+
+	binaryFormat
+	${shaderType}BinaryFormat
+
+	binaryEntryPoint
+	${shaderType}BinaryEntryPoint
+
+	-- or
+
+	multipleBinary
+	multipleBinaryStages
+	(works with binaryFormat)
+	(works with binaryEntryPoint or ${shaderType}BinaryEntryPoint)
+
+	-- and
 
 	uniforms = key/value pair of uniform values to initialize
 	attrs = key/value pair mapping attr name to GLAttribute (with type & dim specified)
@@ -373,6 +394,7 @@ function GLProgram:init(args)
 				header = #headers > 0 and headers:concat'\n' or nil,
 			})
 		end
+-- [[ for specifying one binary per one shader-module ... not working and with no errors given
 		local binary = args[field..'Binary']
 		if binary then
 			shaders:insert(cl{
@@ -381,7 +403,60 @@ function GLProgram:init(args)
 				binaryEntry = args[field..'BinaryEntry'] or args.binaryEntry,
 			})
 		end
+--]]
 	end
+
+-- [[ specifying all binaries together.  the API allows it so I get the feeling the implementers only supported one certain way despite the docs not specifying this.
+-- TODO THIS ONLY SUPPORTS ONE BINARY FOR MULTIPLE SHADER MODULES, SO ALL BETTER MATCH!
+-- how else to specify this in args ... .multipleBinary = {shaderTypes...} ?
+	if args.multipleBinary then
+		local binary = assert.type(args.multipleBinary, 'string')
+		assert.type(args.multipleBinaryStages, 'table', '.multipleBinary requires .multipleBinaryStages')
+		local vector = require 'ffi.cpp.vector-lua'
+		local shaderIDs = vector'GLuint'
+		local usedShaderTypes = table()
+		for _,st in ipairs(shaderTypes) do
+			local field, cl = table.unpack(st)
+			if table.find(args.multipleBinaryStages, field) then
+				shaderIDs:emplace_back()[0] = gl.glCreateShader(cl.type)
+				usedShaderTypes:insert(st)
+			end
+		end
+		assert.gt(#shaderIDs, 0, "expected at least one multipleBinaryStages")
+		assert.eq(#shaderIDs, #usedShaderTypes)
+
+		gl.glShaderBinary(
+			#shaderIDs,
+			shaderIDs.v,
+			assert.index(args, 'binaryFormat'),
+			binary,
+			#binary
+		)
+
+		if op.safeindex(gl, 'glSpecializeShader') then
+			for i=0,#shaderIDs-1 do
+				local st = usedShaderTypes[i+1]
+				local field, cl = table.unpack(st)
+				gl.glSpecializeShader(
+					shaderIDs.v[i],
+					-- allow per-module entry name in args...
+					args[field..'BinaryEntry'] or args.binaryEntry or 'main',	--const GLchar *pEntryPoint,
+					0,		--GLuint numSpecializationConstants,
+					nil,	--const GLuint *pConstantIndex,
+					nil		--const GLuint *pConstantValue
+				)
+
+				local shader = setmetatable({
+					id = shaderIDs.v[i],
+				}, cl)
+				shaders:insert(shader)
+				shader:checkCompileStatus()
+			end
+		end
+	end
+--]]
+
+-- TODO glProgramBinary support as well
 
 	for _,shader in ipairs(shaders) do
 		gl.glAttachShader(self.id, shader.id)
