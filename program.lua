@@ -343,10 +343,15 @@ args:
 
 	-- or
 
-	multipleBinary
-	multipleBinaryStages
-	(works with binaryFormat)
-	(works with binaryEntryPoint or ${shaderType}BinaryEntryPoint)
+	shadersBinary
+	shadersBinaryStages
+	(with binaryFormat)
+	(with binaryEntryPoint or ${shaderType}BinaryEntryPoint)
+
+	-- or
+
+	programBinary
+	(with binaryFormat)
 
 	-- and
 
@@ -369,135 +374,156 @@ however defaults can still be assigned via gl.program
 function GLProgram:init(args)
 	self.id = gl.glCreateProgram()
 
-	local shaders = table(args.shaders)
-	local shaderClasses = table{
-		GLVertexShader,
-		GLFragmentShader,
-	}
-	if GLGeometryShader then
-		shaderClasses:insert(GLGeometryShader)
-	end
-	if GLTessEvalShader then
-		shaderClasses:insert(GLTessEvalShader)
-	end
-	if GLTessControlShader then
-		shaderClasses:insert(GLTessControlShader)
-	end
-	if GLComputeShader then
-		shaderClasses:insert(GLComputeShader)
-	end
-	for _,cl in ipairs(shaderClasses) do
-		local name = cl.name
-		local code = args[name..'Code']
-		-- TODO how about multiple vertex/fragment shaders per program?
-		-- how about just passing a 'args.shaders' to just attach all?
-		if code then
-			local headers = table():append({args[name..'Header']}, {args.header})
-			shaders:insert(cl{
-				code = code,
-				version = args[name..'Version'] or args.version,
-				precision = args[name..'Precision'] or args.precision,
-				header = #headers > 0 and headers:concat'\n' or nil,
-			})
-		end
--- [[ for specifying one binary per one shader-module ... not working and with no errors given
-		local binary = args[name..'Binary']
-		if binary then
-			shaders:insert(cl{
-				binary = binary,
-				binaryFormat = args[name..'BinaryFormat'] or args.binaryFormat,
-				binaryEntry = args[name..'BinaryEntry'] or args.binaryEntry,
-			})
-		end
---]]
-	end
+	if args.programBinary then
+		-- glProgramBinary will set the link status,
+		-- so do either it or glLinkProgram
+		-- in fact, .programBinary should short-circuit all other shader initialization
+		local programBinary = args.programBinary
+		assert.type(programBinary, 'string')
 
--- [[ specifying all binaries together.  the API allows it so I get the feeling the implementers only supported one certain way despite the docs not specifying this.
-	if args.multipleBinary then
-		local binary = assert.type(args.multipleBinary, 'string')
-		assert.type(args.multipleBinaryStages, 'table', '.multipleBinary requires .multipleBinaryStages')
-		local vector = require 'ffi.cpp.vector-lua'
-		local shaderIDs = vector'GLuint'
-		local binShaders = table()
-
-		for _,cl in ipairs(shaderClasses) do
-			if table.find(args.multipleBinaryStages, cl.name) then
-				local shader = cl()
-				binShaders:insert(shader)
-				shaderIDs:emplace_back()[0] = shader.id
-			end
-		end
-		assert.gt(#shaderIDs, 0, "expected at least one multipleBinaryStages")
-		assert.eq(#shaderIDs, #binShaders)
-
-		gl.glShaderBinary(
-			#shaderIDs,
-			shaderIDs.v,
+		gl.glProgramBinary(
+			self.id,
 			assert.index(args, 'binaryFormat'),
-			binary,
-			#binary
+			programBinary,	-- cdata or string
+			#programBinary
 		)
 
-		if op.safeindex(gl, 'glSpecializeShader') then
+		self:checkLinkStatus()
+	else
+		local shaders = table(args.shaders)
+		local shaderClasses = table{
+			GLVertexShader,
+			GLFragmentShader,
+		}
+		if GLGeometryShader then
+			shaderClasses:insert(GLGeometryShader)
+		end
+		if GLTessEvalShader then
+			shaderClasses:insert(GLTessEvalShader)
+		end
+		if GLTessControlShader then
+			shaderClasses:insert(GLTessControlShader)
+		end
+		if GLComputeShader then
+			shaderClasses:insert(GLComputeShader)
+		end
+		for _,cl in ipairs(shaderClasses) do
+			local name = cl.name
+			local code = args[name..'Code']
+			-- TODO how about multiple vertex/fragment shaders per program?
+			-- how about just passing a 'args.shaders' to just attach all?
+			if code then
+				local headers = table():append({args[name..'Header']}, {args.header})
+				shaders:insert(cl{
+					code = code,
+					version = args[name..'Version'] or args.version,
+					precision = args[name..'Precision'] or args.precision,
+					header = #headers > 0 and headers:concat'\n' or nil,
+				})
+			end
+	-- [[ for specifying one binary per one shader-module ... not working and with no errors given
+			local binary = args[name..'Binary']
+			if binary then
+				shaders:insert(cl{
+					binary = binary,
+					binaryFormat = args[name..'BinaryFormat'] or args.binaryFormat,
+					binaryEntry = args[name..'BinaryEntry'] or args.binaryEntry,
+				})
+			end
+	--]]
+		end
+
+	-- [[ specifying all binaries together.  the API allows it so I get the feeling the implementers only supported one certain way despite the docs not specifying this.
+		if args.shadersBinary then
+			local binary = assert.type(args.shadersBinary, 'string')
+			assert.type(args.shadersBinaryStages, 'table', '.shadersBinary requires .shadersBinaryStages')
+			local vector = require 'ffi.cpp.vector-lua'
+			local shaderIDs = vector'GLuint'
+			local binShaders = table()
+
+			for _,cl in ipairs(shaderClasses) do
+				if table.find(args.shadersBinaryStages, cl.name) then
+					local shader = cl()
+					binShaders:insert(shader)
+					shaderIDs:emplace_back()[0] = shader.id
+				end
+			end
+			assert.gt(#shaderIDs, 0, "expected at least one shadersBinaryStages")
+			assert.eq(#shaderIDs, #binShaders)
+
+			gl.glShaderBinary(
+				#shaderIDs,
+				shaderIDs.v,
+				assert.index(args, 'binaryFormat'),
+				binary,
+				#binary
+			)
+
+			-- make sure glSpecializeShader exists (in GLES2 when glShaderBinary was first introduced, it doesn't exist)
+			if op.safeindex(gl, 'glSpecializeShader') then
+				for _,shader in ipairs(binShaders) do
+					gl.glSpecializeShader(
+						shader.id,
+						-- allow per-module entry name in args...
+						args[shader.name..'BinaryEntry']
+							or args.binaryEntry
+							or 'main',	--const GLchar *pEntryPoint,
+						0,		--GLuint numSpecializationConstants,
+						nil,	--const GLuint *pConstantIndex,
+						nil		--const GLuint *pConstantValue
+					)
+				end
+			end
+
+			local success = true
 			for _,shader in ipairs(binShaders) do
-				gl.glSpecializeShader(
-					shader.id,
-					-- allow per-module entry name in args...
-					args[shader.name..'BinaryEntry'] or args.binaryEntry or 'main',	--const GLchar *pEntryPoint,
-					0,		--GLuint numSpecializationConstants,
-					nil,	--const GLuint *pConstantIndex,
-					nil		--const GLuint *pConstantValue
-				)
+				success = shader:checkCompileStatus(nil, true) and success
+			end
+			if not success then
+				error("one or more binary shader compile failed")
+			end
+
+			shaders:append(binShaders)
+		end
+	--]]
+
+	-- TODO glProgramBinary support as well
+
+		for _,shader in ipairs(shaders) do
+			gl.glAttachShader(self.id, shader.id)
+		end
+
+		if args.attrLocs then
+			for k,v in pairs(args.attrLocs) do
+				gl.glBindAttribLocation(self.id, v, k);
 			end
 		end
 
-		local success = true
-		for _,shader in ipairs(binShaders) do
-			success = shader:checkCompileStatus(nil, true) and success
+		local transformFeedback = args.transformFeedback
+		if transformFeedback then
+			local n = #transformFeedback
+			local varyings = char_const_p_arr(n)
+			for i=1,n do
+				varyings[i-1] = transformFeedback[i]
+			end
+			local mode = transformFeedback.mode
+			mode = ({
+				interleaved = gl.GL_INTERLEAVED_ATTRIBS,
+				separate = gl.GL_SEPARATE_ATTRIBS,
+			})[mode] or mode
+			if not mode then error("transformFeedback has unknown mode "..tostring(mode)) end
+			gl.glTransformFeedbackVaryings(self.id, n, varyings, mode)
 		end
-		if not success then
-			error("one or more binary shader compile failed")
+
+		gl.glLinkProgram(self.id)
+
+		self:checkLinkStatus()
+
+		-- now that the program is linked, we can detach all shaders (riiigiht?)
+		-- https://community.khronos.org/t/correct-way-to-delete-shader-programs/69742/3
+		for _,shader in ipairs(shaders) do
+			gl.glDetachShader(self.id, shader.id)
 		end
-
-		shaders:append(binShaders)
-	end
---]]
-
--- TODO glProgramBinary support as well
-
-	for _,shader in ipairs(shaders) do
-		gl.glAttachShader(self.id, shader.id)
-	end
-
-	if args.attrLocs then
-		for k,v in pairs(args.attrLocs) do
-			gl.glBindAttribLocation(self.id, v, k);
-		end
-	end
-
-	local transformFeedback = args.transformFeedback
-	if transformFeedback then
-		local n = #transformFeedback
-		local varyings = char_const_p_arr(n)
-		for i=1,n do
-			varyings[i-1] = transformFeedback[i]
-		end
-		local mode = transformFeedback.mode
-		mode = ({
-			interleaved = gl.GL_INTERLEAVED_ATTRIBS,
-			separate = gl.GL_SEPARATE_ATTRIBS,
-		})[mode] or mode
-		if not mode then error("transformFeedback has unknown mode "..tostring(mode)) end
-		gl.glTransformFeedbackVaryings(self.id, n, varyings, mode)
-	end
-
-	gl.glLinkProgram(self.id)
-	self:checkLinkStatus()
-
-	-- now that the program is linked, we can detach all shaders (riiigiht?)
-	-- https://community.khronos.org/t/correct-way-to-delete-shader-programs/69742/3
-	for _,shader in ipairs(shaders) do
-		gl.glDetachShader(self.id, shader.id)
 	end
 
 	self:use()
@@ -509,10 +535,10 @@ function GLProgram:init(args)
 	for i=1,maxUniforms do
 		local bufSize = maxLen+1
 		local name = GLchar_arr(bufSize)
-		local length = GLsizei_1(0)
+		local length = GLsizei_1()
 		ffi.fill(name, bufSize)
-		local arraySize = GLint_1(0)
-		local utype = GLenum_1(0)
+		local arraySize = GLint_1()
+		local utype = GLenum_1()
 		gl.glGetActiveUniform(self.id, i-1, bufSize, length, arraySize, utype, name)
 		local info = {
 			name = ffi.string(name, length[0]),
@@ -556,9 +582,9 @@ function GLProgram:init(args)
 		local nameMaxLen = self:get'GL_ACTIVE_ATTRIBUTE_MAX_LENGTH'
 		local bufSize = nameMaxLen+1
 		local nameBuf = GLchar_arr(bufSize)
-		local length = GLsizei_1(0)
-		local arraySize = GLint_1(0)
-		local glslType = GLenum_1(0)
+		local length = GLsizei_1()
+		local arraySize = GLint_1()
+		local glslType = GLenum_1()
 		for index=0,self:get'GL_ACTIVE_ATTRIBUTES'-1 do
 			ffi.fill(nameBuf, bufSize)
 			gl.glGetActiveAttrib(self.id, index, bufSize, length, arraySize, glslType, nameBuf)
@@ -608,9 +634,9 @@ function GLProgram:init(args)
 		local nameMaxLen = self:get'GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH'
 		local bufSize = nameMaxLen+1
 		local nameBuf = GLchar_arr(bufSize)
-		local length = GLsizei_1(0)
-		local arraySize = GLint_1(0)
-		local glslType = GLenum_1(0)
+		local length = GLsizei_1()
+		local arraySize = GLint_1()
+		local glslType = GLenum_1()
 		for index=0,self:get'GL_TRANSFORM_FEEDBACK_VARYINGS'-1 do
 			ffi.fill(nameBuf, bufSize)
 			gl.glGetTransformFeedbackVarying(self.id, index, bufSize, length, arraySize, glslType, nameBuf)
@@ -1068,6 +1094,16 @@ function GLProgram.make(args)
 			}
 		):concat'\n',
 	}:useNone()
+end
+
+function GLProgram:getBinary()
+	local length = GLsizei_1(self:get'GL_PROGRAM_BINARY_LENGTH')
+	local binary = ffi.new('uint8_t[?]', length[0])
+	local binaryFormat = GLenum_1()
+require'gl.report''here'
+	gl.glGetProgramBinary(self.id, length[0], length, binaryFormat, binary)
+require'gl.report''here'
+	return ffi.string(binary, length[0]), binaryFormat[0]
 end
 
 return GLProgram
