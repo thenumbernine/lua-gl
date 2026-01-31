@@ -177,16 +177,19 @@ end
 GLProgram.__gc = GLProgram.delete
 
 local GLVertexShader = GLShader:subclass()
+GLVertexShader.name = 'vertex'	-- shorthand
 GLVertexShader.type = gl.GL_VERTEX_SHADER
 GLProgram.VertexShader = GLVertexShader
 
 local GLFragmentShader = GLShader:subclass()
+GLFragmentShader.name = 'fragment'
 GLFragmentShader.type = gl.GL_FRAGMENT_SHADER
 GLProgram.FragmentShader = GLFragmentShader
 
 local GLGeometryShader
 if op.safeindex(gl, 'GL_GEOMETRY_SHADER') then
 	GLGeometryShader = GLShader:subclass()
+	GLGeometryShader.name = 'geoemtry'
 	GLGeometryShader.type = gl.GL_GEOMETRY_SHADER
 	GLProgram.GeometryShader = GLGeometryShader
 end
@@ -194,6 +197,7 @@ end
 local GLTessEvalShader
 if op.safeindex(gl, 'GL_TESS_EVALUATION_SHADER') then
 	GLTessEvalShader = GLShader:subclass()
+	GLTessEvalShader.name = 'tessEval'
 	GLTessEvalShader.type = gl.GL_TESS_EVALUATION_SHADER
 	GLProgram.TessEvalShader = GLTessEvalShader
 end
@@ -201,6 +205,7 @@ end
 local GLTessControlShader
 if op.safeindex(gl, 'GL_TESS_CONTROL_SHADER') then
 	GLTessControlShader = GLShader:subclass()
+	GLTessControlShader.name = 'tessControl'
 	GLTessControlShader.type = gl.GL_TESS_CONTROL_SHADER
 	GLProgram.TessControlShader = GLTessControlShader
 end
@@ -208,6 +213,7 @@ end
 local GLComputeShader
 if op.safeindex(gl, 'GL_COMPUTE_SHADER') then
 	GLComputeShader = GLShader:subclass()
+	GLComputeShader.name = 'compute'
 	GLComputeShader.type = gl.GL_COMPUTE_SHADER
 	GLProgram.ComputeShader = GLComputeShader
 end
@@ -364,66 +370,65 @@ function GLProgram:init(args)
 	self.id = gl.glCreateProgram()
 
 	local shaders = table(args.shaders)
-	local shaderTypes = table{
-		{'vertex', GLVertexShader},
-		{'fragment', GLFragmentShader},
+	local shaderClasses = table{
+		GLVertexShader,
+		GLFragmentShader,
 	}
 	if GLGeometryShader then
-		shaderTypes:insert{'geometry', GLGeometryShader}
+		shaderClasses:insert(GLGeometryShader)
 	end
 	if GLTessEvalShader then
-		shaderTypes:insert{'tessEval', GLTessEvalShader}
+		shaderClasses:insert(GLTessEvalShader)
 	end
 	if GLTessControlShader then
-		shaderTypes:insert{'tessControl', GLTessControlShader}
+		shaderClasses:insert(GLTessControlShader)
 	end
 	if GLComputeShader then
-		shaderTypes:insert{'compute', GLComputeShader}
+		shaderClasses:insert(GLComputeShader)
 	end
-	for _,st in ipairs(shaderTypes) do
-		local field, cl = table.unpack(st)
-		local code = args[field..'Code']
+	for _,cl in ipairs(shaderClasses) do
+		local name = cl.name
+		local code = args[name..'Code']
 		-- TODO how about multiple vertex/fragment shaders per program?
 		-- how about just passing a 'args.shaders' to just attach all?
 		if code then
-			local headers = table():append({args[field..'Header']}, {args.header})
+			local headers = table():append({args[name..'Header']}, {args.header})
 			shaders:insert(cl{
 				code = code,
-				version = args[field..'Version'] or args.version,
-				precision = args[field..'Precision'] or args.precision,
+				version = args[name..'Version'] or args.version,
+				precision = args[name..'Precision'] or args.precision,
 				header = #headers > 0 and headers:concat'\n' or nil,
 			})
 		end
 -- [[ for specifying one binary per one shader-module ... not working and with no errors given
-		local binary = args[field..'Binary']
+		local binary = args[name..'Binary']
 		if binary then
 			shaders:insert(cl{
 				binary = binary,
-				binaryFormat = args[field..'BinaryFormat'] or args.binaryFormat,
-				binaryEntry = args[field..'BinaryEntry'] or args.binaryEntry,
+				binaryFormat = args[name..'BinaryFormat'] or args.binaryFormat,
+				binaryEntry = args[name..'BinaryEntry'] or args.binaryEntry,
 			})
 		end
 --]]
 	end
 
 -- [[ specifying all binaries together.  the API allows it so I get the feeling the implementers only supported one certain way despite the docs not specifying this.
--- TODO THIS ONLY SUPPORTS ONE BINARY FOR MULTIPLE SHADER MODULES, SO ALL BETTER MATCH!
--- how else to specify this in args ... .multipleBinary = {shaderTypes...} ?
 	if args.multipleBinary then
 		local binary = assert.type(args.multipleBinary, 'string')
 		assert.type(args.multipleBinaryStages, 'table', '.multipleBinary requires .multipleBinaryStages')
 		local vector = require 'ffi.cpp.vector-lua'
 		local shaderIDs = vector'GLuint'
-		local usedShaderTypes = table()
-		for _,st in ipairs(shaderTypes) do
-			local field, cl = table.unpack(st)
-			if table.find(args.multipleBinaryStages, field) then
-				shaderIDs:emplace_back()[0] = gl.glCreateShader(cl.type)
-				usedShaderTypes:insert(st)
+		local binShaders = table()
+
+		for _,cl in ipairs(shaderClasses) do
+			if table.find(args.multipleBinaryStages, cl.name) then
+				local shader = cl()
+				binShaders:insert(shader)
+				shaderIDs:emplace_back()[0] = shader.id
 			end
 		end
 		assert.gt(#shaderIDs, 0, "expected at least one multipleBinaryStages")
-		assert.eq(#shaderIDs, #usedShaderTypes)
+		assert.eq(#shaderIDs, #binShaders)
 
 		gl.glShaderBinary(
 			#shaderIDs,
@@ -434,13 +439,11 @@ function GLProgram:init(args)
 		)
 
 		if op.safeindex(gl, 'glSpecializeShader') then
-			for i=0,#shaderIDs-1 do
-				local st = usedShaderTypes[i+1]
-				local field, cl = table.unpack(st)
+			for _,shader in ipairs(binShaders) do
 				gl.glSpecializeShader(
-					shaderIDs.v[i],
+					shader.id,
 					-- allow per-module entry name in args...
-					args[field..'BinaryEntry'] or args.binaryEntry or 'main',	--const GLchar *pEntryPoint,
+					args[shader.name..'BinaryEntry'] or args.binaryEntry or 'main',	--const GLchar *pEntryPoint,
 					0,		--GLuint numSpecializationConstants,
 					nil,	--const GLuint *pConstantIndex,
 					nil		--const GLuint *pConstantValue
@@ -448,15 +451,15 @@ function GLProgram:init(args)
 			end
 		end
 
-		for i=0,#shaderIDs-1 do
-			local st = usedShaderTypes[i+1]
-			local field, cl = table.unpack(st)
-			local shader = setmetatable({
-				id = shaderIDs.v[i],
-			}, cl)
-			shaders:insert(shader)
-			shader:checkCompileStatus()
+		local success = true
+		for _,shader in ipairs(binShaders) do
+			success = shader:checkCompileStatus(nil, true) and success
 		end
+		if not success then
+			error("one or more binary shader compile failed")
+		end
+
+		shaders:append(binShaders)
 	end
 --]]
 
@@ -644,7 +647,7 @@ function GLProgram:init(args)
 	self.uniformBlocks = {}
 	local numBlocks = self:get'GL_ACTIVE_UNIFORM_BLOCKS'
 	for uniformBlockIndex=0,numBlocks-1 do
-		local nameLen = ffi.new'GLsizei[1]'
+		local nameLen = ffi.new('GLsizei[1]', 9999)
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_NAME_LENGTH, nameLen);
 
 		local name = ffi.new('char[?]', nameLen[0]+1)
@@ -652,7 +655,7 @@ function GLProgram:init(args)
 		-- but for a 5-char name I'm getting back "6" result from GL_UNIFORM_BLOCK_NAME_LENGTH ... meaning including-nul-terminator ...
 		-- is GL_UNIFORM_BLOCK_NAME_LENGTH different from glGetActiveUniformBlockName?
 		-- does glGetActiveUniformBlockName even give a length result if you don't pass in a buffer?
-		local nameLen2 = ffi.new'GLsizei[1]'
+		local nameLen2 = ffi.new('GLsizei[1]', 9999)
 		gl.glGetActiveUniformBlockName(self.id, uniformBlockIndex, nameLen[0], nameLen2, name);
 		nameLen2 = nameLen2[0]
 		name = ffi.string(name, nameLen2)
@@ -660,7 +663,7 @@ function GLProgram:init(args)
 
 		-- see if we were asked to set the binding point
 		-- do this before querying the binding point for our program's .uniformBlocks table
-		local srcUniformBlock = srcUniformBlocks[name]
+		local srcUniformBlock = srcUniformBlocks and srcUniformBlocks[name]
 		if srcUniformBlock then
 			if srcUniformBlock.binding then
 				gl.glUniformBlockBinding(

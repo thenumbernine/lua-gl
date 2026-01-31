@@ -2,6 +2,7 @@ require 'ext.gc'	-- make sure luajit can __gc lua-tables
 local op = require 'ext.op'
 local ffi = require 'ffi'
 local gl = require 'gl'
+local string = require 'ext.string'
 local table = require 'ext.table'
 local assert = require 'ext.assert'
 local showcode = require 'template.showcode'
@@ -59,6 +60,7 @@ if 'args' is a string then it is treated as the code.
 --]]
 function GLShader:init(args)
 --DEBUG(glreport):glreport'here'
+	args = args or {}
 	local code
 	if type(args) == 'string' then
 		code = args
@@ -158,6 +160,7 @@ function GLShader:init(args)
 		strs[0] = code	-- doesn't work in ffi.new('char const*[1]')s ctor?
 		gl.glShaderSource(self.id, 1, strs, len)
 		self:compile()
+		self:checkCompileStatus(code)
 	elseif args.binary then
 		local binary = assert.type(args.binary, 'string', 'args.binary')
 		local ids = GLuint_1(self.id)
@@ -180,11 +183,10 @@ function GLShader:init(args)
 				nil		--const GLuint *pConstantValue
 			)
 		end
+		self:checkCompileStatus(code)
 	else
-		error("you need either args.code or args.binary")
+		-- no .code or .binary?  just let them make an empty glCreateShader()
 	end
-
-	self:checkCompileStatus(code)
 end
 
 function GLShader:compile()
@@ -196,28 +198,38 @@ end
 -- TODO return false w/error? and separate 'assert' function? like FBO has for check()
 -- or meh, need case for that yet?
 function GLShader.createCheckStatus(statusEnum, logGetter)
-	return function(self, code)
+	return function(self, code, warnOnly)
 		local status = self:get(statusEnum)
-		if status == gl.GL_FALSE then
-			local length = self:get'GL_INFO_LOG_LENGTH'
-			local log = GLchar_arr(length+1)
-			local result = GLsizei_1()
-			logGetter(self.id, length, result, log);
-			local s = table()
-			if code then
-				s:insert(showcode(code))
-			end
-			s:insert('log:')
-			s:insert(ffi.string(log))
+		if status == gl.GL_TRUE then
+			-- on success, return self
+			return self
+		end
 
-			for _,get in ipairs(self.getInfo) do
-				s:insert(get.name..': '..table{self:get(get.name)}:mapi(tostring):concat' ')
-			end
+		local length = self:get'GL_INFO_LOG_LENGTH'
+		local log = GLchar_arr(length+1)
+		local result = GLsizei_1()
+		logGetter(self.id, length, result, log);
+		local s = table()
+		if code then
+			s:insert(showcode(code))
+		end
+		s:insert('log:')
+		log = string.trim(ffi.string(log))
+		if log ~= '' then
+			s:insert(log)
+		end
 
-			s:insert(statusEnum..' failed!')
+		for _,get in ipairs(self.getInfo) do
+			s:insert(get.name..': '..table{self:get(get.name)}:mapi(tostring):concat' ')
+		end
+
+		s:insert(statusEnum..' failed!')
+		if warnOnly then
+			io.stderr:write('\n'..s:concat'\n'..'\n')
+		else
 			error('\n'..s:concat'\n')
 		end
-		return self
+		-- on fail, return empty
 	end
 end
 
