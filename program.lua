@@ -303,6 +303,8 @@ GLProgram:makeGetter{
 
 -- TODO glGetProgramResource
 
+GLProgram.rowMajor = true	-- do we transpose input matrices? args can override
+
 --[[
 args:
 	shaders = gl.shader objects that are already compiled, to-be-attached and linked
@@ -370,9 +372,12 @@ however defaults can still be assigned via gl.program
 		mode = gl.GL_INTERLEAVED_ATTRIBS, gl.GL_SEPARATE_ATTRIBS
 			or 'interleaved' or 'separate'
 	}
+
+	rowMajor = whether to set the glUniformMatrix to upload rowMajor (I'm defaulting this to true because my C matrices are row-major by default, because I want my C indexes to match math indexes)
 --]]
 function GLProgram:init(args)
 	self.id = gl.glCreateProgram()
+	self.rowMajor = args.rowMajor
 
 	if args.programBinary then
 		-- glProgramBinary will set the link status,
@@ -808,7 +813,7 @@ function GLProgram:setUniform(name, value, ...)
 		if setters.vec then
 			setters.vec(loc, 1, value)
 		elseif setters.mat then
-			setters.mat(loc, 1, false, value)
+			setters.mat(loc, 1, self.rowMajor, value)
 		else
 			error("failed to find array setter for uniform "..name..' type '..tostring(info.type))
 		end
@@ -829,7 +834,7 @@ function GLProgram:setUniform(name, value, ...)
 			setters.vec(loc, 1, cdata)
 		elseif setters.mat then
 			-- TODO c data conversion
-			setters.mat(loc, 1, false, value)
+			setters.mat(loc, 1, sfalseelf.rowMajor, value)
 		else
 			error("failed to find array setter for uniform "..name..' type '..tostring(info.type))
 		end
