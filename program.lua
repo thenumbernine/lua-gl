@@ -189,7 +189,7 @@ GLProgram.FragmentShader = GLFragmentShader
 local GLGeometryShader
 if op.safeindex(gl, 'GL_GEOMETRY_SHADER') then
 	GLGeometryShader = GLShader:subclass()
-	GLGeometryShader.name = 'geoemtry'
+	GLGeometryShader.name = 'geometry'
 	GLGeometryShader.type = gl.GL_GEOMETRY_SHADER
 	GLProgram.GeometryShader = GLGeometryShader
 end
