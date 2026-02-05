@@ -18,7 +18,6 @@ local table = require 'ext.table'
 local op = require 'ext.op'
 local assert = require 'ext.assert'
 local gl = require 'gl'
-local glreport = require 'gl.report'
 local glSafeCall = require 'gl.error'.glSafeCall
 
 
@@ -153,13 +152,10 @@ local function behavior(parent)
 	end
 
 	function template:get(name, ...)
-		glreport'gl.get begin' -- clear error
-
 		local var = self.getInfo[name]
 		if not var then
 			return nil, "failed to find getter associated with "..tostring(name)
 		end
-
 		return var.getter(self, var.nameValue, ...)
 	end
 

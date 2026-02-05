@@ -222,7 +222,6 @@ local function makeInt64Vec(name, count)
 end
 
 local version
-require 'gl.report''before determining GL version'
 local tmp = xpcall(function()
 	local major = assert(GLGet.int'GL_MAJOR_VERSION')
 	local minor = assert(GLGet.int'GL_MINOR_VERSION')

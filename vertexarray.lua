@@ -14,7 +14,6 @@ local ffi = require 'ffi'
 local gl = require 'gl'
 local table = require 'ext.table'
 local class = require 'ext.class'
---DEBUG(glreport):local glreport = require 'gl.report'
 
 local GLuint_1 = ffi.typeof'GLuint[1]'
 
@@ -37,22 +36,17 @@ args:
 		value = what to assign it
 --]]
 function GLVertexArray:init(args)
---DEBUG(glreport):glreport'here'
 	local ptr = GLuint_1()
 	gl.glGenVertexArrays(1, ptr)
---DEBUG(glreport):glreport'here'
 	self.id = ptr[0]
 
 	if args.attrs then
 		local GLAttribute = require 'gl.attribute'
---DEBUG(glreport):glreport'here'
 		local GLArrayBuffer = require 'gl.arraybuffer'
---DEBUG(glreport):glreport'here'
 		local program = assert(args.program, "if you are specifying attrs then you must specify a program")
 		self.attrs = table()
 		for name,setargs in pairs(args.attrs) do
 			local attr = GLAttribute(program.attrs[name])
---DEBUG(glreport):glreport'here'
 			self.attrs:insert(attr)
 			if GLArrayBuffer:isa(setargs) then
 				attr.buffer = setargs
@@ -63,7 +57,6 @@ function GLVertexArray:init(args)
 			end
 		end
 		self:setAttrs()
---DEBUG(glreport):glreport'here'
 	end
 end
 
@@ -94,35 +87,29 @@ function GLVertexArray:setAttrs(attrs)
 	-- [[
 	-- bind the vao
 	self:bind()
---DEBUG(glreport):glreport'here'
 	for _,attr in ipairs(attrs or self.attrs) do
 		-- set the attr w/buffer <-> bind buffer, set pointer (to buffer), unbind buffer
 		attr:enableAndSet()
---DEBUG(glreport):glreport'here'
 	end
 	-- unbind the vao
 	self:unbind()
---DEBUG(glreport):glreport'here'
 	--]]
 	return self
 end
 
 function GLVertexArray:bind(args)
 	gl.glBindVertexArray(self.id)
---DEBUG(glreport):glreport'here'
 	return self
 end
 
 function GLVertexArray:unbind()
 	gl.glBindVertexArray(0)
---DEBUG(glreport):glreport'here'
 	return self
 end
 
 function GLVertexArray:enableAttrs(attrs)
 	for _,attr in ipairs(attrs or self.attrs) do
 		attr:enable()
---DEBUG(glreport):glreport'here'
 	end
 	return self
 end
@@ -130,7 +117,6 @@ end
 function GLVertexArray:disableAttrs(attrs)
 	for _,attr in ipairs(attrs or self.attrs) do
 		attr:disable()
---DEBUG(glreport):glreport'here'
 	end
 	return self
 end
@@ -142,18 +128,14 @@ end
 -- yes.
 function GLVertexArray:bindAndEnable()
 	self:bind()
---DEBUG(glreport):glreport'here'
 	self:enbleAttrs()
---DEBUG(glreport):glreport'here'
 	return self
 end
 
 -- shorthand for unbind + disableAttrs
 function GLVertexArray:unbindAndDisable()
 	self:disableAttrs()
---DEBUG(glreport):glreport'here'
 	self:unbind()
---DEBUG(glreport):glreport'here'
 	return self
 end
 

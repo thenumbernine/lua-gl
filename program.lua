@@ -12,6 +12,7 @@ local GLAttribute = require 'gl.attribute'
 local GLArrayBuffer = require 'gl.arraybuffer'
 local glnumber = require 'gl.number'
 
+local char_arr = ffi.typeof'char[?]'
 local char_const_p_arr = ffi.typeof'char const*[?]'
 local int = ffi.typeof'int'
 local unsigned_int = ffi.typeof'unsigned int'
@@ -20,8 +21,10 @@ local double = ffi.typeof'double'
 local GLchar_arr = ffi.typeof'GLchar[?]'
 local GLint = ffi.typeof'GLint'
 local GLint_1 = ffi.typeof'GLint[1]'
+local GLint_arr = ffi.typeof'GLint[?]'
 local GLsizei_1 = ffi.typeof'GLsizei[1]'
 local GLenum_1 = ffi.typeof'GLenum[1]'
+local GLenum_arr = ffi.typeof'GLenum[?]'
 
 local checkHasGetProgramResource
 do
@@ -564,7 +567,7 @@ function GLProgram:init(args)
 		local utype = GLenum_1()
 		gl.glGetActiveUniform(self.id, i-1, bufSize, length, arraySize, utype, name)
 		local info = {
-			name = ffi.string(name, length[0]),
+			name = length[0] > 0 and ffi.string(name, length[0]) or nil,
 			arraySize = arraySize[0],
 			type = utype[0],
 		}
@@ -572,25 +575,68 @@ function GLProgram:init(args)
 		-- in GLES3, you need a uniform name to get its location
 		-- but in GL>=4.3 you can use glGetProgramResourceiv
 		if checkHasGetProgramResource() then
-			local location = GLint_1()
+			local propNames = table{
+				--'GL_NAME_LENGTH', already done above
+				--'GL_TYPE', already done above
+				--'GL_ARRAY_SIZE', already done above
+				'GL_OFFSET',
+				'GL_BLOCK_INDEX',
+				'GL_ARRAY_STRIDE',
+				'GL_MATRIX_STRIDE',
+				'GL_IS_ROW_MAJOR',
+				'GL_ATOMIC_COUNTER_BUFFER_INDEX',
+				'GL_REFERENCED_BY_VERTEX_SHADER',
+				'GL_REFERENCED_BY_TESS_CONTROL_SHADER',
+				'GL_REFERENCED_BY_TESS_EVALUATION_SHADER',
+				'GL_REFERENCED_BY_GEOMETRY_SHADER',
+				'GL_REFERENCED_BY_FRAGMENT_SHADER',
+				'GL_REFERENCED_BY_COMPUTE_SHADER',
+				'GL_LOCATION',
+			}
+			local propForName = propNames:mapi(function(name,i)
+				return i-1, name
+			end):setmetatable(nil)
+			local propsLua = propNames:mapi(function(name)
+				return gl[name]
+			end)
+			local numProps = #propsLua
+			local props = GLenum_arr(numProps, propsLua)
+			local propResults = GLint_arr(numProps)
 			gl.glGetProgramResourceiv(
 				self.id,
 				gl.GL_UNIFORM,
 				i-1,
-				1,	-- property count
-				GLenum_1(gl.GL_LOCATION),
-				1,	-- buffer size ... in ints?
+				numProps,
+				props,
+				numProps,	-- buffer size ... in ints?
 				nil,
-				location
+				propResults
 			)
-			info.loc = location[0]
-		else
+			info.loc = propResults[propForName.GL_LOCATION]
+			info.offset = propResults[propForName.GL_OFFSET]
+			info.blockIndex = propResults[propForName.GL_BLOCK_INDEX]
+			info.arrayStride = propResults[propForName.GL_ARRAY_STRIDE]
+			info.matrixStride = propResults[propForName.GL_MATRIX_STRIDE]
+			info.rowMajor = propResults[propForName.GL_IS_ROW_MAJOR] ~= 0
+			info.atomicCounterBufferIndex = propResults[propForName.GL_ATOMIC_COUNTER_BUFFER_INDEX]
+
+			info.refByVertex = propResults[propForName.GL_REFERENCED_BY_VERTEX_SHADER] ~= 0 or nil
+			info.refByFragment = propResults[propForName.GL_REFERENCED_BY_FRAGMENT_SHADER] ~= 0 or nil
+			info.refByGeometry = GLGeometryShader and propResults[propForName.GL_REFERENCED_BY_GEOMETRY_SHADER] ~= 0 or nil
+			info.refByTessControl = GLTessControlShader and propResults[propForName.GL_REFERENCED_BY_TESS_CONTROL_SHADER] ~= 0 or nil
+			info.refByTessEval = GLTessEvalShader and propResults[propForName.GL_REFERENCED_BY_TESS_EVALUATION_SHADER] ~= 0 or nil
+			info.refByCompute = GLComputeShader and propResults[propForName.GL_REFERENCED_BY_COMPUTE_SHADER] ~= 0 or nil
+		elseif info.name then
 			info.loc = gl.glGetUniformLocation(self.id, info.name)
+		else
+			-- warning, can't get location of unnamed uniform...
 		end
 
 		info.setters = getUniformSettersForGLType(info.type)
 		self.uniforms[i] = info		-- index by binding
-		self.uniforms[info.name] = info
+		if info.name then
+			self.uniforms[info.name] = info
+		end
 	end
 
 	--[[
@@ -715,15 +761,15 @@ function GLProgram:init(args)
 	self.uniformBlocks = {}
 	local numBlocks = self:get'GL_ACTIVE_UNIFORM_BLOCKS'
 	for uniformBlockIndex=0,numBlocks-1 do
-		local nameLen = ffi.new('GLsizei[1]', 9999)
+		local nameLen = GLsizei_1(9999)
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_NAME_LENGTH, nameLen);
 
-		local name = ffi.new('char[?]', nameLen[0]+1)
+		local name = char_arr(nameLen[0]+1)
 		-- "The actual number of characters written into uniformBlockName, excluding the nul terminator, is returned in length. " from https://registry.khronos.org/OpenGL-Refpages/es3.0/html/glGetActiveUniformBlockName.xhtml
 		-- but for a 5-char name I'm getting back "6" result from GL_UNIFORM_BLOCK_NAME_LENGTH ... meaning including-nul-terminator ...
 		-- is GL_UNIFORM_BLOCK_NAME_LENGTH different from glGetActiveUniformBlockName?
 		-- does glGetActiveUniformBlockName even give a length result if you don't pass in a buffer?
-		local nameLen2 = ffi.new('GLsizei[1]', 9999)
+		local nameLen2 = GLsizei_1(9999)
 		gl.glGetActiveUniformBlockName(self.id, uniformBlockIndex, nameLen[0], nameLen2, name);
 		nameLen2 = nameLen2[0]
 		name = ffi.string(name, nameLen2)
@@ -742,45 +788,45 @@ function GLProgram:init(args)
 			end
 		end
 
-		local binding = ffi.new'GLint[1]'
+		local binding = GLint_1
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_BINDING, binding)
 
-		local dataSize = ffi.new'GLint[1]'
+		local dataSize = GLint_1
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_DATA_SIZE, dataSize)
 
-		local numActiveUniforms = ffi.new'GLint[1]'
+		local numActiveUniforms = GLint_1
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, numActiveUniforms)
 
-		local numActiveUniformIndices = ffi.new('GLint[?]', numActiveUniforms[0])
+		local numActiveUniformIndices = GLint_arr(numActiveUniforms[0])
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, numActiveUniformIndices)
 
-		local refByVtxShader = ffi.new'GLint[1]'
+		local refByVtxShader = GLint_1
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER, refByVtxShader)
 
-		local refByFragShader = ffi.new'GLint[1]'
+		local refByFragShader = GLint_1
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER, refByFragShader)
 
 		local refByGeomShader
 		if GLGeometryShader then
-			refByGeomShader = ffi.new'GLint[1]'
+			refByGeomShader = GLint_1
 			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_GEOMETRY_SHADER, refByGeomShader)
 		end
 
 		local refByTessEvalShader
 		if GLTessEvalShader then
-			refByTessEvalShader = ffi.new'GLint[1]'
+			refByTessEvalShader = GLint_1
 			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_EVALUATION_SHADER, refByTessEvalShader)
 		end
 
 		local refByTessControlShader
 		if GLTessControlShader then
-			refByTessControlShader = ffi.new'GLint[1]'
+			refByTessControlShader = GLint_1
 			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_CONTROL_SHADER, refByTessControlShader)
 		end
 
 		local refByComputeShader
 		if GLComputeShader then
-			refByComputeShader = ffi.new'GLint[1]'
+			refByComputeShader = GLint_1
 			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_COMPUTE_SHADER, refByComputeShader)
 		end
 
@@ -1140,11 +1186,9 @@ end
 
 function GLProgram:getBinary()
 	local length = GLsizei_1(self:get'GL_PROGRAM_BINARY_LENGTH')
-	local binary = ffi.new('uint8_t[?]', length[0])
+	local binary = char_arr(length[0])
 	local binaryFormat = GLenum_1()
-require'gl.report''here'
 	gl.glGetProgramBinary(self.id, length[0], length, binaryFormat, binary)
-require'gl.report''here'
 	return ffi.string(binary, length[0]), binaryFormat[0]
 end
 

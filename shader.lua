@@ -7,7 +7,6 @@ local table = require 'ext.table'
 local assert = require 'ext.assert'
 local showcode = require 'template.showcode'
 local GLGet = require 'gl.get'
---DEBUG(glreport):local glreport = require 'gl.report'
 
 
 local GLchar_arr = ffi.typeof'GLchar[?]'
@@ -59,7 +58,6 @@ args:
 if 'args' is a string then it is treated as the code.
 --]]
 function GLShader:init(args)
---DEBUG(glreport):glreport'here'
 	args = args or {}
 	local code
 	if type(args) == 'string' then
@@ -108,7 +106,6 @@ function GLShader:init(args)
 						if paramValue then
 							gl.glGetShaderPrecisionFormat(self.type, paramValue, range, precv)
 --DEBUG:print(info.param, range[0], range[1], precv[0])
---DEBUG(glreport):glreport('glGetShaderPrecisionFormat '..info.name)
 							if range[0] > 0 and range[1] > 0
 							and (ctype ~= 'float' or precv[0] > 0) 	-- only for floats
 							then
