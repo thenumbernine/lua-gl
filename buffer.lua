@@ -87,9 +87,9 @@ function Buffer:init(args)
 		local vec = vector(
 			args.ctype or ffi.typeof((assert.index({
 				'float',
-				'vec2f_t',
-				'vec3f_t',
-				'vec4f_t'
+				'vec2f',
+				'vec3f',
+				'vec4f'
 			}, dim))),
 			self.count or 0
 		)
