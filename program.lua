@@ -788,45 +788,45 @@ function GLProgram:init(args)
 			end
 		end
 
-		local binding = GLint_1
+		local binding = GLint_1()
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_BINDING, binding)
 
-		local dataSize = GLint_1
+		local dataSize = GLint_1()
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_DATA_SIZE, dataSize)
 
-		local numActiveUniforms = GLint_1
+		local numActiveUniforms = GLint_1()
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, numActiveUniforms)
 
 		local numActiveUniformIndices = GLint_arr(numActiveUniforms[0])
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, numActiveUniformIndices)
 
-		local refByVtxShader = GLint_1
+		local refByVtxShader = GLint_1()
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER, refByVtxShader)
 
-		local refByFragShader = GLint_1
+		local refByFragShader = GLint_1()
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER, refByFragShader)
 
 		local refByGeomShader
 		if GLGeometryShader then
-			refByGeomShader = GLint_1
+			refByGeomShader = GLint_1()
 			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_GEOMETRY_SHADER, refByGeomShader)
 		end
 
 		local refByTessEvalShader
 		if GLTessEvalShader then
-			refByTessEvalShader = GLint_1
+			refByTessEvalShader = GLint_1()
 			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_EVALUATION_SHADER, refByTessEvalShader)
 		end
 
 		local refByTessControlShader
 		if GLTessControlShader then
-			refByTessControlShader = GLint_1
+			refByTessControlShader = GLint_1()
 			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_CONTROL_SHADER, refByTessControlShader)
 		end
 
 		local refByComputeShader
 		if GLComputeShader then
-			refByComputeShader = GLint_1
+			refByComputeShader = GLint_1()
 			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_COMPUTE_SHADER, refByComputeShader)
 		end
 
