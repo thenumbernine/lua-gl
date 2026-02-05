@@ -1,6 +1,7 @@
 require 'ext.gc'	-- make sure luajit can __gc lua-tables
 local ffi = require 'ffi'
 local gl = require 'gl'
+local assert = require 'ext.assert'
 local table = require 'ext.table'
 local range = require 'ext.range'
 local string = require 'ext.string'
@@ -21,6 +22,17 @@ local GLint = ffi.typeof'GLint'
 local GLint_1 = ffi.typeof'GLint[1]'
 local GLsizei_1 = ffi.typeof'GLsizei[1]'
 local GLenum_1 = ffi.typeof'GLenum[1]'
+
+local checkHasGetProgramResource
+do
+	local hasGetProgramResource
+	checkHasGetProgramResource = function()
+		if hasGetProgramResource == nil then
+			hasGetProgramResource = not not op.safeindex(gl, 'glGetProgramResourceiv')
+		end
+		return hasGetProgramResource
+	end
+end
 
 -- this doesn't work as easy as it does in webgl
 -- https://registry.khronos.org/OpenGL-Refpages/gl4/html/glGetActiveUniform.xhtml
@@ -536,6 +548,12 @@ function GLProgram:init(args)
 -- TODO to give uniforms their own classes?
 	self.uniforms = {}
 	local maxUniforms = self:get'GL_ACTIVE_UNIFORMS'
+	if checkHasGetProgramResource() then
+		local maxUniforms2 = self:get('GL_UNIFORM', gl.GL_ACTIVE_RESOURCES)
+		if maxUniforms ~= maxUniforms2 then
+			io.stderr:write('!!! glGetProgramiv GL_ACTIVE_UNIFORMS == '..tostring(maxUniforms)..' vs glGetProgramInterfaceiv GL_UNIFORM GL_ACTIVE_RESOURCES == '..tostring(maxUniforms2)..'\n')
+		end
+	end
 	local maxLen = self:get'GL_ACTIVE_UNIFORM_MAX_LENGTH'
 	for i=1,maxUniforms do
 		local bufSize = maxLen+1
@@ -550,7 +568,26 @@ function GLProgram:init(args)
 			arraySize = arraySize[0],
 			type = utype[0],
 		}
-		info.loc = gl.glGetUniformLocation(self.id, info.name)
+
+		-- in GLES3, you need a uniform name to get its location
+		-- but in GL>=4.3 you can use glGetProgramResourceiv
+		if checkHasGetProgramResource() then
+			local location = GLint_1()
+			gl.glGetProgramResourceiv(
+				self.id,
+				gl.GL_UNIFORM,
+				i-1,
+				1,	-- property count
+				GLenum_1(gl.GL_LOCATION),
+				1,	-- buffer size ... in ints?
+				nil,
+				location
+			)
+			info.loc = location[0]
+		else
+			info.loc = gl.glGetUniformLocation(self.id, info.name)
+		end
+
 		info.setters = getUniformSettersForGLType(info.type)
 		self.uniforms[i] = info		-- index by binding
 		self.uniforms[info.name] = info

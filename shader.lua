@@ -183,7 +183,8 @@ function GLShader:init(args)
 				nil		--const GLuint *pConstantValue
 			)
 		end
-		self:checkCompileStatus(code)
+		-- no need to compile, in fact it gives an invalid operation
+		self:checkCompileStatus()
 	else
 		-- no .code or .binary?  just let them make an empty glCreateShader()
 	end
