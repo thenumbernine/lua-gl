@@ -58,6 +58,11 @@ files = {
 	"ffi/OpenGLMesa.lua",
 	"ffi/KHR/khrplatform.lua",
 }
+if ffi.os == "Android" then
+	table.append(files, {
+		"ffi/Android/EGL.lua",
+	})
+end
 if ffi.os == "Linux" then
 	table.append(files, {
 		"ffi/Linux/OpenGL.lua",
