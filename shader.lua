@@ -143,10 +143,6 @@ function GLShader:init(args)
 
 	self.id = gl.glCreateShader(self.type)
 
-	if gl.glGetError() == gl.GL_INVALID_ENUM then
-		error('the shader type '..('0x%x'):format(self.type)..' is not supported')
-	end
-
 --DEBUG:print()
 --DEBUG:print(require'template.showcode'(code))
 --DEBUG:print()
