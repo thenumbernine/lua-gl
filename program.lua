@@ -191,15 +191,20 @@ end
 
 GLProgram.__gc = GLProgram.delete
 
+
+local shaderClasses = table()
+
 local GLVertexShader = GLShader:subclass()
 GLVertexShader.name = 'vertex'	-- shorthand
 GLVertexShader.type = gl.GL_VERTEX_SHADER
 GLProgram.VertexShader = GLVertexShader
+shaderClasses:insert(GLVertexShader)
 
 local GLFragmentShader = GLShader:subclass()
 GLFragmentShader.name = 'fragment'
 GLFragmentShader.type = gl.GL_FRAGMENT_SHADER
 GLProgram.FragmentShader = GLFragmentShader
+shaderClasses:insert(GLFragmentShader)
 
 local GLGeometryShader
 if op.safeindex(gl, 'GL_GEOMETRY_SHADER') then
@@ -207,6 +212,7 @@ if op.safeindex(gl, 'GL_GEOMETRY_SHADER') then
 	GLGeometryShader.name = 'geometry'
 	GLGeometryShader.type = gl.GL_GEOMETRY_SHADER
 	GLProgram.GeometryShader = GLGeometryShader
+	shaderClasses:insert(GLGeometryShader)
 end
 
 local GLTessEvalShader
@@ -215,6 +221,7 @@ if op.safeindex(gl, 'GL_TESS_EVALUATION_SHADER') then
 	GLTessEvalShader.name = 'tessEval'
 	GLTessEvalShader.type = gl.GL_TESS_EVALUATION_SHADER
 	GLProgram.TessEvalShader = GLTessEvalShader
+	shaderClasses:insert(GLTessEvalShader)
 end
 
 local GLTessControlShader
@@ -223,6 +230,7 @@ if op.safeindex(gl, 'GL_TESS_CONTROL_SHADER') then
 	GLTessControlShader.name = 'tessControl'
 	GLTessControlShader.type = gl.GL_TESS_CONTROL_SHADER
 	GLProgram.TessControlShader = GLTessControlShader
+	shaderClasses:insert(GLTessControlShader)
 end
 
 local GLComputeShader
@@ -231,6 +239,7 @@ if op.safeindex(gl, 'GL_COMPUTE_SHADER') then
 	GLComputeShader.name = 'compute'
 	GLComputeShader.type = gl.GL_COMPUTE_SHADER
 	GLProgram.ComputeShader = GLComputeShader
+	shaderClasses:insert(GLComputeShader)
 end
 
 
@@ -411,22 +420,6 @@ function GLProgram:init(args)
 		self:checkLinkStatus()
 	else
 		local shaders = table(args.shaders)
-		local shaderClasses = table{
-			GLVertexShader,
-			GLFragmentShader,
-		}
-		if GLGeometryShader then
-			shaderClasses:insert(GLGeometryShader)
-		end
-		if GLTessEvalShader then
-			shaderClasses:insert(GLTessEvalShader)
-		end
-		if GLTessControlShader then
-			shaderClasses:insert(GLTessControlShader)
-		end
-		if GLComputeShader then
-			shaderClasses:insert(GLComputeShader)
-		end
 		for _,cl in ipairs(shaderClasses) do
 			local name = cl.name
 			local code = args[name..'Code']
