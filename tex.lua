@@ -194,6 +194,12 @@ local formatInfos = table{
 }
 for i=#formatInfos,1,-1 do
 	local info = formatInfos[i]
+
+	-- keep the names around
+	-- this is useful for errors
+	-- but especially, GLSL uses the internalFormat (without the GL_, and lowercased) in its layout() for images/textures
+	info.internalFormatName = info.internalFormat
+
 	local internalFormat = op.safeindex(gl, info.internalFormat)
 	local baseInternalFormat = op.safeindex(gl, info.baseInternalFormat)
 	local format = op.safeindex(gl, info.format)
