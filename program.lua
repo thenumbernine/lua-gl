@@ -765,12 +765,12 @@ function GLProgram:init(args)
 		local nameLen2 = GLsizei_1(9999)
 		gl.glGetActiveUniformBlockName(self.id, uniformBlockIndex, nameLen[0], nameLen2, name);
 		nameLen2 = nameLen2[0]
-		name = ffi.string(name, nameLen2)
+		name = nameLen2 > 0 and ffi.string(name, nameLen2) or nil
 		-- sure enough, the 2nd-to-last arg returning the buffer length without nul-term is one less than glGetActiveUniformBlockiv GL_UNIFORM_BLOCK_NAME_LENGTH
 
 		-- see if we were asked to set the binding point
 		-- do this before querying the binding point for our program's .uniformBlocks table
-		local srcUniformBlock = srcUniformBlocks and srcUniformBlocks[name]
+		local srcUniformBlock = srcUniformBlocks and name and srcUniformBlocks[name]
 		if srcUniformBlock then
 			if srcUniformBlock.binding then
 				gl.glUniformBlockBinding(
@@ -840,7 +840,7 @@ function GLProgram:init(args)
 		}
 
 		self.uniformBlocks[1+uniformBlockIndex] = uniformBlock
-		self.uniformBlocks[name] = uniformBlock
+		if name then self.uniformBlocks[name] = uniformBlock end
 	end
 
 
