@@ -968,15 +968,16 @@ end
 -- btw can you link vertex+fragment+compute shaders all together?
 
 -- tex is a gl.tex object
-function GLProgram:bindImage(unit, tex, format, rw, level, layered, layer)
+function GLProgram:bindImage(unit, tex, rw, format, level, layered, layer)
 	gl.glBindImageTexture(
 		unit,
-		tex.id,
+		tex.id or tex,
 		level or 0,
 		layered or gl.GL_FALSE,
 		layer or 0,
 		rw,
-		format)
+		format or tex.internalFormat or error("expected format or GLTex to have .internalFormat")
+	)
 	return self
 end
 
