@@ -865,6 +865,15 @@ function GLProgram:useNone()
 	return self
 end
 
+function GLProgram:getBinary()
+	local length = GLsizei_1(self:get'GL_PROGRAM_BINARY_LENGTH')
+	local binary = char_arr(length[0])
+	local binaryFormat = GLenum_1()
+	gl.glGetProgramBinary(self.id, length[0], length, binaryFormat, binary)
+	return ffi.string(binary, length[0]), binaryFormat[0]
+end
+
+
 ---------------- uniforms ----------------
 
 function GLProgram:setUniforms(uniforms)
@@ -955,12 +964,14 @@ function GLProgram:enableAndSetAttrs()
 	end
 	return self
 end
+
 function GLProgram:disableAttrs()
 	for attrname,attr in pairs(self.attrs) do
 		attr:disable()
 	end
 	return self
 end
+
 
 ---------------- compute-only ----------------
 -- should I just subclass GLProgram?
@@ -969,6 +980,18 @@ end
 
 -- tex is a gl.tex object
 function GLProgram:bindImage(unit, tex, rw, format, level, layered, layer)
+	if layered == nil then
+		if tex.target == gl.GL_TEXTURE_3D then
+			-- tex3D needs layered yet.
+			-- technically at https://wikis.khronos.org/opengl/Image_Load_Store
+			-- it says "If layered is GL_TRUE, then texture must be an Array Texture (of some type), a Cubemap Texture, or a 3D Texture."
+			-- it says layered works with tex3d
+			-- but it means tex3d *ONLY WORKS WITH* layered.
+			layered = gl.GL_TRUE
+		else
+			layered = gl.GL_FALSE
+		end
+	end
 	gl.glBindImageTexture(
 		unit,
 		tex.id or tex,
@@ -980,6 +1003,12 @@ function GLProgram:bindImage(unit, tex, rw, format, level, layered, layer)
 	)
 	return self
 end
+
+function GLProgram:dispatchCompute(...)
+	gl.glDispatchCompute(...)
+	return self
+end
+
 
 --[[
 static method for getting the glsl version line
@@ -1176,14 +1205,6 @@ function GLProgram.make(args)
 			}
 		):concat'\n',
 	}:useNone()
-end
-
-function GLProgram:getBinary()
-	local length = GLsizei_1(self:get'GL_PROGRAM_BINARY_LENGTH')
-	local binary = char_arr(length[0])
-	local binaryFormat = GLenum_1()
-	gl.glGetProgramBinary(self.id, length[0], length, binaryFormat, binary)
-	return ffi.string(binary, length[0]), binaryFormat[0]
 end
 
 return GLProgram

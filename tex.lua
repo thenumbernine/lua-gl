@@ -461,11 +461,14 @@ end
 -- TODO well if now I'm storing .data ...
 function GLTex:toCPU(ptr, level)
 	if not ptr then
-		-- TODO need to map from format to channels
-		-- TOOD need to map from GL type to C type
-		--ptr = uint8_t_arr(size)
-		-- or TODO default to self.data, that was used for initial texture creation?
-		error("expected ptr")
+		ptr = self.data
+		if not ptr then
+			-- TODO need to map from format to channels
+			-- TOOD need to map from GL type to C type
+			--ptr = uint8_t_arr(size)
+			-- or TODO default to self.data, that was used for initial texture creation?
+			error("expected ptr or .data")
+		end
 	end
 	-- TODO .keep to keep the ptr upon init, and default to it here?
 	-- TODO require bind() beforehand like all the other setters? or manually bind() here?
