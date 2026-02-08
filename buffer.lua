@@ -1,6 +1,6 @@
 require 'ext.gc'	-- make sure luajit can __gc lua-tables
 local ffi = require 'ffi'
-local vector = require 'ffi.cpp.vector-lua'
+local vector = require 'stl.vector-lua'
 local op = require 'ext.op'
 local assert = require 'ext.assert'
 local table = require 'ext.table'

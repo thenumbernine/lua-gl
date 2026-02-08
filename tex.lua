@@ -458,7 +458,17 @@ function GLTex:generateMipmap()
 	return self
 end
 
--- TODO well if now I'm storing .data ...
+-- this is more in tune with the lua-gl library
+function GLTex:getImage(ptr, level)
+	ptr = ptr or self.data
+	if not ptr then
+		error("expected ptr or .data")
+	end
+	gl.glGetTexImage(self.target, level or 0, self.format, self.type, ffi.cast(char_p, ptr))
+	return self
+end
+
+-- this is a lua-cl compat function
 function GLTex:toCPU(ptr, level)
 	if not ptr then
 		ptr = self.data
@@ -473,7 +483,7 @@ function GLTex:toCPU(ptr, level)
 	-- TODO .keep to keep the ptr upon init, and default to it here?
 	-- TODO require bind() beforehand like all the other setters? or manually bind() here?
 	self:bind()
-	gl.glGetTexImage(self.target, level or 0, self.format, self.type, ffi.cast(char_p, ptr))
+		:getImage(ptr, level)
 	return ptr
 end
 

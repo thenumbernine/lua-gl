@@ -450,7 +450,7 @@ function GLProgram:init(args)
 		if args.shadersBinary then
 			local binary = assert.type(args.shadersBinary, 'string')
 			assert.type(args.shadersBinaryStages, 'table', '.shadersBinary requires .shadersBinaryStages')
-			local vector = require 'ffi.cpp.vector-lua'
+			local vector = require 'stl.vector-lua'
 			local shaderIDs = vector'GLuint'
 			local binShaders = table()
 

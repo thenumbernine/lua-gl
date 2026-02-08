@@ -90,6 +90,7 @@ deps = {
 	"ext",
 	"ffi",
 	"image",
+	"stl",
 	"template",
 	"vec-ffi",
 }
