@@ -12,13 +12,14 @@ files = {
 	"call.lua",
 	"distinfo",
 	"elementarraybuffer.lua",
-	"error.lua",
 	"env.lua",
+	"error.lua",
 	"ffi/EGL.lua",
 	"ffi/OpenGL.lua",
 	"ffi/OpenGLES1.lua",
 	"ffi/OpenGLES2.lua",
 	"ffi/OpenGLES3.lua",
+	"ffi/OpenGLMesa.lua",
 	"ffi/glu.lua",
 	"framebuffer.lua",
 	"geometry.lua",
@@ -55,12 +56,12 @@ files = {
 	"types.lua",
 	"uniformbuffer.lua",
 	"vertexarray.lua",
-	"ffi/OpenGLMesa.lua",
 	"ffi/KHR/khrplatform.lua",
 }
 if ffi.os == "Android" then
 	table.append(files, {
 		"ffi/Android/EGL.lua",
+		"ffi/Android/OpenGL.lua",
 	})
 end
 if ffi.os == "Linux" then
