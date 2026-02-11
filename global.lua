@@ -221,6 +221,7 @@ local function makeInt64Vec(name, count)
 	}
 end
 
+--[[ version-detect, I guess I wasn't using it, and it existing in global-scope screwed up Windows who can't reference gl until after GLApp:initGL is finished
 local version
 local tmp = xpcall(function()
 	local major = assert(GLGet.int'GL_MAJOR_VERSION')
@@ -271,6 +272,7 @@ end) or (function()
     print("couldn't get the GL version ... assuming 1.1")
     version = 1.1
 end)()
+--]]
 
 GLGlobal:makeGetter{
 	getter = function(self, nameValue, result)
