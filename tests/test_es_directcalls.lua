@@ -9,7 +9,7 @@ local ffi = require 'ffi'
 local assert = require 'ext.assert'
 local getTime = require 'ext.timer'.getTime
 
-local Test = require 'glapp':subclass()
+local Test = require 'gl.app':subclass()
 Test.title = "Spinning Triangle"
 
 local znear = .1
