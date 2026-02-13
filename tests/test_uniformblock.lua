@@ -9,7 +9,7 @@ local vec4x4f = require 'vec-ffi.vec4x4f'
 local gl = require 'gl.setup'(cmdline.gl)
 local GLUniformBuffer = require 'gl.uniformbuffer'
 local GLSceneObject = require 'gl.sceneobject'
-local App = require 'glapp.orbit'()
+local App = require 'app3d.orbit'()
 
 -- define Cdef of uniform blocks:
 

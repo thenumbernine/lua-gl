@@ -8,7 +8,6 @@ local table = require 'ext.table'
 
 local GLTexCube = require 'gl.texcube'
 
---local App = require 'glapp.orbit'()
 local App = require 'imgui.appwithorbit'()
 
 App.title = "Cubemaps"

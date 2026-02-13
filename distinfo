@@ -106,6 +106,7 @@ if ffi.os == "Windows" and ffi.arch == "x64" then
 	})
 end
 deps = {
+	"app3d",
 	"ext",
 	"ffi",
 	"image",

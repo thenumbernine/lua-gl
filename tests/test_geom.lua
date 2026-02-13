@@ -5,7 +5,7 @@ local sdl = require 'sdl'
 local gl = require 'gl.setup'(cmdline.gl)
 local GLSceneObject = require 'gl.sceneobject'
 
-local App = require 'glapp.orbit'()
+local App = require 'app3d.orbit'()
 App.viewDist = 3
 
 function App:initGL()

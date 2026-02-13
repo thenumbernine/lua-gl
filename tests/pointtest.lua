@@ -9,7 +9,7 @@ local vec3f = require 'vec-ffi.vec3f'
 local GLSceneObject = require 'gl.sceneobject'
 
 
-local Test = require 'glapp.orbit'()
+local Test = require 'app3d.orbit'()
 Test.title = "Spinning Points"
 
 local numPts

@@ -6,7 +6,7 @@ local gl = require 'gl.setup' (cmdline.gl or 'OpenGLES3')
 local ffi = require 'ffi'
 local getTime = require 'ext.timer'.getTime
 
-local Test = require 'glapp.orbit'()
+local Test = require 'app3d.orbit'()
 Test.title = "Spinning Triangle"
 
 Test.viewDist = 20

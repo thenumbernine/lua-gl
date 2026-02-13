@@ -9,7 +9,7 @@ local getTime = require 'ext.timer'.getTime
 local Image = require 'image'
 local GLTex2D = require 'gl.tex2d'
 
-local Test = require 'glapp.orbit'()
+local Test = require 'app3d.orbit'()
 Test.title = "Spinning Triangle"
 
 Test.viewDist = 10
