@@ -42,7 +42,7 @@ end
 local uniformSettersForGLTypes
 local function getUniformSettersForGLType(utype)
 	-- this table contains symbols from the gl lib
-	-- in Windows these symbols haven't been loaded until after glapp starts
+	-- in Windows these symbols haven't been loaded until after gl.app starts
 	-- so it's best to build this table upon request
 	if not uniformSettersForGLTypes then
 		uniformSettersForGLTypes = {}
