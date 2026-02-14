@@ -225,7 +225,7 @@ return require 'ffi.load' 'GLESv2'
 	},
 
 	{
-		inc = '<GLES3/gl3.h>',
+		inc = '<GLES3/gl32.h>',
 		out = 'OpenGLES3.lua',
 		final = function(code)
 			-- why don't I have a GLES3 library when I have GLES3 headers?

@@ -2,6 +2,7 @@
 local cmdline = require 'ext.cmdline'(...)
 local op = require 'ext.op'
 local timer = require 'ext.timer'
+local template = require 'template'
 local sdl = require 'sdl'
 local gl = require 'gl.setup'(cmdline.gl)
 local GLSceneObject = require 'gl.sceneobject'
@@ -10,6 +11,11 @@ local App = require 'app3d.orbit'()
 App.viewDist = 3
 
 function App:initGL()
+	-- if I do this math in-shader then I get "error: compile-time constant expressions require GLSL 4.40 "
+	-- so I'll do it in here/template
+	-- TODO pick this based on whatever the max vertices queried are
+	local maxTess = 9
+
 	self.globj = GLSceneObject{
 		program = {
 			version = 'latest',
@@ -27,14 +33,10 @@ void main() {
 	//gl_Position = projMat * (viewMat * vec4(vertex, 1.));
 }
 ]],
-			geometryCode = [[
-// I don't suppose tesselation can be specified by uniform ... probably not when tesselation shaders exist
-// TODO pick this based on whatever the max vertices queried are
-#define MAX_TESS 9
-
+			geometryCode = template([[
 layout(triangles) in;
 layout(triangle_strip,
-	max_vertices=MAX_TESS*MAX_TESS*3
+	max_vertices=<?=maxTess*maxTess*3?>
 ) out;
 
 layout(location=0) in vec3 vertexv[];
@@ -92,7 +94,7 @@ void main() {
 		triBasis[0] = vertexv[1] - vertexv[0];
 		triBasis[1] = vertexv[2] - vertexv[0];
 		triBasis[2] = vertexv[0];
-		int tess = int((float(MAX_TESS) - 1.) * (1. - mindot) * .5 + 1.);
+		int tess = int((float(<?=maxTess?>) - 1.) * (1. - mindot) * .5 + 1.);
 		float tessf = float(tess);
 		float dt = 1./tessf;
 		for (int i = 0; i < tess; ++i) {
@@ -123,7 +125,9 @@ void main() {
 		EndPrimitive();
 	}
 }
-]],
+]], 		{
+				maxTess = maxTess,
+			}),
 			fragmentCode = [[
 layout(location=0) in vec3 vertexg;
 layout(location=0) out vec4 fragColor;
