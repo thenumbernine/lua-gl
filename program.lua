@@ -213,6 +213,8 @@ if op.safeindex(gl, 'GL_GEOMETRY_SHADER') then
 	GLGeometryShader.type = gl.GL_GEOMETRY_SHADER
 	GLProgram.GeometryShader = GLGeometryShader
 	shaderClasses:insert(GLGeometryShader)
+else
+	shaderClasses:insert{name='geometry', notavailable=true}
 end
 
 local GLTessEvalShader
@@ -222,6 +224,8 @@ if op.safeindex(gl, 'GL_TESS_EVALUATION_SHADER') then
 	GLTessEvalShader.type = gl.GL_TESS_EVALUATION_SHADER
 	GLProgram.TessEvalShader = GLTessEvalShader
 	shaderClasses:insert(GLTessEvalShader)
+else
+	shaderClasses:insert{name='tessEval', notavailable=true}
 end
 
 local GLTessControlShader
@@ -231,6 +235,8 @@ if op.safeindex(gl, 'GL_TESS_CONTROL_SHADER') then
 	GLTessControlShader.type = gl.GL_TESS_CONTROL_SHADER
 	GLProgram.TessControlShader = GLTessControlShader
 	shaderClasses:insert(GLTessControlShader)
+else
+	shaderClasses:insert{name='tessControl', notavailable=true}
 end
 
 local GLComputeShader
@@ -240,6 +246,8 @@ if op.safeindex(gl, 'GL_COMPUTE_SHADER') then
 	GLComputeShader.type = gl.GL_COMPUTE_SHADER
 	GLProgram.ComputeShader = GLComputeShader
 	shaderClasses:insert(GLComputeShader)
+else
+	shaderClasses:insert{name='compute', notavailable=true}
 end
 
 
@@ -426,6 +434,7 @@ function GLProgram:init(args)
 			-- TODO how about multiple vertex/fragment shaders per program?
 			-- how about just passing a 'args.shaders' to just attach all?
 			if code then
+				if cl.notavailable then error("requested shader "..cl.name.." from code but it is not available") end
 				local headers = table():append({args[name..'Header']}, {args.header})
 				shaders:insert(cl{
 					code = code,
@@ -437,6 +446,7 @@ function GLProgram:init(args)
 	-- [[ for specifying one binary per one shader-module ... not working and with no errors given
 			local binary = args[name..'Binary']
 			if binary then
+				if cl.notavailable then error("requested shader "..cl.name.." from binary but it is not available") end
 				shaders:insert(cl{
 					binary = binary,
 					binaryFormat = args[name..'BinaryFormat'] or args.binaryFormat,
@@ -455,6 +465,7 @@ function GLProgram:init(args)
 			local binShaders = table()
 
 			for _,cl in ipairs(shaderClasses) do
+				if cl.notavailable then error("requested shader "..cl.name.." from binary but it is not available") end
 				if table.find(args.shadersBinaryStages, cl.name) then
 					local shader = cl()
 					binShaders:insert(shader)
