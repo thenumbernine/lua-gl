@@ -15,6 +15,15 @@ return setmetatable(
 			local gl = require('gl.ffi.'..glname)
 			package.loaded.gl = gl
 			package.loaded['gl.gl'] = gl
+			-- also don't let subsequent calls to gl.setup override this ...
+			package.loaded['gl.setup'] = function(newglname)
+				if newglname and newglname ~= glname then
+					io.stderr:write("WARNING you had two calls to gl.setup with conflicting gl names.\n")
+					io.stderr:write('\t', tostring(glname), ' vs ', tostring(newglname), '\n')
+					io.stderr:write(debug.traceback(), '\n')
+				end
+				return gl
+			end
 			return gl
 		end,
 	}
