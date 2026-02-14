@@ -13,6 +13,7 @@ function GLTex2D:create(args)
 	self.height = args.height
 	self.border = args.border
 	self.data = args.data
+	self.immutable = args.immutable
 
 	-- TODO this is duplicated here and gl/tex1d.lua, gl/tex3d.lua
 	self.internalFormat = args.internalFormat
@@ -21,16 +22,29 @@ function GLTex2D:create(args)
 	self.format = args.format or (formatInfo and formatInfo.format or error("args.format not provided, and couldn't find GLTex.formatInfoForInternalFormat["..tostring(self.internalFormat).."]"))
 	self.type = args.type or (formatInfo and formatInfo.types[1] or error("args.type not provided, and couldn't find GLTex.formatInfoForInternalFormat["..tostring(self.internalFormat).."]"))
 
-	gl.glTexImage2D(
-		self.target,
-		self.level or 0,
-		self.internalFormat,
-		self.width,
-		self.height,
-		self.border or 0,
-		self.format,
-		self.type,
-		self.data)
+	if self.immutable then
+		self.levels = args.levels
+		gl.glTexStorage2D(
+			self.target,
+			self.levels or 1,
+			self.internalFormat,
+			self.width,
+			self.height)
+		if self.data then
+			self:subimage()
+		end
+	else
+		gl.glTexImage2D(
+			self.target,
+			self.level or 0,
+			self.internalFormat,
+			self.width,
+			self.height,
+			self.border or 0,
+			self.format,
+			self.type,
+			self.data)
+	end
 end
 
 function GLTex2D:load(args)

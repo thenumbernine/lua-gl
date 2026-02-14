@@ -19,6 +19,7 @@ function GLTex3D:create(args)
 	self.depth = args.depth
 	self.border = args.border
 	self.data = args.data
+	self.immutable = args.immutable
 
 	-- TODO this is duplicated here and gl/tex1d.lua, gl/tex2d.lua
 	self.internalFormat = args.internalFormat
@@ -27,17 +28,31 @@ function GLTex3D:create(args)
 	self.format = args.format or (formatInfo and formatInfo.format)
 	self.type = args.type or (formatInfo and formatInfo.types[1] or error("args.type not provided, and couldn't find GLTex.formatInfoForInternalFormat["..tostring(self.internalFormat).."]"))
 
-	gl.glTexImage3D(
-		self.target,
-		self.level or 0,
-		self.internalFormat,
-		self.width,
-		self.height,
-		self.depth,
-		self.border or 0,
-		self.format,
-		self.type,
-		self.data)
+	if self.immutable then
+		self.levels = args.levels	-- needs how many up front
+		gl.glTexStorage3D(
+			self.target,
+			self.levels or 1,
+			self.internalFormat,
+			self.width,
+			self.height,
+			self.depth)
+		if self.data then
+			self:subimage()
+		end
+	else
+		gl.glTexImage3D(
+			self.target,
+			self.level or 0,
+			self.internalFormat,
+			self.width,
+			self.height,
+			self.depth,
+			self.border or 0,
+			self.format,
+			self.type,
+			self.data)
+	end
 end
 
 function GLTex3D:load(args)
