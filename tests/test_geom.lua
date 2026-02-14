@@ -1,6 +1,7 @@
 #!/usr/bin/env luajit
 local cmdline = require 'ext.cmdline'(...)
 local op = require 'ext.op'
+local timer = require 'ext.timer'
 local sdl = require 'sdl'
 local gl = require 'gl.setup'(cmdline.gl)
 local GLSceneObject = require 'gl.sceneobject'
@@ -32,7 +33,7 @@ void main() {
 #define MAX_TESS 9
 
 layout(triangles) in;
-layout(triangle_strip, 
+layout(triangle_strip,
 	max_vertices=MAX_TESS*MAX_TESS*3
 ) out;
 
@@ -41,6 +42,7 @@ layout(location=0) out vec3 vertexg;
 
 layout(location=0) uniform mat4 viewMat;
 layout(location=1) uniform mat4 projMat;
+layout(location=2) uniform float triScale;
 
 void emitVtx(vec3 v) {
 	// tetrahedron, tesselated, normalized, looks ugly -- too much vertexes bunched at the corners
@@ -58,9 +60,16 @@ vec3 getVertex(vec2 ij, mat3 triBasis) {
 }
 
 void emitTri(vec2 ij0, vec2 ij1, vec2 ij2, mat3 triBasis) {
-	emitVtx(getVertex(ij0, triBasis));
-	emitVtx(getVertex(ij1, triBasis));
-	emitVtx(getVertex(ij2, triBasis));
+	vec3 v0 = getVertex(ij0, triBasis);
+	vec3 v1 = getVertex(ij1, triBasis);
+	vec3 v2 = getVertex(ij2, triBasis);
+	vec3 avg = (v0 + v1 + v2) / 3.;
+	v0 = mix(avg, v0, triScale);
+	v1 = mix(avg, v1, triScale);
+	v2 = mix(avg, v2, triScale);
+	emitVtx(v0);
+	emitVtx(v1);
+	emitVtx(v2);
 	EndPrimitive();
 }
 
@@ -172,7 +181,7 @@ void main() {
 					5,2,1,
 					5,3,2,
 					5,4,3,
-					5,1,4,			
+					5,1,4,
 				},
 			},
 		},
@@ -181,28 +190,26 @@ void main() {
 
 	gl.glEnable(gl.GL_DEPTH_TEST)
 	gl.glEnable(gl.GL_CULL_FACE)
-	gl.glLineWidth(2)
 end
 
-local hasPolygonMode
-local useLines
+local triScaleTime = 1
 function App:update()
 	App.super.update(self)
 	gl.glClear(bit.bor(gl.GL_COLOR_BUFFER_BIT, gl.GL_DEPTH_BUFFER_BIT))
 
-	if hasPolygonMode == nil then
-		hasPolygonMode = not not op.safeindex(gl, 'glPolygonMode')
-	end
-	if hasPolygonMode then
-		gl.glPolygonMode(gl.GL_FRONT_AND_BACK, useLines and gl.GL_LINE or gl.GL_FILL)
-	end
-
-	self.globj:draw()
+	local dt = 5 * (timer.getTime() - triScaleTime)
+	self.globj:draw{
+		uniforms = {
+			triScale = 1 - dt*math.exp(-dt*dt)
+				/ (1/math.sqrt(2*math.exp(1)))		-- normalize by suprema
+			,
+		}
+	}
 end
 
 function App:event(e)
 	if e[0].type == sdl.SDL_EVENT_MOUSE_BUTTON_DOWN then
-		useLines = not useLines
+		triScaleTime = timer.getTime()
 	end
 	App.super.event(self, e)
 end
