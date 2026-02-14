@@ -296,8 +296,6 @@ GLProgram:makeGetter{
 				{name='GL_GEOMETRY_VERTICES_OUT'},
 				{name='GL_GEOMETRY_INPUT_TYPE'},
 				{name='GL_GEOMETRY_OUTPUT_TYPE'},
-				{name='GL_MAX_GEOMETRY_OUTPUT_VERTICES'},
-				{name='GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS'},
 			} or nil
 		):mapi(function(args)
 			args.getter = getGLGetProgrami

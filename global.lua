@@ -810,6 +810,10 @@ GLGlobal:makeGetter{
 	):append(
 		-- version < 4.3 and {} or
 		{
+			-- where do these go?  I don't see them in gl4 glGet's docs, but everyone says to use them with gl4 glGetIntegerv ...
+			makeInt'GL_MAX_GEOMETRY_OUTPUT_VERTICES',
+			makeInt'GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS',
+
 			--print'GL version >= 4.3:'
 			makeInt'GL_MAX_ELEMENT_INDEX',
 			makeInt'GL_MAX_COMPUTE_UNIFORM_BLOCKS',
