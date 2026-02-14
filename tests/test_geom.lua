@@ -14,7 +14,7 @@ function App:initGL()
 	-- if I do this math in-shader then I get "error: compile-time constant expressions require GLSL 4.40 "
 	-- so I'll do it in here/template
 	-- TODO pick this based on whatever the max vertices queried are
-	local maxTess = 9
+	local maxTess = cmdline.maxTess or 9
 
 	self.globj = GLSceneObject{
 		program = {
