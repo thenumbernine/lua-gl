@@ -51,6 +51,7 @@ files = {
 	"tests/compute-spirv.lua",
 	"tests/compute.lua",
 	"tests/cubemap.lua",
+	"tests/egl.lua",
 	"tests/info.lua",
 	"tests/minimal.lua",
 	"tests/pointtest.lua",
