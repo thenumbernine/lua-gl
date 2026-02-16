@@ -3,6 +3,8 @@
 --------------------------------------------
 
 name = "gl"
+startDir = "gl/tests"
+luaArgs = "test_tex.lua"
 files = {
 	"LICENSE",
 	"README.md",
