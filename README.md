@@ -19,11 +19,6 @@ Behavior rule of thumb:
 
 Creating an object will bind() it, and requires an unbind() / useNone().
 
-This is true for `gl.tex` and subclasses
-- But not for `gl.program`
-- And not for `gl.fbo`
-- And idk even about vertex attributes / array objects
-
 Setting any parameters will require a manual bind() called beforehand.
 
 ### Dependencies:
