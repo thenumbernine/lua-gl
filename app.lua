@@ -92,7 +92,15 @@ function GLApp:initWindow()
 	self:sdlGLSetAttributes()
 	GLApp.super.initWindow(self)
 
-	self.sdlCtx = sdlAssertNonNull(sdl.SDL_GL_CreateContext(self.window))
+-- [[ old way that works with SDL_CreateWindow
+	self.sdlCtx = sdl.SDL_GL_CreateContext(self.window)
+--DEBUG:print('GLApp self.sdlCtx', self.sdlCtx)
+	sdlAssertNonNull(self.sdlCtx)
+--]]
+--[[ emscripten wants me to make window+renderer, and then get the ctx later. but doing this console-warnings with desktop GL, and fully fails with desktop Vulkan.
+	self.sdlCtx = sdl.SDL_GL_GetCurrentContext()
+print('GLApp self.sdlCtx', self.sdlCtx)
+--]]
 
 	--sdl.SDL_EnableKeyRepeat(0,0)
 	--self.sdlAssert( -- assert not really required, and it fails on raspberry pi, so ...
