@@ -190,12 +190,12 @@ void main() {
 
 		gl.glEnableVertexAttribArray(vertexAttrLoc)
 		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vertexBufferID)
-		gl.glVertexAttribPointer(vertexAttrLoc, 2, gl.GL_FLOAT, gl.GL_FALSE, 0, ffi.null)
+		gl.glVertexAttribPointer(vertexAttrLoc, 2, gl.GL_FLOAT, gl.GL_FALSE, 0, nil)
 		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
 		gl.glEnableVertexAttribArray(colorAttrLoc)
 		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, colorBufferID)
-		gl.glVertexAttribPointer(colorAttrLoc, 3, gl.GL_FLOAT, gl.GL_FALSE, 0, ffi.null)
+		gl.glVertexAttribPointer(colorAttrLoc, 3, gl.GL_FLOAT, gl.GL_FALSE, 0, nil)
 		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
 		gl.glBindVertexArray(0)
@@ -234,12 +234,12 @@ function Test:update()
 	else
 		gl.glEnableVertexAttribArray(vertexAttrLoc)
 		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vertexBufferID)
-		gl.glVertexAttribPointer(vertexAttrLoc, 2, gl.GL_FLOAT, gl.GL_FALSE, 0, ffi.null)
+		gl.glVertexAttribPointer(vertexAttrLoc, 2, gl.GL_FLOAT, gl.GL_FALSE, 0, nil)
 		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 
 		gl.glEnableVertexAttribArray(colorAttrLoc)
 		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, colorBufferID)
-		gl.glVertexAttribPointer(colorAttrLoc, 3, gl.GL_FLOAT, gl.GL_FALSE, 0, ffi.null)
+		gl.glVertexAttribPointer(colorAttrLoc, 3, gl.GL_FLOAT, gl.GL_FALSE, 0, nil)
 		gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
 	end
 
