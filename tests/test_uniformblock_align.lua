@@ -149,6 +149,7 @@ void main() {
 						local gpuOffset = gpuUniform.offset
 						--local gpuSize = hmm nope, no size param that I've saved yet.  just the type and arraySize and matrixStride...
 
+						assert.eq(cpuOffset, gpuOffset)
 						print(uniformName 
 							..' cpu offset='..cpuOffset
 							..' gpu offset='..gpuOffset
@@ -169,13 +170,13 @@ void main() {
 				local gpuOffset = gpuUniform.offset
 				--local gpuSize = hmm nope, no size param that I've saved yet.  just the type and arraySize and matrixStride...
 
+				assert.eq(cpuOffset, gpuOffset)
 				print(uniformName 
 					..' cpu offset='..cpuOffset
 					..' gpu offset='..gpuOffset
 					..' cpu size='..cpuSize
 				)
 			end
-
 		end
 	end
 --]]
