@@ -41,8 +41,8 @@ layout(std140, row_major) uniform VtxMatrices {
 
 void main() {
 	vertexv = vertex;
-	gl_Position = 
-		projMat * viewMat * modelMat * 
+	gl_Position =
+		projMat * viewMat * modelMat *
 		vec4(2. * vertex - 1., 0., 1.);
 }
 ]],
@@ -80,9 +80,9 @@ void main() {
 	}
 
 	print(tolua(table.mapi(self.obj.program.uniformBlocks, function(o) return o end)))
--- why is the colorMat uniform location -1 even when I am using it?	
+-- why is the colorMat uniform location -1 even when I am using it?
 	print(tolua(table.mapi(self.obj.program.uniforms, function(o) return table(o, {setters=false}) end)))
-	
+
 	self.vtxMatricesCPU = VtxMatricesType()
 	self.fragMatricesCPU = FragMatricesType()
 
@@ -123,7 +123,7 @@ function App:update()
 	gl.glClear(gl.GL_COLOR_BUFFER_BIT)
 
 	local thisTime = timer.getTime()
-	local lastTime = self.lastTime or thisTime 
+	local lastTime = self.lastTime or thisTime
 	local dt = thisTime - lastTime
 	self.modelMat:applyRotate(.1 * dt, 0, 1, 0)
 	self.colorMat:applyRotate(

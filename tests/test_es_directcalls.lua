@@ -89,7 +89,7 @@ void main() {
 		print('length', length)
 		local log = ffi.new('char[?]',length+1)
 		local result = ffi.new'GLsizei[1]'
-		gl.glGetShaderInfoLog(vertexShaderID, length, result, log);
+		gl.glGetShaderInfoLog(vertexShaderID, length, result, log)
 		print('double check length', result[0])
 		print('log:')
 		print(ffi.string(log))
@@ -120,7 +120,7 @@ void main() {
 		print('length', length)
 		local log = ffi.new('char[?]',length+1)
 		local result = ffi.new'GLsizei[1]'
-		gl.glGetShaderInfoLog(fragmentShaderID, length, result, log);
+		gl.glGetShaderInfoLog(fragmentShaderID, length, result, log)
 		print('double check length', result[0])
 		print('log:')
 		print(ffi.string(log))
@@ -142,7 +142,7 @@ void main() {
 		print('length', length)
 		local log = ffi.new('char[?]',length+1)
 		local result = ffi.new'GLsizei[1]'
-		gl.glGetProgramInfoLog(programID, length, result, log);
+		gl.glGetProgramInfoLog(programID, length, result, log)
 		print('double check length', result[0])
 		print('log:')
 		print(ffi.string(log))
