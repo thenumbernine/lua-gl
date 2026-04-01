@@ -808,26 +808,27 @@ function GLProgram:init(args)
 		local refByFragShader = GLint_1()
 		gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER, refByFragShader)
 
+		-- not in GLES3.2, even though GL_GEOMETRY_SHADER is
 		local refByGeomShader
-		if GLGeometryShader then
+		if GLGeometryShader and op.safeindex(gl, 'GL_UNIFORM_BLOCK_REFERENCED_BY_GEOMETRY_SHADER') then
 			refByGeomShader = GLint_1()
 			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_GEOMETRY_SHADER, refByGeomShader)
 		end
 
 		local refByTessEvalShader
-		if GLTessEvalShader then
+		if GLTessEvalShader and op.safeindex(gl, 'GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_EVALUATION_SHADER') then
 			refByTessEvalShader = GLint_1()
 			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_EVALUATION_SHADER, refByTessEvalShader)
 		end
 
 		local refByTessControlShader
-		if GLTessControlShader then
+		if GLTessControlShader and op.safeindex(gl, 'GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_CONTROL_SHADER') then
 			refByTessControlShader = GLint_1()
 			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_CONTROL_SHADER, refByTessControlShader)
 		end
 
 		local refByComputeShader
-		if GLComputeShader then
+		if GLComputeShader and op.safeindex(gl, 'GL_UNIFORM_BLOCK_REFERENCED_BY_COMPUTE_SHADER') then
 			refByComputeShader = GLint_1()
 			gl.glGetActiveUniformBlockiv(self.id, uniformBlockIndex, gl.GL_UNIFORM_BLOCK_REFERENCED_BY_COMPUTE_SHADER, refByComputeShader)
 		end
@@ -842,10 +843,10 @@ function GLProgram:init(args)
 			end),
 			refByVertex = refByVtxShader[0] ~= 0 or nil,
 			refByFragment = refByFragShader[0] ~= 0 or nil,
-			refByGeometry = GLGeometryShader and refByGeomShader[0] ~= 0 or nil,
-			refByTessControl = GLTessControlShader and refByTessControlShader[0] ~= 0 or nil,
-			refByTessEval = GLTessEvalShader and refByTessEvalShader[0] ~= 0 or nil,
-			refByCompute = GLComputeShader and refByComputeShader[0] ~= 0 or nil,
+			refByGeometry = refByGeomShader and refByGeomShader[0] ~= 0 or nil,
+			refByTessControl = refByTessControlShader and refByTessControlShader[0] ~= 0 or nil,
+			refByTessEval = refByTessEvalShader and refByTessEvalShader[0] ~= 0 or nil,
+			refByCompute = refByComputeShader and refByComputeShader[0] ~= 0 or nil,
 		}
 
 		self.uniformBlocks[1+uniformBlockIndex] = uniformBlock
