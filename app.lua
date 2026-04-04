@@ -111,7 +111,7 @@ print('GLApp self.sdlCtx', self.sdlCtx)
 	-- `luajit -e "require'gl.app'.gldebug=true" ...`
 	-- or `luajit -lgl.debug ...`
 	if self.gldebug then
-		self.glDebugCallback = function(source, gltype, id, severity, length, message, userParam)
+		self.glDebugCallback = jit.off(function(source, gltype, id, severity, length, message, userParam)
 			print('!!! glDebugCallback source='..tostring(source)
 				..' gltype='..tostring(gltype)
 				..' id='..tostring(id)
@@ -119,7 +119,7 @@ print('GLApp self.sdlCtx', self.sdlCtx)
 				..' '..ffi.string(message, length)
 			)
 			print(debug.traceback())
-		end
+		end)
 		self.glDebugClosure = ffi.cast('GLDEBUGPROC', self.glDebugCallback)
 
 		gl.glDebugMessageCallback(self.glDebugClosure, nil)
