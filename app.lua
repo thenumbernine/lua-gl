@@ -11,15 +11,26 @@ GLApp.title = "OpenGL App"
 
 GLApp.sdlCreateWindowFlags = bit.bor(GLApp.sdlCreateWindowFlags, sdl.SDL_WINDOW_OPENGL)
 
+-- change these during init, at least before sdlGLSetAttributes or initWindow is called
+-- set them to nil in the class to skip setting them
+GLApp.sdlGlAttrs = {
+	[sdl.SDL_GL_RED_SIZE] = 8,
+	[sdl.SDL_GL_GREEN_SIZE] = 8,
+	[sdl.SDL_GL_BLUE_SIZE] = 8,
+	[sdl.SDL_GL_ALPHA_SIZE] = 8,
+	[sdl.SDL_GL_DEPTH_SIZE] = 24,
+	[sdl.SDL_GL_DOUBLEBUFFER] = 1,
+}
 function GLApp:sdlGLSetAttributes()
-	-- [[ needed for windows, not for ... android? I forget ...
-	self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_RED_SIZE, 8))
-	self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_GREEN_SIZE, 8))
-	self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_BLUE_SIZE, 8))
-	self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_ALPHA_SIZE, 8))
-	self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_DEPTH_SIZE, 24))
-	self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_DOUBLEBUFFER, 1))
-	--]]
+	if self.gldebug then
+		self.sdlGlAttrs[sdl.SDL_GL_CONTEXT_FLAGS] = bit.bor(self.sdlGlAttrs[sdl.SDL_GL_CONTEXT_FLAGS] or 0, sdl.SDL_GL_CONTEXT_DEBUG_FLAG)
+	end
+
+	-- alright the next block *could* be done to sdlGlAttrs,
+	-- or it *could* be done directly to SDL_GL_SetAttribute
+	-- I'll do it to sdlGlAttrs, but that just means I should probably also put it in its own function for overriding...
+	-- since it itself is overriding whatever the user has set prior to this method call
+	-- like maybe there should be another method for 'setSdlGlAttrDefaults' or something ... idk ... frustrating.
 
 	-- [[ OSX wants to set GL to version 2.1 even though they claim they support up to 4.1 ...
 	-- is there any way to query the highest available GL version from SDL?  Or do I just have to know that, because it's OSX, it's going to be extra-retarded?
@@ -51,21 +62,21 @@ function GLApp:sdlGLSetAttributes()
 			-- From OpenGL.framework's OpenGL/gl3.h:
 			-- Use this with 'gl.setup' 'OpenGL3'
 			-- Or else you'll probably get a black screen, or some shader errors, or something will go wrong
-			self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_CONTEXT_MAJOR_VERSION, 4))
-			self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_CONTEXT_MINOR_VERSION, 1))
-			self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_CONTEXT_PROFILE_MASK, sdl.SDL_GL_CONTEXT_PROFILE_CORE))
-			self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_CONTEXT_FLAGS, sdl.SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG))
-			self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_ACCELERATED_VISUAL, 1))
+			self.sdlGlAttrs[sdl.SDL_GL_CONTEXT_MAJOR_VERSION] = 4
+			self.sdlGlAttrs[sdl.SDL_GL_CONTEXT_MINOR_VERSION] = 1
+			self.sdlGlAttrs[sdl.SDL_GL_CONTEXT_PROFILE_MASK] = sdl.SDL_GL_CONTEXT_PROFILE_CORE
+			self.sdlGlAttrs[sdl.SDL_GL_ACCELERATED_VISUAL] = 1
+			self.sdlGlAttrs[sdl.SDL_GL_CONTEXT_FLAGS] = bit.bor(self.sdlGlAttrs[sdl.SDL_GL_CONTEXT_FLAGS] or 0, sdl.SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG)
 			--]=]
 		elseif loaded2 then
 			--[=[ Using OSX framework GL 2.0
 			-- From OpenGL.framework's OpenGL/gl.h:
 			-- Use this with 'gl.setup' 'OpenGL2'
 			-- Doesn't really need these, it runs fine as-is:
-			self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_CONTEXT_MAJOR_VERSION, 2))
-			self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_CONTEXT_MINOR_VERSION, 0))
-			self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_CONTEXT_FLAGS, sdl.SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG))
-			self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_ACCELERATED_VISUAL, 1))
+			self.sdlGlAttrs[sdl.SDL_GL_CONTEXT_MAJOR_VERSION] = 2
+			self.sdlGlAttrs[sdl.SDL_GL_CONTEXT_MINOR_VERSION] = 0
+			self.sdlGlAttrs[sdl.SDL_GL_CONTEXT_FLAGS] = bit.bor(self.sdlGlAttrs[sdl.SDL_GL_CONTEXT_FLAGS] or 0, sdl.SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG)
+			self.sdlGlAttrs[sdl.SDL_GL_ACCELERATED_VISUAL] = 1
 			--]=]
 		elseif loadedES then
 			-- [=[ trying to get GLES3 working on OSX ... getting "SDL_GetError(): Could not initialize OpenGL / GLES library"
@@ -77,15 +88,20 @@ function GLApp:sdlGLSetAttributes()
 			sdl.SDL_SetHint("SDL_HINT_OPENGL_LIBRARY", "/usr/local/opt/mesa/lib/libGLESv2.dylib")
 			sdl.SDL_SetHint("SDL_HINT_EGL_LIBRARY", "/usr/local/opt/mesa/lib/libEGL.dylib")
 			if self.sdlMajorVersion == 2 then	-- only for SDL2, not for SDL3
-				self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_CONTEXT_EGL, 1))
+				self.sdlGlAttrs[sdl.SDL_GL_CONTEXT_EGL] = 1
 			end
-			self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_CONTEXT_PROFILE_MASK, sdl.SDL_GL_CONTEXT_PROFILE_ES))
-			self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_CONTEXT_MAJOR_VERSION, 3))
-			self.sdlAssert(sdl.SDL_GL_SetAttribute(sdl.SDL_GL_CONTEXT_MINOR_VERSION, 0))
+			self.sdlGlAttrs[sdl.SDL_GL_CONTEXT_PROFILE_MASK] = sdl.SDL_GL_CONTEXT_PROFILE_ES
+			self.sdlGlAttrs[sdl.SDL_GL_CONTEXT_MAJOR_VERSION] = 3
+			self.sdlGlAttrs[sdl.SDL_GL_CONTEXT_MINOR_VERSION] = 0
 			--]=]
 		end
 	end
 	--]]
+
+	-- let's hope order doesn't matter...
+	for k,v in pairs(self.sdlGlAttrs) do
+		self.sdlAssert(sdl.SDL_GL_SetAttribute(k, v))
+	end
 end
 
 function GLApp:initWindow()
