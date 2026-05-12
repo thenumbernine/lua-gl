@@ -82,18 +82,18 @@ files = {
 	"vertexarray.lua",
 	"ffi/KHR/khrplatform.lua",
 }
-if ffi.os == "Android" then
+if targetOS == "Android" then
 	table.append(files, {
 		"ffi/Android/EGL.lua",
 		"ffi/Android/OpenGL.lua",
 	})
 end
-if ffi.os == "Linux" then
+if targetOS == "Linux" then
 	table.append(files, {
 		"ffi/Linux/OpenGL.lua",
 	})
 end
-if ffi.os == "OSX" then
+if targetOS == "OSX" then
 	table.append(files, {
 		"ffi/OSX/OpenGL.lua",
 		"ffi/OSX/OpenGL2.lua",
@@ -101,12 +101,12 @@ if ffi.os == "OSX" then
 		"ffi/OSX/OpenGLMesa.lua",
 	})
 end
-if ffi.os == "Windows" then
+if targetOS == "Windows" then
 	table.append(files, {
 		"ffi/Windows/OpenGL.lua",
 	})
 end
-if ffi.os == "Windows" and ffi.arch == "x64" then
+if targetOS == "Windows" and targetArch == "x64" then
 	table.append(files, {
 		"bin/Windows/x64/glew32.dll",
 	})
