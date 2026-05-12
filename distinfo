@@ -5,6 +5,8 @@
 name = "gl"
 startDir = "gl/tests"
 luaArgs = "test_tex.lua"
+git = "https://github.com/thenumbernine/lua-gl"
+
 files = {
 	"LICENSE",
 	"README.md",
@@ -66,6 +68,7 @@ files = {
 	"tests/test_tex.lua",
 	"tests/test_transformFeedbackTest.lua",
 	"tests/test_uniformblock.lua",
+	"tests/test_uniformblock_align.lua",
 	"tests/test_vertexattrib.lua",
 	"tex.lua",
 	"tex1d.lua",
@@ -109,12 +112,13 @@ if ffi.os == "Windows" and ffi.arch == "x64" then
 	})
 end
 deps = {
-	"app3d",
+	"app3d",	-- used by a lot of tests so I'll just include it always
 	"ext",
 	"ffi",
 	"image",
 	"sdl",
 	"stl",
+	--"struct",	-- used by tests/test_uniformblock_align.lua
 	"template",
 	"vec-ffi",
 }
@@ -136,7 +140,7 @@ generateBindings = function()return{
 			or '"KHR/khrplatform.h"',
 		out = ffi.os..'/KHR/khrplatform.lua',
 	},
-	
+
 	{
 		inc =
 		--[[ OSX ... but I'm putting it in local space cuz bleh framework namespace resolution means include pattern-matching, not appending like typical search paths use ... so until fixing the include resolution ...
